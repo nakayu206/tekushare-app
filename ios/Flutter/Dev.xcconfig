@@ -1,0 +1,9 @@
+// dev環境のiOS固有設定
+// Xcode 上で Build Configuration（Debug-dev / Profile-dev / Release-dev）の
+// "Configuration File" にこのファイルを追加する想定
+//
+// Flutter標準の Generated.xcconfig は Debug/Profile/Release.xcconfig 経由で
+// 自動的に include されるため、ここでは flavor 固有の値のみ定義する
+
+BUNDLE_ID_SUFFIX = .dev
+BUNDLE_DISPLAY_NAME = TekuShare Dev

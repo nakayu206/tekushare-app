@@ -1,0 +1,3 @@
+// prod（リリース）環境のiOS固有設定
+BUNDLE_ID_SUFFIX =
+BUNDLE_DISPLAY_NAME = TekuShare
