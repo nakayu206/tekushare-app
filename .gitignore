@@ -7,6 +7,17 @@
 .buildlog/
 .history
 
+# IntelliJ / Android Studio (machine-specific)
+# .idea 配下にはマシン固有の絶対パスやユーザー設定が含まれるため除外。
+# 参考: https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+.idea/
+
+# Backup files (editor-generated artifacts)
+# 参考: https://github.com/github/gitignore/blob/main/Global/Backup.gitignore
+*.bak
+*.orig
+*.tmp
+
 
 
 # Flutter repo-specific
