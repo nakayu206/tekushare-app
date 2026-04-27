@@ -4,11 +4,11 @@
 
 ## ファイル構成
 
-| ファイル | トリガー | 用途 |
-|---------|---------|------|
-| `ci.yml` | PR 作成・main への push | フォーマット / 静的解析 / テストを自動実行 |
-| `deploy-stg.yml` | main への push | stg flavor で Android APK をビルド |
-| `deploy-prod.yml` | `v*.*.*` タグの push | prod flavor で App Bundle ビルド + GitHub Release 作成 |
+| ファイル          | トリガー                | 用途                                                   |
+| ----------------- | ----------------------- | ------------------------------------------------------ |
+| `ci.yml`          | PR 作成・main への push | フォーマット / 静的解析 / テストを自動実行             |
+| `deploy-stg.yml`  | main への push          | stg flavor で Android APK をビルド                     |
+| `deploy-prod.yml` | `v*.*.*` タグの push    | prod flavor で App Bundle ビルド + GitHub Release 作成 |
 
 ## 運用フロー
 
@@ -35,10 +35,12 @@
 以下のシークレットを登録する必要があります。
 
 ### stg（Firebase App Distribution）
+
 - `FIREBASE_APP_ID_STG`
 - `FIREBASE_CREDENTIALS`（サービスアカウント JSON の中身）
 
 ### prod（Google Play）
+
 - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`
 
 ## 補足
