@@ -1,0 +1,69 @@
+name: Move to Done on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  move-to-done:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set PR status to Done in project
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          OWNER: nakayu206
+          PROJECT_NUMBER: "3"
+          PR_NODE_ID: ${{ github.event.pull_request.node_id }}
+        run: |
+          set -euo pipefail
+
+          # 1) Project の node ID と Status フィールド情報を取得
+          PROJECT_DATA=$(gh api graphql -f query='
+            query($owner: String!, $number: Int!) {
+              user(login: $owner) {
+                projectV2(number: $number) {
+                  id
+                  field(name: "Status") {
+                    ... on ProjectV2SingleSelectField {
+                      id
+                      options { id name }
+                    }
+                  }
+                }
+              }
+            }' -F owner="$OWNER" -F number=$PROJECT_NUMBER)
+
+          PROJECT_ID=$(echo "$PROJECT_DATA" | jq -r '.data.user.projectV2.id')
+          FIELD_ID=$(echo "$PROJECT_DATA" | jq -r '.data.user.projectV2.field.id')
+          DONE_OPTION_ID=$(echo "$PROJECT_DATA" | jq -r '.data.user.projectV2.field.options[] | select(.name=="Done") | .id')
+
+          if [ -z "$PROJECT_ID" ] || [ -z "$DONE_OPTION_ID" ]; then
+            echo "Failed to resolve project / Done option"
+            exit 1
+          fi
+
+          # 2) PR を Project に追加（既に存在する場合は既存 item の ID が返る）
+          ADD_RESULT=$(gh api graphql -f query='
+            mutation($projectId: ID!, $contentId: ID!) {
+              addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                item { id }
+              }
+            }' -F projectId="$PROJECT_ID" -F contentId="$PR_NODE_ID")
+
+          ITEM_ID=$(echo "$ADD_RESULT" | jq -r '.data.addProjectV2ItemById.item.id')
+
+          # 3) Status を Done に更新
+          gh api graphql -f query='
+            mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $projectId,
+                itemId: $itemId,
+                fieldId: $fieldId,
+                value: { singleSelectOptionId: $optionId }
+              }) { projectV2Item { id } }
+            }' \
+            -F projectId="$PROJECT_ID" \
+            -F itemId="$ITEM_ID" \
+            -F fieldId="$FIELD_ID" \
+            -F optionId="$DONE_OPTION_ID"
