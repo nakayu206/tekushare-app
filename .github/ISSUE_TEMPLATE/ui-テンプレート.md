@@ -1,8 +1,8 @@
 ---
 name: UI テンプレート
-about: Describe this issue tUIタスクemplate's purpose here.
+about: " UIタスク"
 title: "[UI]"
-labels: UI
+labels: Logic, UI
 assignees: ''
 
 ---
