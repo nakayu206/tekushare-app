@@ -2,7 +2,7 @@
 name: UI テンプレート
 about: " UIタスク"
 title: "[UI]"
-labels: Logic, UI
+labels: UI
 assignees: ''
 
 ---
@@ -15,7 +15,8 @@ assignees: ''
 
 ## デザイン参考
 <!-- Figma リンクやスクリーンショット -->
-
+### **Figma リンク**
+### **画面キャプチャ**
 ## チェックリスト
 - [ ] デザイン確認完了
 - [ ] 実装完了
