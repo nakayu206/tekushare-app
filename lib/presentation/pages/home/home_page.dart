@@ -144,9 +144,9 @@ class _FootprintSection extends StatelessWidget {
 
   // dx: 中心からの横オフセット, dy: 下からの距離, angle: 回転（ラジアン）
   static const _steps = [
-    (dx: -22.0, dy: 10.0,  angle: 0.0),
-    (dx: -32.0, dy: 73.0,  angle: -0.3),
-    (dx: -8.0,  dy: 140.0, angle: 0.0),
+    (dx: -22.0, dy: 10.0, angle: 0.0),
+    (dx: -32.0, dy: 73.0, angle: -0.3),
+    (dx: -8.0, dy: 140.0, angle: 0.0),
     (dx: -18.0, dy: 198.0, angle: -0.3),
   ];
 
