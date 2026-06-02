@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tekushare/app.dart';
 import 'package:tekushare/core/config/flavor.dart';
@@ -6,5 +7,5 @@ import 'package:tekushare/core/config/flavor.dart';
 /// dev環境のエントリーポイント
 void main() {
   AppConfig.setFlavor(Flavor.dev);
-  runApp(const TekuShareApp());
+  runApp(const ProviderScope(child: TekuShareApp()));
 }
