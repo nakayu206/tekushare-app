@@ -10,7 +10,8 @@ class CategoryChipGroup extends StatelessWidget {
     required this.categories,
     required this.selectedCategory,
     required this.onSelected,
-  }) : assert(categories.length == 6, 'CategoryChipGroup requires exactly 6 categories');
+  }) : assert(categories.length == 6,
+            'CategoryChipGroup requires exactly 6 categories');
 
   final List<String> categories;
   final String selectedCategory;

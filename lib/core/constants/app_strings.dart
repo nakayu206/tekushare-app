@@ -40,5 +40,4 @@ abstract class AppStrings {
   static const statusWantToGo = '行きたい';
   static const statusVisited = '行った';
   static const categoryChange = '行った！に変更';
-
 }
