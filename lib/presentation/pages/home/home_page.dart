@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/presentation/pages/spot/spot_list_page.dart';
 import 'package:tekushare/presentation/pages/walk/walk_page.dart';
 import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/presentation/widgets/common/clock_header.dart';
@@ -84,7 +85,17 @@ class _HomePageState extends State<HomePage>
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: 0,
+        onTap: (index) {
+          if (index == 1 && ModalRoute.of(context)?.isCurrent == true) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SpotListPage()),
+            );
+          }
+        },
+      ),
     );
   }
 }

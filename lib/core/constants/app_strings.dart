@@ -36,6 +36,9 @@ abstract class AppStrings {
   static const categoryGoods = '雑貨屋';
   static const categoryOther = 'そのほか';
 
+  // リストページ
+  static const listWentTab = '行った！';
+
   // スポット
   static const statusWantToGo = '行きたい';
   static const statusVisited = '行った';
