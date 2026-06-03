@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/presentation/pages/walk/walk_page.dart';
@@ -9,7 +8,6 @@ import 'package:tekushare/presentation/widgets/common/clock_header.dart';
 import 'package:tekushare/presentation/widgets/common/primary_button.dart';
 
 /// ホーム画面
-/// 現在時刻・片道設定を表示し、足あとアニメーション後に散歩開始ボタンを表示する
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
