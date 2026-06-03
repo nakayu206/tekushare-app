@@ -5,6 +5,7 @@ import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/presentation/widgets/common/category_chip_group.dart';
+import 'package:tekushare/presentation/widgets/common/dashed_border_painter.dart';
 
 /// 行きたい！ページ
 class WantToGoPage extends StatefulWidget {
@@ -181,7 +182,7 @@ class _PhotoBox extends StatelessWidget {
       width: 176,
       height: 100,
       child: CustomPaint(
-        painter: _DashedBorderPainter(),
+        painter: const DashedBorderPainter(),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -207,46 +208,6 @@ class _PhotoBox extends StatelessWidget {
       ),
     );
   }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.textAccent
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      const Radius.circular(12),
-    );
-    final path = Path()..addRRect(rrect);
-    canvas.drawPath(_dashPath(path), paint);
-  }
-
-  Path _dashPath(Path source, {double dashWidth = 6, double dashSpace = 4}) {
-    final dest = Path();
-    for (final metric in source.computeMetrics()) {
-      double distance = 0;
-      bool draw = true;
-      while (distance < metric.length) {
-        final len = draw ? dashWidth : dashSpace;
-        if (draw) {
-          dest.addPath(
-            metric.extractPath(distance, distance + len),
-            Offset.zero,
-          );
-        }
-        distance += len;
-        draw = !draw;
-      }
-    }
-    return dest;
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ──────────────────────────────────────────

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/presentation/pages/spot/spot_detail_page.dart';
 import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/presentation/widgets/common/category_chip_group.dart';
 
@@ -78,9 +79,16 @@ class _SpotListPageState extends State<SpotListPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: items.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (_, i) => _ListItem(
+                itemBuilder: (context, i) => _ListItem(
                   date: items[i].date,
                   title: items[i].title,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          SpotDetailPage(isWantToGo: _isWantToGoTab),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -198,57 +206,65 @@ class _TabLabel extends StatelessWidget {
 // ──────────────────────────────────────────
 
 class _ListItem extends StatelessWidget {
-  const _ListItem({required this.date, required this.title});
+  const _ListItem({
+    required this.date,
+    required this.title,
+    required this.onTap,
+  });
 
   final String date;
   final String title;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 4,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 6,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Text(
-            date,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: AppTextStyle.xl,
-              fontWeight: FontWeight.w500,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 4,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(width: 32),
-          Expanded(
-            child: Text(
-              title,
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 6,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Text(
+              date,
               style: const TextStyle(
                 color: AppColors.primary,
                 fontSize: AppTextStyle.xl,
                 fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-          const Icon(
-            Icons.chevron_right,
-            color: AppColors.primary,
-          ),
-        ],
+            const SizedBox(width: 32),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: AppTextStyle.xl,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.primary,
+            ),
+          ],
+        ),
       ),
     );
   }

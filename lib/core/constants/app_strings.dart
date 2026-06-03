@@ -43,4 +43,11 @@ abstract class AppStrings {
   static const statusWantToGo = '行きたい';
   static const statusVisited = '行った';
   static const categoryChange = '行った！に変更';
+
+  // スポット詳細
+  static const spotDetailSaveButton = '上書き保存';
+  static const spotDetailDeleteButton = '削除する';
+  static const spotDetailSaveConfirmMessage = '上書き保存しますか？';
+  static const spotDetailDeleteConfirmMessage = '削除しますか？';
+  static const spotDetailDeleted = '削除しました！';
 }

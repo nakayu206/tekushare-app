@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/presentation/pages/spot/spot_detail_page.dart';
 import 'package:tekushare/presentation/pages/spot/spot_list_page.dart';
 import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
 
@@ -146,6 +147,34 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(BackButton), findsOneWidget);
+    });
+
+    testWidgets('リストアイテムをタップすると SpotDetailPage へ遷移する', (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(wantToGoOnly));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsOneWidget);
+    });
+
+    testWidgets('「行った！」タブのアイテムをタップすると行った！モードで SpotDetailPage へ遷移する',
+        (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.listWentTab));
+      await tester.pump();
+      await tester.tap(find.text(wentOnly));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text(AppStrings.listWentTab),
+        ),
+        findsOneWidget,
+      );
     });
   });
 }
