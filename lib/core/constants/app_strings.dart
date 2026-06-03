@@ -18,15 +18,18 @@ abstract class AppStrings {
 
   // 行きたい！ページ
   static const wantToGoPageTitle = '行きたい！';
-  static const wantToGoNoTitle = '（タイトルなし）';
   static const wantToGoSave = '行きたい！に保存';
   static const wantToGoConfirmMessage = '「行きたい！」に保存しますか？';
-  static const wantToGoSaved = '保存しました！';
   static const saveButton = '保存する';
   static const cancelButton = 'キャンセル';
   static const closeButton = '閉じる';
   static const realtimeLocation = 'リアルタイム位置';
   static const addPhoto = '写真を追加';
+  static const titleHint = 'タイトルを設定する';
+
+  // 共通
+  static const noTitle = '（タイトルなし）';
+  static const saved = '保存しました！';
 
   // カテゴリ
   static const categoryPark = '公園';
@@ -43,4 +46,11 @@ abstract class AppStrings {
   static const statusWantToGo = '行きたい';
   static const statusVisited = '行った';
   static const categoryChange = '行った！に変更';
+
+  // スポット詳細
+  static const spotDetailSaveButton = '上書き保存';
+  static const spotDetailDeleteButton = '削除する';
+  static const spotDetailSaveConfirmMessage = '上書き保存しますか？';
+  static const spotDetailDeleteConfirmMessage = '削除しますか？';
+  static const spotDetailDeleted = '削除しました！';
 }
