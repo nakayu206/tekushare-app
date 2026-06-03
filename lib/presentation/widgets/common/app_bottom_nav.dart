@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/constants/app_text_style.dart';
 
 /// アプリ共通のボトムナビゲーションバー（Material 3 NavigationBar）
 class AppBottomNav extends StatelessWidget {
@@ -39,7 +40,7 @@ class AppBottomNav extends StatelessWidget {
             final color = states.contains(WidgetState.selected)
                 ? Colors.white
                 : AppColors.navInactive;
-            return TextStyle(fontSize: 11, color: color);
+            return TextStyle(fontSize: AppTextStyle.xs, color: color);
           }),
         ),
       ),

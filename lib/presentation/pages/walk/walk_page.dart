@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/presentation/pages/spot/want_to_go_page.dart';
 import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/presentation/widgets/common/clock_header.dart';
 import 'package:tekushare/presentation/widgets/common/primary_button.dart';
 
 /// 散歩モード画面
-/// 「散歩をはじめる」押下後に表示される画面
 class WalkPage extends StatelessWidget {
   const WalkPage({super.key});
 
@@ -26,9 +26,9 @@ class WalkPage extends StatelessWidget {
               child: _WalkActionButton(
                 label: AppStrings.takePhoto,
                 svgAsset: 'assets/SVG/camera.svg',
-                fontSize: 22,
+                fontSize: AppTextStyle.x1l,
                 onPressed: () {
-                  // TODO(#7): 撮影処理
+                  // TODO: 撮影処理
                 },
               ),
             ),
@@ -36,9 +36,10 @@ class WalkPage extends StatelessWidget {
             Center(
               child: _WalkActionButton(
                 label: AppStrings.saveToWantToGo,
-                onPressed: () {
-                  // TODO(#7): 行きたいリストへ保存
-                },
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const WantToGoPage()),
+                ),
               ),
             ),
             const SizedBox(height: 70),
@@ -65,7 +66,7 @@ class _WalkActionButton extends StatelessWidget {
   const _WalkActionButton({
     required this.label,
     this.svgAsset,
-    this.fontSize = 20,
+    this.fontSize = AppTextStyle.xl,
     required this.onPressed,
   });
 

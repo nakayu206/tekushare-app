@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_defaults.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
@@ -31,7 +30,7 @@ class ClockHeader extends ConsumerWidget {
             '$h:$m',
             style: AppTextStyle.timerDisplay.copyWith(
               color: AppColors.primary,
-              fontSize: 96,
+              fontSize: AppTextStyle.clock,
               height: 1.0,
             ),
           ),
@@ -40,7 +39,7 @@ class ClockHeader extends ConsumerWidget {
             '片道  00:$minutes',
             style: AppTextStyle.bodyMedium.copyWith(
               color: AppColors.primary,
-              fontSize: 32,
+              fontSize: AppTextStyle.x3l,
               fontWeight: FontWeight.w500,
               height: 1.0,
             ),
