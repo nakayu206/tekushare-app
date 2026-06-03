@@ -32,7 +32,7 @@ void main() {
       expect(find.byType(AppBottomNav), findsOneWidget);
     });
 
-    testWidgets('ボトムナビで「行きたい！」タブに遷移できる', (tester) async {
+    testWidgets('ボトムナビで「リスト」タブに遷移できる', (tester) async {
       await launchApp(tester);
 
       await tester.tap(find.text(AppStrings.navList));
