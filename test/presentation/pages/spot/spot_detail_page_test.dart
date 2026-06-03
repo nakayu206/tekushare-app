@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/presentation/pages/spot/spot_detail_page.dart';
 import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
@@ -112,15 +113,45 @@ void main() {
       expect(find.byType(AppBottomNav), findsOneWidget);
     });
 
-    testWidgets('カテゴリチップをタップすると選択が切り替わる', (tester) async {
+    testWidgets('カテゴリチップをタップすると選択色が切り替わる', (tester) async {
       await pumpPage(tester);
+
+      // タップ前：公園が選択色
+      expect(
+        find.ancestor(
+          of: find.text(AppStrings.categoryPark),
+          matching: find.byWidgetPredicate((w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        ),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text(AppStrings.categoryCafe));
       await tester.pump();
 
-      // カフェが選択状態になっているか確認（公園は選択解除）
-      // CategoryChipGroup の内部状態として公園チップは非選択色になる
-      expect(find.text(AppStrings.categoryCafe), findsOneWidget);
+      // タップ後：カフェが選択色、公園は非選択色
+      expect(
+        find.ancestor(
+          of: find.text(AppStrings.categoryCafe),
+          matching: find.byWidgetPredicate((w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.ancestor(
+          of: find.text(AppStrings.categoryPark),
+          matching: find.byWidgetPredicate((w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        ),
+        findsNothing,
+      );
     });
 
     // ──────────────────────────────────────────
@@ -203,7 +234,7 @@ void main() {
       await tester.tap(find.text(AppStrings.spotDetailSaveButton));
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.wantToGoNoTitle), findsOneWidget);
+      expect(find.text(AppStrings.noTitle), findsOneWidget);
     });
 
     testWidgets('タイトル入力時の確認ダイアログに入力値が表示される', (tester) async {
@@ -241,7 +272,7 @@ void main() {
       await tester.tap(find.text(AppStrings.saveButton));
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.wantToGoSaved), findsOneWidget);
+      expect(find.text(AppStrings.saved), findsOneWidget);
     });
 
     testWidgets('保存完了ダイアログの閉じるでページを離れる', (tester) async {

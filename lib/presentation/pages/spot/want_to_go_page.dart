@@ -39,7 +39,7 @@ class _WantToGoPageState extends State<WantToGoPage> {
       context: context,
       builder: (_) => _ConfirmDialog(
         title: _titleController.text.isEmpty
-            ? AppStrings.wantToGoNoTitle
+            ? AppStrings.noTitle
             : _titleController.text,
         onConfirm: () {
           Navigator.pop(context);
@@ -147,7 +147,7 @@ class _TitleInput extends StatelessWidget {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
-        hintText: 'タイトルを設定する',
+        hintText: AppStrings.titleHint,
         hintStyle: const TextStyle(
             color: AppColors.textDisabled, fontSize: AppTextStyle.x2l),
         border: OutlineInputBorder(
@@ -337,7 +337,7 @@ class _SavedDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              AppStrings.wantToGoSaved,
+              AppStrings.saved,
               style: TextStyle(
                   fontSize: AppTextStyle.lg2, fontWeight: FontWeight.w500),
             ),

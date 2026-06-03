@@ -41,12 +41,12 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
       context: context,
       builder: (_) => _SaveConfirmDialog(
         title: _titleController.text.isEmpty
-            ? AppStrings.wantToGoNoTitle
+            ? AppStrings.noTitle
             : _titleController.text,
         onConfirm: () {
           Navigator.pop(context);
           if (!mounted) return;
-          _showResultDialog(AppStrings.wantToGoSaved);
+          _showResultDialog(AppStrings.saved);
         },
         onCancel: () => Navigator.pop(context),
       ),
@@ -58,7 +58,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
       context: context,
       builder: (_) => _DeleteConfirmDialog(
         title: _titleController.text.isEmpty
-            ? AppStrings.wantToGoNoTitle
+            ? AppStrings.noTitle
             : _titleController.text,
         onConfirm: () {
           Navigator.pop(context);
@@ -183,7 +183,7 @@ class _TitleInput extends StatelessWidget {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
-        hintText: 'タイトルを設定する',
+        hintText: AppStrings.titleHint,
         hintStyle: const TextStyle(
           color: AppColors.textDisabled,
           fontSize: AppTextStyle.x2l,

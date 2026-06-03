@@ -68,7 +68,7 @@ void main() {
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.wantToGoNoTitle), findsOneWidget);
+      expect(find.text(AppStrings.noTitle), findsOneWidget);
     });
 
     testWidgets('タイトル入力時の確認ダイアログに入力値が表示される', (tester) async {
@@ -106,7 +106,7 @@ void main() {
       await tester.tap(find.text(AppStrings.saveButton));
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.wantToGoSaved), findsOneWidget);
+      expect(find.text(AppStrings.saved), findsOneWidget);
     });
 
     testWidgets('保存完了ダイアログの閉じるでページを離れる', (tester) async {
