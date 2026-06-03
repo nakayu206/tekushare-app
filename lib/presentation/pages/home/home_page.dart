@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:tekushare/core/constants/app_colors.dart';
-import 'package:tekushare/core/constants/app_defaults.dart';
-import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
-import 'package:tekushare/core/constants/app_text_style.dart';
-import 'package:tekushare/presentation/providers/clock_provider.dart';
+import 'package:tekushare/presentation/pages/walk/walk_page.dart';
 import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
+import 'package:tekushare/presentation/widgets/common/clock_header.dart';
 import 'package:tekushare/presentation/widgets/common/primary_button.dart';
 
 /// ホーム画面
+/// 現在時刻・片道設定を表示し、足あとアニメーション後に散歩開始ボタンを表示する
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -67,15 +66,16 @@ class _HomePageState extends State<HomePage>
       body: SafeArea(
         child: Column(
           children: [
-            const _ClockSection(),
+            const ClockHeader(),
             const Spacer(flex: 8),
             FadeTransition(
               opacity: _buttonFade,
               child: PrimaryButton(
                 label: AppStrings.startWalk,
-                onPressed: () {
-                  // TODO(#6): 散歩モード画面へ遷移
-                },
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const WalkPage()),
+                ),
               ),
             ),
             const Spacer(),
@@ -87,48 +87,6 @@ class _HomePageState extends State<HomePage>
         ),
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 0),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 時刻・片道設定（Riverpod で時刻を管理）
-// ──────────────────────────────────────────
-
-class _ClockSection extends ConsumerWidget {
-  const _ClockSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final now = ref.watch(clockProvider).valueOrNull ?? DateTime.now();
-    final h = now.hour.toString().padLeft(2, '0');
-    final m = now.minute.toString().padLeft(2, '0');
-    final minutes = AppDefaults.timerMinutes.toString().padLeft(2, '0');
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 99, bottom: AppSpacing.sm),
-      child: Column(
-        children: [
-          Text(
-            '$h:$m',
-            style: AppTextStyle.timerDisplay.copyWith(
-              color: AppColors.primary,
-              fontSize: 96,
-              height: 1.0,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '片道  00:$minutes',
-            style: AppTextStyle.bodyMedium.copyWith(
-              color: AppColors.primary,
-              fontSize: 32,
-              fontWeight: FontWeight.w500,
-              height: 1.0,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

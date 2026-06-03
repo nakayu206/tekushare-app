@@ -10,7 +10,9 @@ abstract class AppStrings {
   static const oneWay = '片道';
 
   // 散歩モード
-  static const endWalk = '散歩終了';
+  static const endWalk = '散歩を終了する';
+  static const takePhoto = '撮影する';
+  static const saveToWantToGo = '現在地を\n行きたいリストに保存する';
   static const wantToGo = '行きたい！';
   static const safetyOk = '元気です';
 
