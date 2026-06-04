@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/presentation/pages/spot/want_to_go_page.dart';
 import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
@@ -51,6 +52,37 @@ void main() {
       await pumpPage(tester);
 
       expect(find.byType(AppBottomNav), findsOneWidget);
+    });
+
+    testWidgets('カテゴリチップをタップすると選択状態が変わる', (tester) async {
+      await pumpPage(tester);
+
+      // 初期は公園が選択色
+      expect(
+        find.ancestor(
+          of: find.text(AppStrings.categoryPark),
+          matching: find.byWidgetPredicate((w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text(AppStrings.categoryCafe));
+      await tester.pump();
+
+      // カフェが選択色になる
+      expect(
+        find.ancestor(
+          of: find.text(AppStrings.categoryCafe),
+          matching: find.byWidgetPredicate((w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('保存ボタンを押すと確認ダイアログが表示される', (tester) async {

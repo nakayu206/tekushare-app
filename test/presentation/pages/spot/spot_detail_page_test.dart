@@ -155,8 +155,46 @@ void main() {
     });
 
     // ──────────────────────────────────────────
+    // ボトムナビ
+    // ──────────────────────────────────────────
+
+    testWidgets('ボトムナビのリストをタップすると前の画面に戻る', (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.navList));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsNothing);
+    });
+
+    testWidgets('ボトムナビのホームをタップすると最初の画面に戻る', (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.navHome));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsNothing);
+    });
+
+    // ──────────────────────────────────────────
     // 削除フロー
     // ──────────────────────────────────────────
+
+    testWidgets('タイトル入力時の削除確認ダイアログに入力値が表示される', (tester) async {
+      await pumpPage(tester);
+
+      await tester.enterText(find.byType(TextField), 'テストスポット');
+      await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text('テストスポット'),
+        ),
+        findsOneWidget,
+      );
+    });
 
     testWidgets('削除ボタンを押すと削除確認ダイアログが表示される', (tester) async {
       await pumpPage(tester);

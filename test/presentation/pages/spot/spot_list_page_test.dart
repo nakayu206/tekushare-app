@@ -149,6 +149,52 @@ void main() {
       expect(find.byType(BackButton), findsOneWidget);
     });
 
+    testWidgets('行った！タブから行きたい！タブに戻れる', (tester) async {
+      await pumpPage(tester);
+
+      // 行った！タブに切り替え
+      await tester.tap(find.text(AppStrings.listWentTab));
+      await tester.pump();
+      expect(find.text(wentOnly), findsOneWidget);
+
+      // 行きたい！タブに戻す
+      await tester.tap(find.text(AppStrings.wantToGo));
+      await tester.pump();
+
+      expect(find.text(wantToGoOnly), findsOneWidget);
+      expect(find.text(wentOnly), findsNothing);
+    });
+
+    testWidgets('ボトムナビのホームをタップすると前の画面に戻る', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SpotListPage()),
+              ),
+              child: const Text('start'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('start'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SpotListPage), findsOneWidget);
+
+      await tester.tap(find.text(AppStrings.navHome));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotListPage), findsNothing);
+    });
+
     testWidgets('リストアイテムをタップすると SpotDetailPage へ遷移する', (tester) async {
       await pumpPage(tester);
 
