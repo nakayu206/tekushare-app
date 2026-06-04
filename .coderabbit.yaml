@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "ja-JP"
+early_access: true
+
+reviews:
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+
+  path_filters:
+    - "!**/*.g.dart"
+    - "!**/*.freezed.dart"
+    - "!**/generated/**"
+
+  path_instructions:
+    - path: "lib/**/*.dart"
+      instructions: |
+        Flutter/Dart のコードをレビューしてください。以下を確認すること。
+
+        【レイアウト・画面対応】
+        - SafeArea と MediaQuery による画面サイズの考慮が行われているか
+        - Widget は責務単位で分割されているか
+        - AppColors / AppStrings / AppTextStyle などのデザイントークンを使っているか（マジックナンバー・ハードコードをしていないか）
+
+        【パフォーマンス（公式ベストプラクティス準拠）】
+        - 変化しない Widget に `const` コンストラクタを使っているか
+        - `setState()` の呼び出し範囲を必要最小限に絞っているか
+        - アニメーション内で `Opacity` を使わず `AnimatedOpacity` / `FadeTransition` を使っているか
+        - リスト・グリッドは `ListView.builder` など遅延構築を使っているか
+        - `build()` 内で重い処理（ループ・データ変換）をしていないか
+
+        【メモリ管理】
+        - `AnimationController` / `TextEditingController` / `ScrollController` などを `dispose()` で破棄しているか
+
+        【状態管理】
+        - Riverpod の使い方が公式ドキュメントに準拠しているか
+        - グローバルな副作用（static フィールドの書き換えなど）を避けているか
+
+        【アクセシビリティ（公式ベストプラクティス準拠）】
+        - タップ可能な要素は最小 48×48px を確保しているか
+        - SVG・アイコンなどに `Semantics` / `ExcludeSemantics` の使い分けができているか
+        - 色のみに依存しない UI 設計になっているか
+
+        【コード品質】
+        - 不要なコメント・デッドコードが残っていないか
+
+    - path: "test/**/*.dart"
+      instructions: |
+        Flutter テストのコードをレビューしてください。以下を確認すること。
+        - テスト説明文（testWidgets の第1引数）が振る舞いを正確に表しているか
+        - 画面サイズを physicalSize / devicePixelRatio で設定しているか
+        - 1テストにつき1つの振る舞いのみ検証しているか
+        - addTearDown でリソースのリセットをしているか
+
+    - path: "integration_test/**/*.dart"
+      instructions: |
+        Flutter 結合テストのコードをレビューしてください。以下を確認すること。
+        - IntegrationTestWidgetsFlutterBinding.ensureInitialized() が main() の先頭にあるか
+        - pumpAndSettle() でアニメーション完了を待っているか
+        - アサーションがナビゲーション後の実際のページ・ウィジェットを検証しているか（常にtrueになる汎用ウィジェットでないか）
+
+    - path: "docs/**/*.md"
+      instructions: |
+        ドキュメントをレビューしてください。以下を確認すること。
+        - コードの実装と内容が乖離していないか
+        - コマンド例が正しく動作するか
+
+  auto_review:
+    enabled: true
+    ignore_title_keywords:
+      - "WIP"
+    drafts: false
+    base_branches:
+      - "main"
+
+chat:
+  auto_reply: true
