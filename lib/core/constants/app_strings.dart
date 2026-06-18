@@ -11,6 +11,8 @@ abstract class AppStrings {
 
   // 散歩モード
   static const endWalk = '散歩を終了する';
+  static const endWalkConfirmMessage = '散歩を終了しますか？';
+  static const endWalkConfirmButton = '終了する';
   static const takePhoto = '撮影する';
   static const saveToWantToGo = '現在地を\n行きたいリストに保存する';
   static const wantToGo = '行きたい！';
