@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
-import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
@@ -21,13 +22,13 @@ class _EndWalkPageState extends State<EndWalkPage>
   late List<Animation<double>> _footprintFades;
   late Animation<double> _cardFade;
 
-  // (left, top, angle) — SafeAreaからの絶対座標
+  // 画面幅・高さに対する比率で指定（端末サイズ非依存）
   // 左右交互に配置して歩いている感じを表現
   static const _steps = [
-    (left: -15.0, top: 190.0, angle: 0.1), // 左足
-    (left: 50.0, top: 210.0, angle: -0.4), // 右足
-    (left: 75.0, top: 268.0, angle: 0.1), // 左足
-    (left: 140.0, top: 288.0, angle: -0.4), // 右足
+    (leftRatio: -0.038, topRatio: 0.264, angle: 0.1), // 左足
+    (leftRatio: 0.128, topRatio: 0.292, angle: -0.4), // 右足
+    (leftRatio: 0.192, topRatio: 0.372, angle: 0.1), // 左足
+    (leftRatio: 0.359, topRatio: 0.400, angle: -0.4), // 右足
   ];
 
   @override
@@ -68,25 +69,33 @@ class _EndWalkPageState extends State<EndWalkPage>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Stack(
-          children: [
-            ..._buildFootprints(),
-            Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final h = constraints.maxHeight;
+            return Stack(
               children: [
-                const ClockHeader(),
-                const Spacer(flex: 2),
-                FadeTransition(
-                  opacity: _cardFade,
-                  child: _ConfirmCard(
-                    onCancel: () => Navigator.pop(context),
-                    onConfirm: () =>
-                        Navigator.popUntil(context, (route) => route.isFirst),
-                  ),
+                ..._buildFootprints(w, h),
+                Column(
+                  children: [
+                    const ClockHeader(),
+                    const Spacer(flex: 2),
+                    FadeTransition(
+                      opacity: _cardFade,
+                      child: _ConfirmCard(
+                        onCancel: () => Navigator.pop(context),
+                        onConfirm: () => Navigator.popUntil(
+                          context,
+                          (route) => route.isFirst,
+                        ),
+                      ),
+                    ),
+                    const Spacer(flex: 3),
+                  ],
                 ),
-                const Spacer(flex: 3),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: AppBottomNav(
@@ -105,23 +114,25 @@ class _EndWalkPageState extends State<EndWalkPage>
     );
   }
 
-  List<Widget> _buildFootprints() {
+  List<Widget> _buildFootprints(double w, double h) {
     return List.generate(_steps.length, (i) {
       final step = _steps[i];
       return Positioned(
-        left: step.left,
-        top: step.top,
+        left: step.leftRatio * w,
+        top: step.topRatio * h,
         child: FadeTransition(
           opacity: _footprintFades[i],
           child: Transform.rotate(
             angle: step.angle,
-            child: SvgPicture.asset(
-              'assets/SVG/foot2.svg',
-              width: 33,
-              height: 49,
-              colorFilter: const ColorFilter.mode(
-                AppColors.primary,
-                BlendMode.srcIn,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                'assets/SVG/foot2.svg',
+                width: 33,
+                height: 49,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.primary,
+                  BlendMode.srcIn,
+                ),
               ),
             ),
           ),
@@ -141,18 +152,25 @@ class _ConfirmCard extends StatelessWidget {
   final VoidCallback onCancel;
   final VoidCallback onConfirm;
 
+  static const double _buttonWidth = 125.0;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.x2l,
+        AppSpacing.x3l,
+        AppSpacing.x2l,
+        AppSpacing.x2l,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
+            blurRadius: AppSpacing.sm,
             offset: const Offset(0, 2),
           ),
         ],
@@ -164,36 +182,36 @@ class _ConfirmCard extends StatelessWidget {
             AppStrings.endWalkConfirmMessage,
             style: TextStyle(fontSize: AppTextStyle.lg2),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.x2l),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                width: 125,
-                height: 48,
+                width: _buttonWidth,
+                height: AppSpacing.x5l,
                 child: OutlinedButton(
                   onPressed: onCancel,
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary),
                     foregroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                   ),
                   child: const Text(AppStrings.cancelButton),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               SizedBox(
-                width: 125,
-                height: 48,
+                width: _buttonWidth,
+                height: AppSpacing.x5l,
                 child: ElevatedButton(
                   onPressed: onConfirm,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                   ),
                   child: const Text(AppStrings.endWalkConfirmButton),
