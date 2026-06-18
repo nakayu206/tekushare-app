@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
-import 'package:tekushare/presentation/pages/home/home_page.dart';
+import 'package:tekushare/screens/pages/home/view/home_page.dart';
 
 /// アプリのルートWidget
 class TekuShareApp extends StatelessWidget {

@@ -4,11 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tekushare/app.dart';
 import 'package:tekushare/core/config/flavor.dart';
-import 'package:tekushare/presentation/pages/home/home_page.dart';
-import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
+import 'package:tekushare/screens/pages/home/view/home_page.dart';
+import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 void main() {
-  testWidgets('アプリが起動してホーム画面が表示される', (tester) async {
+  // アプリが起動してホーム画面が表示される
+  testWidgets('launches app and shows home screen', (tester) async {
     // スマートフォンサイズでテスト
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3.0;

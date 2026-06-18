@@ -4,9 +4,9 @@ import 'package:integration_test/integration_test.dart';
 import 'package:tekushare/app.dart';
 import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
-import 'package:tekushare/presentation/pages/home/home_page.dart';
-import 'package:tekushare/presentation/pages/spot/spot_list_page.dart';
-import 'package:tekushare/presentation/widgets/common/app_bottom_nav.dart';
+import 'package:tekushare/screens/pages/home/view/home_page.dart';
+import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -22,15 +22,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  group('アプリ起動フロー', () {
-    testWidgets('アプリが起動してホーム画面が表示される', (tester) async {
+  group('app launch flow', () {
+    // アプリが起動してホーム画面が表示される
+    testWidgets('launches app and shows home screen', (tester) async {
       await launchApp(tester);
 
       expect(find.byType(HomePage), findsOneWidget);
       expect(find.byType(AppBottomNav), findsOneWidget);
     });
 
-    testWidgets('ボトムナビで「リスト」タブに遷移できる', (tester) async {
+    // ボトムナビで「リスト」タブに遷移できる
+    testWidgets('navigates to list tab via bottom nav', (tester) async {
       await launchApp(tester);
 
       await tester.tap(find.text(AppStrings.navList));

@@ -1,0 +1,365 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
+import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+
+void main() {
+  group('SpotDetailPage', () {
+    Future<void> pumpPage(
+      WidgetTester tester, {
+      bool isWantToGo = true,
+    }) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(home: SpotDetailPage(isWantToGo: isWantToGo)),
+        ),
+      );
+      await tester.pump();
+    }
+
+    Future<void> pumpPushedPage(
+      WidgetTester tester, {
+      bool isWantToGo = true,
+    }) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SpotDetailPage(isWantToGo: isWantToGo),
+                  ),
+                ),
+                child: const Text('start'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('start'));
+      await tester.pumpAndSettle();
+    }
+
+    // ──────────────────────────────────────────
+    // 表示
+    // ──────────────────────────────────────────
+
+    // 行きたい！モードでタイトルが「行きたい！」になる
+    testWidgets('shows want-to-go title in want-to-go mode', (tester) async {
+      await pumpPage(tester, isWantToGo: true);
+
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text(AppStrings.wantToGoPageTitle),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // 行った！モードでタイトルが「行った！」になる
+    testWidgets('shows went title in went mode', (tester) async {
+      await pumpPage(tester, isWantToGo: false);
+
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text(AppStrings.listWentTab),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // 6つのカテゴリチップが表示される
+    testWidgets('shows six category chips', (tester) async {
+      await pumpPage(tester);
+
+      expect(find.text(AppStrings.categoryPark), findsOneWidget);
+      expect(find.text(AppStrings.categoryCafe), findsOneWidget);
+      expect(find.text(AppStrings.categoryLunch), findsOneWidget);
+      expect(find.text(AppStrings.categoryDinner), findsOneWidget);
+      expect(find.text(AppStrings.categoryGoods), findsOneWidget);
+      expect(find.text(AppStrings.categoryOther), findsOneWidget);
+    });
+
+    // 写真を追加エリアが2つ表示される
+    testWidgets('shows two add photo areas', (tester) async {
+      await pumpPage(tester);
+
+      expect(find.text(AppStrings.addPhoto), findsNWidgets(2));
+    });
+
+    // 削除ボタンが表示される
+    testWidgets('shows delete button', (tester) async {
+      await pumpPage(tester);
+
+      expect(find.text(AppStrings.spotDetailDeleteButton), findsOneWidget);
+    });
+
+    // 上書き保存ボタンが表示される
+    testWidgets('shows save button', (tester) async {
+      await pumpPage(tester);
+
+      expect(find.text(AppStrings.spotDetailSaveButton), findsOneWidget);
+    });
+
+    // ボトムナビが表示される
+    testWidgets('shows bottom navigation', (tester) async {
+      await pumpPage(tester);
+
+      expect(find.byType(AppBottomNav), findsOneWidget);
+    });
+
+    // カテゴリチップをタップすると選択色が切り替わる
+    testWidgets('tapping a category chip toggles selection color',
+        (tester) async {
+      await pumpPage(tester);
+
+      // タップ前：公園が選択色
+      expect(
+        find.ancestor(
+          of: find.text(AppStrings.categoryPark),
+          matching: find.byWidgetPredicate((w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text(AppStrings.categoryCafe));
+      await tester.pump();
+
+      // タップ後：カフェが選択色、公園は非選択色
+      expect(
+        find.ancestor(
+          of: find.text(AppStrings.categoryCafe),
+          matching: find.byWidgetPredicate((w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.ancestor(
+          of: find.text(AppStrings.categoryPark),
+          matching: find.byWidgetPredicate((w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        ),
+        findsNothing,
+      );
+    });
+
+    // ──────────────────────────────────────────
+    // ボトムナビ
+    // ──────────────────────────────────────────
+
+    // ボトムナビのリストをタップすると前の画面に戻る
+    testWidgets('tapping bottom nav list goes back to previous screen',
+        (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.navList));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsNothing);
+    });
+
+    // ボトムナビのホームをタップすると最初の画面に戻る
+    testWidgets('tapping bottom nav home goes back to first screen',
+        (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.navHome));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsNothing);
+    });
+
+    // ──────────────────────────────────────────
+    // 削除フロー
+    // ──────────────────────────────────────────
+
+    // タイトル入力時の削除確認ダイアログに入力値が表示される
+    testWidgets('delete confirmation dialog shows entered title',
+        (tester) async {
+      await pumpPage(tester);
+
+      await tester.enterText(find.byType(TextField), 'テストスポット');
+      await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text('テストスポット'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // 削除ボタンを押すと削除確認ダイアログが表示される
+    testWidgets('pressing delete button shows delete confirmation dialog',
+        (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.text(AppStrings.spotDetailDeleteConfirmMessage), findsOneWidget);
+    });
+
+    // 削除確認のキャンセルでダイアログが閉じる
+    testWidgets('canceling delete confirmation closes dialog', (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.cancelButton));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.text(AppStrings.spotDetailDeleteConfirmMessage), findsNothing);
+    });
+
+    // 削除確認で削除完了ダイアログが表示される
+    testWidgets('confirming delete shows deletion complete dialog',
+        (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(AppStrings.spotDetailDeleteButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.spotDetailDeleted), findsOneWidget);
+    });
+
+    // 削除完了ダイアログの閉じるでページを離れる
+    testWidgets('closing deletion complete dialog leaves the page',
+        (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(AppStrings.spotDetailDeleteButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.closeButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsNothing);
+    });
+
+    // ──────────────────────────────────────────
+    // 上書き保存フロー
+    // ──────────────────────────────────────────
+
+    // 上書き保存ボタンを押すと保存確認ダイアログが表示される
+    testWidgets('pressing save button shows save confirmation dialog',
+        (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailSaveButton));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.text(AppStrings.spotDetailSaveConfirmMessage), findsOneWidget);
+    });
+
+    // タイトル未入力時の確認ダイアログに（タイトルなし）が表示される
+    testWidgets(
+        'save confirmation dialog shows no-title placeholder when title is empty',
+        (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailSaveButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.noTitle), findsOneWidget);
+    });
+
+    // タイトル入力時の確認ダイアログに入力値が表示される
+    testWidgets('save confirmation dialog shows entered title', (tester) async {
+      await pumpPage(tester);
+
+      await tester.enterText(find.byType(TextField), 'テストスポット');
+      await tester.tap(find.text(AppStrings.spotDetailSaveButton));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text('テストスポット'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // 保存確認のキャンセルでダイアログが閉じる
+    testWidgets('canceling save confirmation closes dialog', (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailSaveButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.cancelButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.spotDetailSaveConfirmMessage), findsNothing);
+    });
+
+    // 保存確認で保存完了ダイアログが表示される
+    testWidgets('confirming save shows save complete dialog', (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailSaveButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.saveButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.saved), findsOneWidget);
+    });
+
+    // 保存完了ダイアログの閉じるでページを離れる
+    testWidgets('closing save complete dialog leaves the page', (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.spotDetailSaveButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.saveButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.closeButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsNothing);
+    });
+  });
+}
