@@ -45,6 +45,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
       context: context,
       builder: (_) => _SaveConfirmDialog(
         nameController: _nameController,
+        log: state.selectedLog,
         onSave: () {
           final name = _nameController.text.isEmpty
               ? state.defaultRouteName
@@ -297,10 +298,7 @@ class _RouteListCardState extends State<_RouteListCard> {
                     icon: const Icon(Icons.chevron_left),
                     color: AppColors.primary,
                     disabledColor: AppColors.textDisabled,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
                   ),
-                  const SizedBox(width: AppSpacing.lg),
                   Text(
                     '${_currentPage + 1}',
                     style: const TextStyle(
@@ -309,7 +307,6 @@ class _RouteListCardState extends State<_RouteListCard> {
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.lg),
                   IconButton(
                     onPressed: _currentPage < _pageCount - 1
                         ? () => _goToPage(_currentPage + 1)
@@ -317,8 +314,6 @@ class _RouteListCardState extends State<_RouteListCard> {
                     icon: const Icon(Icons.chevron_right),
                     color: AppColors.primary,
                     disabledColor: AppColors.textDisabled,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),
@@ -653,31 +648,29 @@ class _WalkInfoCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              const Text(
-                AppStrings.walkSpotCount,
-                style: TextStyle(
+              Text(
+                '${AppStrings.walkSpotCount}：${log.spotCount}件',
+                style: const TextStyle(
                   fontSize: AppTextStyle.md,
                   color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(width: 30),
-              SizedBox(
-                width: 108,
-                height: 24,
-                child: OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.primary),
-                    foregroundColor: AppColors.primary,
-                    padding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
+              OutlinedButton(
+                onPressed: () {},
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary),
+                  foregroundColor: AppColors.primary,
+                  minimumSize: const Size(108, 24),
+                  tapTargetSize: MaterialTapTargetSize.padded,
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
-                  child: const Text(
-                    AppStrings.viewDetails,
-                    style: TextStyle(fontSize: AppTextStyle.sm),
-                  ),
+                ),
+                child: const Text(
+                  AppStrings.viewDetails,
+                  style: TextStyle(fontSize: AppTextStyle.sm),
                 ),
               ),
             ],
@@ -779,13 +772,21 @@ class _InfoRow extends StatelessWidget {
 class _SaveConfirmDialog extends StatelessWidget {
   const _SaveConfirmDialog({
     required this.nameController,
+    required this.log,
     required this.onSave,
     required this.onCancel,
   });
 
   final TextEditingController nameController;
+  final WalkLog log;
   final VoidCallback onSave;
   final VoidCallback onCancel;
+
+  String get _shortDate {
+    final match = RegExp(r'\d+年0?(\d+)月0?(\d+)日\((.+)\)').firstMatch(log.date);
+    if (match == null) return log.date;
+    return '${match.group(1)}月${match.group(2)}日（${match.group(3)}）';
+  }
 
   static const double _buttonWidth = 125.0;
 
@@ -805,20 +806,18 @@ class _SaveConfirmDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 日付
-            const Text(
-              '2月2日（木）',
-              style: TextStyle(
+            Text(
+              _shortDate,
+              style: const TextStyle(
                 color: AppColors.primary,
                 fontSize: AppTextStyle.x2l,
                 fontWeight: AppTextStyle.semiBold,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
-            // 散歩時間・距離
-            const Text(
-              '散歩時間00:15 / 距離1.2km',
-              style: TextStyle(
+            Text(
+              '散歩時間${log.duration} / 距離${log.distance}',
+              style: const TextStyle(
                 color: AppColors.primary,
                 fontSize: AppTextStyle.sm,
               ),

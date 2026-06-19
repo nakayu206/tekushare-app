@@ -59,7 +59,7 @@ abstract class AppStrings {
   static const walkStartEndTime = '開始終了時間';
   static const walkDuration = '散歩時間';
   static const walkDistanceLabel = '距離';
-  static const walkSpotCount = '行きたいスポット：1件';
+  static const walkSpotCount = '行きたいスポット';
   static const viewDetails = '詳しく見る';
 
   // スポット詳細
