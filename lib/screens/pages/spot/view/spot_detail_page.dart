@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/spot_detail_viewmodel.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
@@ -137,6 +138,11 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
             Navigator.pop(context);
           } else if (index == 0) {
             Navigator.popUntil(context, (route) => route.isFirst);
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+            );
           }
         },
       ),

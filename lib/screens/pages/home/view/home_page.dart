@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
@@ -92,6 +93,11 @@ class _HomePageState extends State<HomePage>
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
+            );
+          } else if (index == 2 && ModalRoute.of(context)?.isCurrent == true) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const WalkRoutePage()),
             );
           }
         },

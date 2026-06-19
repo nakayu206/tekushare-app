@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/spot_list_viewmodel.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
@@ -77,7 +78,14 @@ class SpotListPage extends ConsumerWidget {
       bottomNavigationBar: AppBottomNav(
         currentIndex: 1,
         onTap: (index) {
-          if (index == 0 && Navigator.canPop(context)) Navigator.pop(context);
+          if (index == 0 && Navigator.canPop(context)) {
+            Navigator.pop(context);
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+            );
+          }
         },
       ),
     );
