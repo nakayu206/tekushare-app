@@ -49,6 +49,19 @@ abstract class AppStrings {
   static const statusVisited = '行った';
   static const categoryChange = '行った！に変更';
 
+  // 散歩ルートページ
+  static const walkRoutePageTitle = '散歩ルート';
+  static const savedRoutes = '保存済みのルートから選ぶ';
+  static const selectedRoute = '選択中のルート';
+  static const routeNameHint = '名前を設定する';
+  static const saveRouteConfirmMessage = 'この散歩ルートを保存しますか？';
+  static const saveRouteButton = 'このルートを保存する';
+  static const walkStartEndTime = '開始終了時間';
+  static const walkDuration = '散歩時間';
+  static const walkDistanceLabel = '距離';
+  static const walkSpotCount = '行きたいスポット';
+  static const viewDetails = '詳しく見る';
+
   // スポット詳細
   static const spotDetailSaveButton = '上書き保存';
   static const spotDetailDeleteButton = '削除する';

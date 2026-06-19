@@ -4,6 +4,7 @@ import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
@@ -84,8 +85,13 @@ class _EndWalkPageState extends State<EndWalkPage>
                       opacity: _cardFade,
                       child: _ConfirmCard(
                         onCancel: () => Navigator.pop(context),
-                        onConfirm: () => Navigator.popUntil(
+                        onConfirm: () => Navigator.pushAndRemoveUntil(
                           context,
+                          MaterialPageRoute(
+                            builder: (_) => const WalkRoutePage(
+                              showSaveDialogOnLoad: true,
+                            ),
+                          ),
                           (route) => route.isFirst,
                         ),
                       ),
@@ -107,6 +113,11 @@ class _EndWalkPageState extends State<EndWalkPage>
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const WalkRoutePage()),
             );
           }
         },
