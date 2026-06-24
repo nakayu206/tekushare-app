@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
@@ -192,6 +194,28 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SpotDetailPage), findsNothing);
+    });
+
+    // ボトムナビのルートをタップすると WalkRoutePage へ遷移する
+    testWidgets('tapping bottom nav route navigates to WalkRoutePage',
+        (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.navRoute));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WalkRoutePage), findsOneWidget);
+    });
+
+    // ボトムナビの設定をタップすると SettingsPage へ遷移する
+    testWidgets('tapping bottom nav settings navigates to SettingsPage',
+        (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.navSettings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsOneWidget);
     });
 
     // ──────────────────────────────────────────

@@ -287,7 +287,7 @@ class _RouteListCardState extends State<_RouteListCard> {
                                 hasItem && (offset + i) == widget.selectedIndex,
                             onTap: hasItem
                                 ? () => widget.onSelect(offset + i)
-                                : () {},
+                                : null,
                           ),
                           if (i < _pageSize - 1)
                             const SizedBox(height: AppSpacing.sm),
@@ -341,12 +341,12 @@ class _RouteItem extends StatelessWidget {
   const _RouteItem({
     required this.route,
     required this.isSelected,
-    required this.onTap,
+    this.onTap,
   });
 
   final WalkRoute route;
   final bool isSelected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
