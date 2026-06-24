@@ -64,5 +64,26 @@ void main() {
       expect(updated.memo, 'おすすめのカフェ');
       expect(updated.photoPath, '/photos/cafe.jpg');
     });
+
+    test('copyWith で memo を null に戻せる', () {
+      final spot = makeSpot().copyWith(memo: 'メモあり');
+      final updated = spot.copyWith(memo: null);
+
+      expect(updated.memo, isNull);
+    });
+
+    test('copyWith で photoPath を null に戻せる', () {
+      final spot = makeSpot().copyWith(photoPath: '/photos/cafe.jpg');
+      final updated = spot.copyWith(photoPath: null);
+
+      expect(updated.photoPath, isNull);
+    });
+
+    test('copyWith で memo を指定しないと元の値を保持する', () {
+      final spot = makeSpot().copyWith(memo: 'メモあり');
+      final updated = spot.copyWith(title: '新しいタイトル');
+
+      expect(updated.memo, 'メモあり');
+    });
   });
 }

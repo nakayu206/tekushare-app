@@ -1,12 +1,12 @@
 import 'package:tekushare/domain/entities/lat_lng.dart';
 
 class WalkRoute {
-  const WalkRoute({
+  WalkRoute({
     required this.id,
     required this.walkSessionId,
-    required this.points,
+    required List<LatLng> points,
     required this.createdAt,
-  });
+  }) : points = List.unmodifiable(points);
 
   final String id;
   final String walkSessionId;

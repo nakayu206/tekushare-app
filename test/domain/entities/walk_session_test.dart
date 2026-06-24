@@ -56,5 +56,25 @@ void main() {
       expect(updated.startedAt, started);
       expect(updated.elapsedSeconds, 120);
     });
+
+    test('copyWith で startedAt を null に戻せる', () {
+      final session = WalkSession(
+        status: WalkStatus.idle,
+        startedAt: DateTime(2024, 1, 1, 9, 0),
+      );
+      final updated = session.copyWith(startedAt: null);
+
+      expect(updated.startedAt, isNull);
+    });
+
+    test('copyWith で finishedAt を null に戻せる', () {
+      final session = WalkSession(
+        status: WalkStatus.finished,
+        finishedAt: DateTime(2024, 1, 1, 9, 30),
+      );
+      final updated = session.copyWith(finishedAt: null);
+
+      expect(updated.finishedAt, isNull);
+    });
   });
 }

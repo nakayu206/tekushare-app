@@ -13,16 +13,19 @@ class WalkSession {
   final DateTime? finishedAt;
   final int elapsedSeconds;
 
+  // startedAt / finishedAt は null に戻せる必要があるためセンチネル値で未指定と明示的 null を区別する
+  static const Object _sentinel = Object();
+
   WalkSession copyWith({
     WalkStatus? status,
-    DateTime? startedAt,
-    DateTime? finishedAt,
+    Object? startedAt = _sentinel,
+    Object? finishedAt = _sentinel,
     int? elapsedSeconds,
   }) {
     return WalkSession(
       status: status ?? this.status,
-      startedAt: startedAt ?? this.startedAt,
-      finishedAt: finishedAt ?? this.finishedAt,
+      startedAt: startedAt == _sentinel ? this.startedAt : startedAt as DateTime?,
+      finishedAt: finishedAt == _sentinel ? this.finishedAt : finishedAt as DateTime?,
       elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
     );
   }

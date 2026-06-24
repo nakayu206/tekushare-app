@@ -51,5 +51,20 @@ void main() {
       expect(updated.points, route.points);
       expect(updated.createdAt, route.createdAt);
     });
+
+    test('points は外部から変更できない', () {
+      final mutablePoints = [const LatLng(35.6895, 139.6917)];
+      final route = WalkRoute(
+        id: 'route-1',
+        walkSessionId: 'session-1',
+        points: mutablePoints,
+        createdAt: createdAt,
+      );
+
+      expect(
+        () => route.points.add(const LatLng(35.6900, 139.6920)),
+        throwsUnsupportedError,
+      );
+    });
   });
 }

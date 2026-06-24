@@ -21,14 +21,17 @@ class Spot {
   final String? photoPath;
   final DateTime createdAt;
 
+  // memo / photoPath は null に戻せる必要があるためセンチネル値で未指定と明示的 null を区別する
+  static const Object _sentinel = Object();
+
   Spot copyWith({
     String? id,
     String? title,
     double? latitude,
     double? longitude,
     SpotStatus? status,
-    String? memo,
-    String? photoPath,
+    Object? memo = _sentinel,
+    Object? photoPath = _sentinel,
     DateTime? createdAt,
   }) {
     return Spot(
@@ -37,8 +40,8 @@ class Spot {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       status: status ?? this.status,
-      memo: memo ?? this.memo,
-      photoPath: photoPath ?? this.photoPath,
+      memo: memo == _sentinel ? this.memo : memo as String?,
+      photoPath: photoPath == _sentinel ? this.photoPath : photoPath as String?,
       createdAt: createdAt ?? this.createdAt,
     );
   }
