@@ -24,8 +24,10 @@ class WalkSession {
   }) {
     return WalkSession(
       status: status ?? this.status,
-      startedAt: startedAt == _sentinel ? this.startedAt : startedAt as DateTime?,
-      finishedAt: finishedAt == _sentinel ? this.finishedAt : finishedAt as DateTime?,
+      startedAt:
+          startedAt == _sentinel ? this.startedAt : startedAt as DateTime?,
+      finishedAt:
+          finishedAt == _sentinel ? this.finishedAt : finishedAt as DateTime?,
       elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
     );
   }
