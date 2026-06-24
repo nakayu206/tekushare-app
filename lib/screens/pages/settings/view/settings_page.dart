@@ -219,8 +219,7 @@ class _SegmentBtn extends StatelessWidget {
           style: TextStyle(
             fontSize: AppTextStyle.md,
             color: isSelected ? AppColors.primary : AppColors.textDisabled,
-            fontWeight:
-                isSelected ? AppTextStyle.medium : AppTextStyle.regular,
+            fontWeight: isSelected ? AppTextStyle.medium : AppTextStyle.regular,
           ),
         ),
       ),
@@ -249,8 +248,9 @@ class _MinutePicker extends StatefulWidget {
 
 class _MinutePickerState extends State<_MinutePicker> {
   void _showPicker() {
-    final initialIndex =
-        widget.options.indexOf(widget.value).clamp(0, widget.options.length - 1);
+    final initialIndex = widget.options
+        .indexOf(widget.value)
+        .clamp(0, widget.options.length - 1);
     final controller = FixedExtentScrollController(initialItem: initialIndex);
     var selected = widget.value;
 
@@ -405,7 +405,9 @@ class _TimerCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: AppTextStyle.md2,
                   fontWeight: AppTextStyle.bold,
-                  color: state.timerEnabled ? AppColors.primary : AppColors.textDisabled,
+                  color: state.timerEnabled
+                      ? AppColors.primary
+                      : AppColors.textDisabled,
                 ),
               ),
               const Spacer(),
@@ -535,7 +537,9 @@ class _InactivityCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: AppTextStyle.md2,
                   fontWeight: AppTextStyle.bold,
-                  color: state.inactivityEnabled ? AppColors.primary : AppColors.textDisabled,
+                  color: state.inactivityEnabled
+                      ? AppColors.primary
+                      : AppColors.textDisabled,
                 ),
               ),
               const Spacer(),
@@ -727,7 +731,8 @@ class _ContactRow extends StatelessWidget {
                     : AppStrings.settingsShareNotRegistered,
                 style: TextStyle(
                   fontSize: AppTextStyle.sm,
-                  color: registered ? AppColors.primary : AppColors.textDisabled,
+                  color:
+                      registered ? AppColors.primary : AppColors.textDisabled,
                 ),
               ),
             ),
@@ -987,8 +992,7 @@ class _PhoneSelectDialog extends StatelessWidget {
                             horizontal: AppSpacing.md,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.full),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
                           ),
                         ),
                         child: const Text(
