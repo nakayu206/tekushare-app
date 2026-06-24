@@ -268,7 +268,7 @@ class _MinutePickerState extends State<_MinutePicker> {
                   Navigator.pop(context);
                 },
                 child: const Text(
-                  '完了',
+                  AppStrings.pickerDone,
                   style: TextStyle(color: AppColors.primary),
                 ),
               ),
@@ -284,7 +284,7 @@ class _MinutePickerState extends State<_MinutePicker> {
                     .map(
                       (m) => Center(
                         child: Text(
-                          '$m分',
+                          '$m${AppStrings.minuteSuffix}',
                           style: const TextStyle(fontSize: AppTextStyle.lg),
                         ),
                       ),
@@ -295,7 +295,7 @@ class _MinutePickerState extends State<_MinutePicker> {
           ],
         ),
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   @override
@@ -306,7 +306,7 @@ class _MinutePickerState extends State<_MinutePicker> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${widget.value}分',
+            '${widget.value}${AppStrings.minuteSuffix}',
             style: const TextStyle(
               fontSize: AppTextStyle.md2,
               color: Colors.black,
@@ -401,7 +401,7 @@ class _TimerCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                state.timerEnabled ? 'ON' : 'OFF',
+                state.timerEnabled ? AppStrings.switchOn : AppStrings.switchOff,
                 style: TextStyle(
                   fontSize: AppTextStyle.md2,
                   fontWeight: AppTextStyle.bold,
@@ -533,7 +533,9 @@ class _InactivityCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                state.inactivityEnabled ? 'ON' : 'OFF',
+                state.inactivityEnabled
+                    ? AppStrings.switchOn
+                    : AppStrings.switchOff,
                 style: TextStyle(
                   fontSize: AppTextStyle.md2,
                   fontWeight: AppTextStyle.bold,
@@ -756,7 +758,7 @@ class _ShareLinkArea extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF3A3A3A),
+        color: AppColors.shareLinkBg,
         borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Row(
@@ -769,10 +771,10 @@ class _ShareLinkArea extends StatelessWidget {
                   AppStrings.settingsShareLinkLabel,
                   style: TextStyle(
                     fontSize: AppTextStyle.xs,
-                    color: Colors.white54,
+                    color: AppColors.shareLinkLabel,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.xs / 2),
                 Text(
                   link,
                   style: const TextStyle(
@@ -981,7 +983,7 @@ class _PhoneSelectDialog extends StatelessWidget {
                       ),
                     ),
                     SizedBox(
-                      height: 36,
+                      height: AppSize.buttonHeight,
                       child: ElevatedButton(
                         onPressed: () => onSelect(c),
                         style: ElevatedButton.styleFrom(
@@ -1176,29 +1178,32 @@ class _CustomSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: AppSize.switchTrackW,
-        height: AppSize.switchTrackH,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          color: value ? AppColors.primary : AppColors.textDisabled,
-        ),
-        child: AnimatedAlign(
+    return Semantics(
+      toggled: value,
+      child: GestureDetector(
+        onTap: () => onChanged(!value),
+        child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: (AppSize.switchTrackH - AppSize.switchThumb) / 2,
-            ),
-            child: Container(
-              width: AppSize.switchThumb,
-              height: AppSize.switchThumb,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
+          width: AppSize.switchTrackW,
+          height: AppSize.switchTrackH,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            color: value ? AppColors.primary : AppColors.textDisabled,
+          ),
+          child: AnimatedAlign(
+            duration: const Duration(milliseconds: 200),
+            alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: (AppSize.switchTrackH - AppSize.switchThumb) / 2,
+              ),
+              child: Container(
+                width: AppSize.switchThumb,
+                height: AppSize.switchThumb,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
