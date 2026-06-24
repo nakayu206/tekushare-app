@@ -94,6 +94,10 @@ abstract class AppStrings {
   static const settingsShareRoutesList = '散歩ルート';
   static const settingsShareSendButton = 'リンクを送る';
   static const settingsShareSaveButton = '内容保存';
+  static const pickerDone = '完了';
+  static const minuteSuffix = '分';
+  static const switchOn = 'ON';
+  static const switchOff = 'OFF';
   static const settingsPhoneSelectTitle = '電話番号を選択';
   static const settingsPhoneRegisterButton = 'この番号を登録する';
   static const settingsPhoneConfirmMessage = '安否確認先の電話番号に\n登録しますか？';
