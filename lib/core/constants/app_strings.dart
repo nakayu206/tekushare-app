@@ -68,4 +68,31 @@ abstract class AppStrings {
   static const spotDetailSaveConfirmMessage = '上書き保存しますか？';
   static const spotDetailDeleteConfirmMessage = '削除しますか？';
   static const spotDetailDeleted = '削除しました！';
+
+  // 設定画面
+  static const settingsTitle = '設定';
+  static const settingsTimerTitle = 'タイマー';
+  static const settingsTimerSubtitle = 'タイマーで知らせる時間を設定';
+  static const settingsTimerRoundTrip = '往復';
+  static const settingsInactivityTitle = '安否確認';
+  static const settingsInactivitySubtitle = '無動作感知システム';
+  static const settingsInactivityContact = '通知先';
+  static const settingsInactivityContactSet = '設定する';
+  static const settingsShareTitle = 'シェア';
+  static const settingsShareSubtitle = '共有するアカウント設定';
+  static const settingsShareRegistered = '登録済み';
+  static const settingsShareNotRegistered = '未登録';
+  static const settingsShareLinkLabel = '共有リンク';
+  static const settingsShareLinkCopy = 'コピー';
+  static const settingsShareViaApp = 'アプリで共有';
+  static const settingsShareContent = '共有する内容';
+  static const settingsShareSpotsList = '行きたい場所リスト';
+  static const settingsShareRoutesList = '散歩ルート';
+  static const settingsShareSendButton = 'リンクを送る';
+  static const settingsShareSaveButton = '内容保存';
+  static const settingsPhoneSelectTitle = '電話番号を選択';
+  static const settingsPhoneRegisterButton = 'この番号を登録する';
+  static const settingsPhoneConfirmMessage = '安否確認先の電話番号に\n登録しますか？';
+  static const settingsPhoneRegisterConfirm = '登録する';
+  static const settingsPhoneRegisteredMessage = '登録しました！';
 }

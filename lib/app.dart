@@ -6,6 +6,8 @@ import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/screens/pages/home/view/home_page.dart';
 
+final routeObserver = RouteObserver<ModalRoute<void>>();
+
 /// アプリのルートWidget
 class TekuShareApp extends StatelessWidget {
   const TekuShareApp({super.key});
@@ -15,6 +17,7 @@ class TekuShareApp extends StatelessWidget {
     return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [routeObserver],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         scaffoldBackgroundColor: AppColors.background,
