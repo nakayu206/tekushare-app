@@ -16,4 +16,5 @@ abstract class AppColors {
   static const error = Color(0xFFE53935);
   static const shareLinkBg = Color(0xFF3A3A3A);
   static const shareLinkLabel = Color(0x80FFFFFF);
+  static const shareLinkButton = Color(0x3DFFFFFF);
 }

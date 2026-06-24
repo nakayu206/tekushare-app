@@ -792,7 +792,7 @@ class _ShareLinkArea extends StatelessWidget {
           ElevatedButton(
             onPressed: () => Clipboard.setData(ClipboardData(text: link)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white24,
+              backgroundColor: AppColors.shareLinkButton,
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(
