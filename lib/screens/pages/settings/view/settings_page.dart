@@ -256,43 +256,45 @@ class _MinutePickerState extends State<_MinutePicker> {
 
     showModalBottomSheet<void>(
       context: context,
-      builder: (_) => SizedBox(
-        height: AppSize.pickerSheetH,
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  widget.onChanged(selected);
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  AppStrings.pickerDone,
-                  style: TextStyle(color: AppColors.primary),
+      builder: (_) => SafeArea(
+        child: SizedBox(
+          height: AppSize.pickerSheetH,
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    widget.onChanged(selected);
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    AppStrings.pickerDone,
+                    style: TextStyle(color: AppColors.primary),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: CupertinoPicker(
-                scrollController: controller,
-                itemExtent: AppSize.pickerItemH,
-                onSelectedItemChanged: (index) {
-                  selected = widget.options[index];
-                },
-                children: widget.options
-                    .map(
-                      (m) => Center(
-                        child: Text(
-                          '$m${AppStrings.minuteSuffix}',
-                          style: const TextStyle(fontSize: AppTextStyle.lg),
+              Expanded(
+                child: CupertinoPicker(
+                  scrollController: controller,
+                  itemExtent: AppSize.pickerItemH,
+                  onSelectedItemChanged: (index) {
+                    selected = widget.options[index];
+                  },
+                  children: widget.options
+                      .map(
+                        (m) => Center(
+                          child: Text(
+                            '$m${AppStrings.minuteSuffix}',
+                            style: const TextStyle(fontSize: AppTextStyle.lg),
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(),
+                      )
+                      .toList(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ).whenComplete(controller.dispose);
