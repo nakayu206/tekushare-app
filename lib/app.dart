@@ -10,6 +10,8 @@ import 'package:tekushare/screens/pages/home/view/home_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
+final routeObserver = RouteObserver<ModalRoute<void>>();
+
 /// アプリのルートWidget
 class TekuShareApp extends ConsumerWidget {
   const TekuShareApp({super.key});
@@ -21,6 +23,7 @@ class TekuShareApp extends ConsumerWidget {
     return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [routeObserver],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         scaffoldBackgroundColor: AppColors.background,

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tekushare/app.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
@@ -21,10 +23,30 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late AnimationController _controller;
   late List<Animation<double>> _footprintFades;
   late Animation<double> _buttonFade;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void didPopNext() {
+    if (ref.read(walkSessionProvider).status == WalkStatus.walking) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const WalkPage()),
+          );
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -58,6 +80,7 @@ class _HomePageState extends ConsumerState<HomePage>
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _controller.dispose();
     super.dispose();
   }
@@ -100,14 +123,22 @@ class _HomePageState extends ConsumerState<HomePage>
         currentIndex: 0,
         onTap: (index) {
           if (index == 1 && ModalRoute.of(context)?.isCurrent == true) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
+              (route) => route.isFirst,
             );
           } else if (index == 2 && ModalRoute.of(context)?.isCurrent == true) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+              (route) => route.isFirst,
+            );
+          } else if (index == 3 && ModalRoute.of(context)?.isCurrent == true) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+              (route) => route.isFirst,
             );
           }
         },
