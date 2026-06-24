@@ -38,9 +38,7 @@ class WalkRouteModel {
 
   static WalkRouteModel fromEntity(WalkRoute route) {
     final pointsJson = jsonEncode(
-      route.points
-          .map((p) => {'lat': p.latitude, 'lng': p.longitude})
-          .toList(),
+      route.points.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList(),
     );
 
     return WalkRouteModel()
