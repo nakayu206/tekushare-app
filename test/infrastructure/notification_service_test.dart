@@ -34,7 +34,7 @@ void main() {
           body: anyNamed('body'),
           notificationDetails: anyNamed('notificationDetails'),
         ),
-      ).thenAnswer((_) async => null);
+      ).thenAnswer((_) async {});
 
       await service.showInactivityNotification();
 
@@ -56,7 +56,7 @@ void main() {
           body: anyNamed('body'),
           notificationDetails: anyNamed('notificationDetails'),
         ),
-      ).thenAnswer((_) async => null);
+      ).thenAnswer((_) async {});
 
       await service.showTurnaroundNotification();
 
@@ -71,7 +71,7 @@ void main() {
     });
 
     test('cancelAll で plugin.cancelAll が呼ばれる', () async {
-      when(mockPlugin.cancelAll()).thenAnswer((_) async => null);
+      when(mockPlugin.cancelAll()).thenAnswer((_) async {});
 
       await service.cancelAll();
 
