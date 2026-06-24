@@ -11,5 +11,6 @@
     "editor.selectionHighlight": false,
     "editor.suggestSelection": "first",
     "editor.tabCompletion": "onlySnippets"
-  }
+  },
+  "cmake.sourceDirectory": "C:/programming/tekushare-app/linux"
 }
