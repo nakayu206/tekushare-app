@@ -18,10 +18,12 @@ import 'package:tekushare/infrastructure/notification_service.dart';
 /// アプリ起動時に一度だけ初期化される。
 final isarProvider = FutureProvider<Isar>((ref) async {
   final dir = await getApplicationDocumentsDirectory();
-  return Isar.open(
+  final isar = await Isar.open(
     [SpotModelSchema, WalkSessionModelSchema, WalkRouteModelSchema],
     directory: dir.path,
   );
+  ref.onDispose(isar.close);
+  return isar;
 });
 
 final spotRepositoryProvider = Provider<SpotRepository>((ref) {
