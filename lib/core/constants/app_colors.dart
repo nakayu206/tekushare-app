@@ -13,4 +13,7 @@ abstract class AppColors {
   static const listSelected = Color(0xFF17A6C8);
   static const navActive = primary;
   static const navInactive = Color(0xFFB0B0B0);
+  static const shareLinkBg = Color(0xFF3A3A3A);
+  static const shareLinkLabel = Color(0x80FFFFFF);
+  static const shareLinkButton = Color(0x3DFFFFFF);
 }

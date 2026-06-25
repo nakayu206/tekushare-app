@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/pages/walk/viewmodel/walk_session_viewmodel.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 
 /// 散歩終了確認ページ
-class EndWalkPage extends StatefulWidget {
+class EndWalkPage extends ConsumerStatefulWidget {
   const EndWalkPage({super.key});
 
   @override
-  State<EndWalkPage> createState() => _EndWalkPageState();
+  ConsumerState<EndWalkPage> createState() => _EndWalkPageState();
 }
 
-class _EndWalkPageState extends State<EndWalkPage>
+class _EndWalkPageState extends ConsumerState<EndWalkPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late List<Animation<double>> _footprintFades;
@@ -85,15 +88,18 @@ class _EndWalkPageState extends State<EndWalkPage>
                       opacity: _cardFade,
                       child: _ConfirmCard(
                         onCancel: () => Navigator.pop(context),
-                        onConfirm: () => Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const WalkRoutePage(
-                              showSaveDialogOnLoad: true,
+                        onConfirm: () {
+                          ref.read(walkSessionProvider.notifier).endWalk();
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const WalkRoutePage(
+                                showSaveDialogOnLoad: true,
+                              ),
                             ),
-                          ),
-                          (route) => route.isFirst,
-                        ),
+                            (route) => route.isFirst,
+                          );
+                        },
                       ),
                     ),
                     const Spacer(flex: 3),
@@ -110,14 +116,22 @@ class _EndWalkPageState extends State<EndWalkPage>
           if (index == 0) {
             Navigator.popUntil(context, (route) => route.isFirst);
           } else if (index == 1) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
+              (route) => route.isFirst,
             );
           } else if (index == 2) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+              (route) => route.isFirst,
+            );
+          } else if (index == 3) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+              (route) => route.isFirst,
             );
           }
         },

@@ -4,6 +4,7 @@ import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
@@ -62,15 +63,25 @@ class WalkPage extends StatelessWidget {
       bottomNavigationBar: AppBottomNav(
         currentIndex: 0,
         onTap: (index) {
-          if (index == 1) {
-            Navigator.push(
+          if (index == 0) {
+            Navigator.popUntil(context, (route) => route.isFirst);
+          } else if (index == 1) {
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
+              (route) => route.isFirst,
             );
           } else if (index == 2) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+              (route) => route.isFirst,
+            );
+          } else if (index == 3) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+              (route) => route.isFirst,
             );
           }
         },
