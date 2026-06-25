@@ -11,7 +11,8 @@ class RouteRepositoryImpl implements RouteRepository {
   @override
   Future<void> saveRoute(WalkRoute route) async {
     await _isar.writeTxn(() async {
-      await _isar.walkRouteModels.putByUid(WalkRouteModel.fromEntity(route));
+      await _isar.walkRouteModels
+          .putByWalkSessionId(WalkRouteModel.fromEntity(route));
     });
   }
 
