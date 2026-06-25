@@ -95,6 +95,51 @@ void main() {
       );
     });
 
+    test('unableToDetermine の場合は requestPermission を呼び許可されれば通過する', () async {
+      final expected = Position(
+        latitude: 35.6812,
+        longitude: 139.7671,
+        timestamp: DateTime(2024, 1, 1),
+        accuracy: 5.0,
+        altitude: 0.0,
+        altitudeAccuracy: 0.0,
+        heading: 0.0,
+        headingAccuracy: 0.0,
+        speed: 0.0,
+        speedAccuracy: 0.0,
+      );
+
+      when(mockPlatform.isLocationServiceEnabled())
+          .thenAnswer((_) async => true);
+      when(mockPlatform.checkPermission())
+          .thenAnswer((_) async => LocationPermission.unableToDetermine);
+      when(mockPlatform.requestPermission())
+          .thenAnswer((_) async => LocationPermission.whileInUse);
+      when(
+        mockPlatform.getCurrentPosition(
+          locationSettings: anyNamed('locationSettings'),
+        ),
+      ).thenAnswer((_) async => expected);
+
+      final result = await service.getCurrentPosition();
+
+      expect(result.latitude, 35.6812);
+    });
+
+    test('unableToDetermine で requestPermission も拒否された場合は例外をスローする', () async {
+      when(mockPlatform.isLocationServiceEnabled())
+          .thenAnswer((_) async => true);
+      when(mockPlatform.checkPermission())
+          .thenAnswer((_) async => LocationPermission.unableToDetermine);
+      when(mockPlatform.requestPermission())
+          .thenAnswer((_) async => LocationPermission.denied);
+
+      await expectLater(
+        service.getCurrentPosition(),
+        throwsA(isA<PermissionDeniedException>()),
+      );
+    });
+
     test('パーミッションが永久拒否された場合は例外をスローする', () async {
       when(mockPlatform.isLocationServiceEnabled())
           .thenAnswer((_) async => true);

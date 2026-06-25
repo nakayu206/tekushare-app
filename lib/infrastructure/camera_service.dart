@@ -5,22 +5,20 @@ class CameraService {
 
   final ImagePicker _picker;
 
+  static const _imageQuality = 85;
+
   /// カメラで撮影した画像のパスを返す。
   /// キャンセル時は null を返す。
-  Future<String?> takePhoto() async {
-    final file = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-    );
-    return file?.path;
-  }
+  Future<String?> takePhoto() => _pickImage(ImageSource.camera);
 
   /// ギャラリーから選択した画像のパスを返す。
   /// キャンセル時は null を返す。
-  Future<String?> pickFromGallery() async {
+  Future<String?> pickFromGallery() => _pickImage(ImageSource.gallery);
+
+  Future<String?> _pickImage(ImageSource source) async {
     final file = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
+      source: source,
+      imageQuality: _imageQuality,
     );
     return file?.path;
   }

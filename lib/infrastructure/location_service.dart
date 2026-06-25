@@ -1,6 +1,8 @@
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
+  static const _distanceFilterMeters = 5;
+
   /// パーミッション確認・リクエストを行い、現在地の Stream を返す。
   /// パーミッションが拒否された場合は例外をスローする。
   Stream<Position> positionStream() async* {
@@ -8,7 +10,7 @@ class LocationService {
 
     const settings = LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 5, // 5m 以上移動したら更新
+      distanceFilter: _distanceFilterMeters,
     );
 
     yield* Geolocator.getPositionStream(locationSettings: settings);
@@ -31,7 +33,8 @@ class LocationService {
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.unableToDetermine) {
       permission = await Geolocator.requestPermission();
     }
 
