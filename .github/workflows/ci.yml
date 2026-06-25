@@ -56,10 +56,19 @@ jobs:
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
 
-      # 8. 単体テスト（test/ 配下）— Linux デスクトップターゲットで実行
+      # 8. libisar.so をプロジェクトルートにコピー（Isar が Directory.current で探すため）
+      #    isar_flutter_libs は flutter build linux でバンドルに libisar.so を生成する。
+      #    単体テスト実行時の Directory.current はプロジェクトルートのため、
+      #    ビルド成果物からコピーしておく必要がある。
+      - name: Prepare libisar.so for tests
+        run: |
+          xvfb-run flutter build linux --debug
+          cp build/linux/x64/debug/bundle/lib/libisar.so .
+
+      # 9. 単体テスト（test/ 配下）— Linux デスクトップターゲットで実行
       - name: Run unit tests
         run: xvfb-run flutter test -d linux --reporter expanded
 
-      # 9. 結合テスト（integration_test/ 配下）— Linux デスクトップターゲットで実行
+      # 10. 結合テスト（integration_test/ 配下）— Linux デスクトップターゲットで実行
       - name: Run integration tests
         run: xvfb-run flutter test integration_test/ -d linux --reporter expanded
