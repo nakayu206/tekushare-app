@@ -9,6 +9,7 @@ import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/screens/pages/home/view/home_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/clock_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 
 class _FakeWalkSessionRepository implements WalkSessionRepository {
@@ -29,20 +30,18 @@ class _FakeRouteRepository implements RouteRepository {
   Future<List<WalkRoute>> getAllRoutes() async => [];
 }
 
-Widget _buildTestApp({List<Override> overrides = const []}) {
-  AppConfig.setFlavor(Flavor.dev);
-  return ProviderScope(
-    overrides: [
+/// 共通のプロバイダーオーバーライド（clockProvider のタイマーを回避）
+List<Override> get _baseOverrides => [
+      // Stream.periodic によるタイマーをテストで残さないよう単発ストリームに差し替え
+      clockProvider.overrideWith((ref) => Stream.value(DateTime.now())),
       walkSessionRepositoryProvider
           .overrideWithValue(_FakeWalkSessionRepository()),
       routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
-      ...overrides,
-    ],
-    child: const MaterialApp(home: HomePage()),
-  );
-}
+    ];
 
 void main() {
+  AppConfig.setFlavor(Flavor.dev);
+
   group('HomePage', () {
     testWidgets('初期状態でホーム画面が表示される', (tester) async {
       tester.view.physicalSize = const Size(1170, 2532);
@@ -50,7 +49,12 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _baseOverrides,
+          child: const MaterialApp(home: HomePage()),
+        ),
+      );
       await tester.pump();
 
       expect(find.byType(HomePage), findsOneWidget);
@@ -62,13 +66,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer(
-        overrides: [
-          walkSessionRepositoryProvider
-              .overrideWithValue(_FakeWalkSessionRepository()),
-          routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
-        ],
-      );
+      final container = ProviderContainer(overrides: _baseOverrides);
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
@@ -90,18 +88,13 @@ void main() {
     });
 
     testWidgets('walking 状態になったら WalkPage へ遷移する', (tester) async {
-      tester.view.physicalSize = const Size(1170, 2532);
+      // WalkPage のコンテンツが収まるよう縦に広いサイズを指定
+      tester.view.physicalSize = const Size(1170, 3600);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer(
-        overrides: [
-          walkSessionRepositoryProvider
-              .overrideWithValue(_FakeWalkSessionRepository()),
-          routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
-        ],
-      );
+      final container = ProviderContainer(overrides: _baseOverrides);
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
