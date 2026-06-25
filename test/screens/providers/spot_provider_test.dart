@@ -49,7 +49,8 @@ void main() {
       final container = makeContainer();
       addTearDown(container.dispose);
 
-      await Future<void>.delayed(Duration.zero);
+      container.read(spotProvider); // notifier を生成してストリーム購読を開始
+      await Future<void>.delayed(Duration.zero); // ストリームの emit を待つ
       final spots = container.read(spotProvider);
       expect(spots, [fakeSpot]);
     });
@@ -96,7 +97,8 @@ void main() {
       final container = makeContainer();
       addTearDown(container.dispose);
 
-      await Future<void>.delayed(Duration.zero);
+      container.read(spotProvider); // notifier を生成してストリーム購読を開始
+      await Future<void>.delayed(Duration.zero); // ストリームの emit を待つ
       final result = container.read(filteredSpotsProvider);
       expect(result, [fakeSpot]);
     });
@@ -105,6 +107,7 @@ void main() {
       final container = makeContainer();
       addTearDown(container.dispose);
 
+      container.read(spotProvider); // notifier を生成してストリーム購読を開始
       container.read(selectedSpotStatusProvider.notifier).state =
           SpotStatus.wantToGo;
       await Future<void>.delayed(Duration.zero);
@@ -117,6 +120,7 @@ void main() {
       final container = makeContainer();
       addTearDown(container.dispose);
 
+      container.read(spotProvider); // notifier を生成してストリーム購読を開始
       container.read(selectedSpotStatusProvider.notifier).state =
           SpotStatus.visited;
       await Future<void>.delayed(Duration.zero);
