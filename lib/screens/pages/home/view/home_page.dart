@@ -65,8 +65,7 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   Widget build(BuildContext context) {
     ref.listen<WalkSession>(walkSessionProvider, (previous, next) {
-      if (next.status == WalkStatus.walking &&
-          previous?.status != WalkStatus.walking) {
+      if (next.status == WalkStatus.walking && next.id != previous?.id) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const WalkPage()),

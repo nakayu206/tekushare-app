@@ -110,5 +110,39 @@ void main() {
 
       expect(find.byType(WalkPage), findsOneWidget);
     });
+
+    testWidgets('walking 状態のまま戻って再度ボタンを押しても WalkPage へ遷移する', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3600);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(overrides: _baseOverrides);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: HomePage()),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 3000));
+
+      // 1回目：WalkPage へ遷移
+      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.pumpAndSettle();
+      expect(find.byType(WalkPage), findsOneWidget);
+
+      // WalkPage から戻る（walking 状態のまま）
+      final NavigatorState navigator = tester.state(find.byType(Navigator));
+      navigator.pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(HomePage), findsOneWidget);
+
+      // 2回目：再度ボタンを押しても WalkPage へ遷移する
+      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.pumpAndSettle();
+      expect(find.byType(WalkPage), findsOneWidget);
+    });
   });
 }
