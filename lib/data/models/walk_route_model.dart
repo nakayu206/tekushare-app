@@ -13,7 +13,7 @@ class WalkRouteModel {
   @Index(unique: true)
   late String uid;
 
-  @Index()
+  @Index(unique: true)
   late String walkSessionId;
 
   // List<LatLng> を JSON 文字列として保存

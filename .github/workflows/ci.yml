@@ -7,7 +7,9 @@ name: CI
 # テスト方針
 #   - 単体テスト (test/): ウィジェット・ロジックを1件ずつ責務単位でテスト
 #   - 結合テスト (integration_test/): ユーザー操作の流れをまとめてテスト
-#                                     CI では Linux デスクトップターゲットで実行
+#   いずれも Linux デスクトップターゲット (-d linux) で実行する。
+#   isar_flutter_libs は FFI プラグインのため、ヘッドレスの flutter test では
+#   ネイティブライブラリが初期化されず Isar が使えない。-d linux が必須。
 
 on:
   pull_request:
@@ -32,7 +34,7 @@ jobs:
           channel: stable
           cache: true
 
-      # 3. Linux デスクトップ向けシステム依存パッケージを取得（結合テスト用）
+      # 3. Linux デスクトップ向けシステム依存パッケージを取得
       - name: Install Linux desktop dependencies
         run: |
           sudo apt-get update -y
@@ -50,13 +52,23 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      # 7. 単体テスト（test/ 配下）
-      - name: Run unit tests
-        run: flutter test --reporter expanded
-
-      # 8. 結合テスト（integration_test/ 配下）— Linux デスクトップターゲットで実行
+      # 7. Linux デスクトップを有効化（単体・結合テスト共通）
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
 
+      # 8. libisar.so をプロジェクトルートにコピー（Isar が Directory.current で探すため）
+      #    isar_flutter_libs は flutter build linux でバンドルに libisar.so を生成する。
+      #    単体テスト実行時の Directory.current はプロジェクトルートのため、
+      #    ビルド成果物からコピーしておく必要がある。
+      - name: Prepare libisar.so for tests
+        run: |
+          xvfb-run flutter build linux --debug
+          cp build/linux/x64/debug/bundle/lib/libisar.so .
+
+      # 9. 単体テスト（test/ 配下）— Linux デスクトップターゲットで実行
+      - name: Run unit tests
+        run: xvfb-run flutter test -d linux --reporter expanded
+
+      # 10. 結合テスト（integration_test/ 配下）— Linux デスクトップターゲットで実行
       - name: Run integration tests
         run: xvfb-run flutter test integration_test/ -d linux --reporter expanded
