@@ -29,7 +29,11 @@ class InactivityNotifier extends StateNotifier<DateTime> {
     _timer = Timer.periodic(_checkInterval, (_) async {
       if (!_notified && _checkInactivity.call(state)) {
         _notified = true;
-        await _notificationService.showInactivityNotification();
+        try {
+          await _notificationService.showInactivityNotification();
+        } catch (_) {
+          _notified = false;
+        }
       }
     });
   }
