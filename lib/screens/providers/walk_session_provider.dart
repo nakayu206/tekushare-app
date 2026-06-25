@@ -18,6 +18,7 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
   }
 
   Future<void> endWalk(WalkRoute route) async {
+    if (state.status != WalkStatus.walking) return;
     final finished = await _endWalk.call(state, route);
     state = finished;
   }

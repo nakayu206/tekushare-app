@@ -92,5 +92,15 @@ void main() {
 
       verify(mockRouteRepo.saveRoute(any)).called(1);
     });
+
+    test('idle 状態で endWalk を呼んでもリポジトリが呼ばれない', () async {
+      final container = makeContainer();
+      addTearDown(container.dispose);
+
+      await container.read(walkSessionProvider.notifier).endWalk(makeRoute());
+
+      verifyNever(mockSessionRepo.saveSession(any));
+      verifyNever(mockRouteRepo.saveRoute(any));
+    });
   });
 }
