@@ -19,6 +19,7 @@ class WalkSessionModel {
 
   WalkSession toEntity() {
     return WalkSession(
+      id: uid,
       status: status,
       startedAt: startedAt,
       finishedAt: finishedAt,
@@ -26,9 +27,9 @@ class WalkSessionModel {
     );
   }
 
-  static WalkSessionModel fromEntity(String uid, WalkSession session) {
+  static WalkSessionModel fromEntity(WalkSession session) {
     return WalkSessionModel()
-      ..uid = uid
+      ..uid = session.id
       ..status = session.status
       ..startedAt = session.startedAt
       ..finishedAt = session.finishedAt

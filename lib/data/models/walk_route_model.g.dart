@@ -56,6 +56,19 @@ const WalkRouteModelSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'walkSessionId': IndexSchema(
+      id: 6869786109258476304,
+      name: r'walkSessionId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'walkSessionId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -312,6 +325,51 @@ extension WalkRouteModelQueryWhere
               indexName: r'uid',
               lower: [],
               upper: [uid],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterWhereClause>
+      walkSessionIdEqualTo(String walkSessionId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'walkSessionId',
+        value: [walkSessionId],
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterWhereClause>
+      walkSessionIdNotEqualTo(String walkSessionId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'walkSessionId',
+              lower: [],
+              upper: [walkSessionId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'walkSessionId',
+              lower: [walkSessionId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'walkSessionId',
+              lower: [walkSessionId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'walkSessionId',
+              lower: [],
+              upper: [walkSessionId],
               includeUpper: false,
             ));
       }
