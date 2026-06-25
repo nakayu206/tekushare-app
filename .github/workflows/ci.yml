@@ -51,13 +51,19 @@ jobs:
         run: flutter analyze
 
       # 7. リポジトリテスト用の Isar ネイティブバイナリをセットアップ
-      #    Linux では dlopen はカレントディレクトリを検索しないため、
-      #    LD_LIBRARY_PATH にプロジェクトルートを追加してライブラリを解決する
+      #    dlopen はカレントディレクトリや LD_LIBRARY_PATH より ldconfig キャッシュを優先するため、
+      #    /usr/local/lib にコピーして ldconfig でキャッシュ更新するのが最も確実。
       - name: Setup Isar binary for unit tests
         run: |
           ISAR_LIB=$(find ~/.pub-cache -name "libisar.so" | head -1)
-          cp "$ISAR_LIB" "$GITHUB_WORKSPACE"
-          echo "LD_LIBRARY_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+          if [ -z "$ISAR_LIB" ]; then
+            echo "ERROR: libisar.so not found in pub cache"
+            find ~/.pub-cache -path "*/isar*" -name "*.so" 2>/dev/null || true
+            exit 1
+          fi
+          echo "Found: $ISAR_LIB"
+          sudo cp "$ISAR_LIB" /usr/local/lib/libisar.so
+          sudo ldconfig
 
       # 8. 単体テスト（test/ 配下）
       - name: Run unit tests
