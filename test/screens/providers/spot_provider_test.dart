@@ -113,7 +113,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       final result = container.read(filteredSpotsProvider);
-      expect(result.every((s) => s.status == SpotStatus.wantToGo), isTrue);
+      expect(result, [fakeSpot]);
     });
 
     test('visited フィルタで visited のみ返す', () async {
