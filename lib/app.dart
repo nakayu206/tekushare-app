@@ -13,7 +13,7 @@ class TekuShareApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isarState = ref.watch(isarProvider);
+    final ready = ref.watch(appReadyProvider);
     return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
@@ -23,7 +23,7 @@ class TekuShareApp extends ConsumerWidget {
         textTheme: GoogleFonts.zenMaruGothicTextTheme(),
         useMaterial3: true,
       ),
-      home: isarState.when(
+      home: ready.when(
         loading: () =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),
         error: (e, _) => Scaffold(body: Center(child: Text('DB初期化エラー: $e'))),

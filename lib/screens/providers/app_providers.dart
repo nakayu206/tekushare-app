@@ -45,3 +45,9 @@ final photoRepositoryProvider = Provider<PhotoRepository>((ref) {
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService.instance;
 });
+
+/// DB 初期化完了を表すプロバイダー。
+/// ウィジェットテストでは overrideWith(() async {}) で即時解決できる。
+final appReadyProvider = FutureProvider<void>((ref) async {
+  await ref.watch(isarProvider.future);
+});
