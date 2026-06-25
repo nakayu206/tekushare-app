@@ -17,15 +17,18 @@ class InactivityNotifier extends StateNotifier<DateTime> {
 
   final NotificationService _notificationService;
   Timer? _timer;
+  bool _notified = false;
 
   /// ユーザー操作が発生するたびに呼び出す
   void updateLastAction() {
+    _notified = false;
     state = DateTime.now();
   }
 
   void _startTimer() {
     _timer = Timer.periodic(_checkInterval, (_) async {
-      if (_checkInactivity.call(state)) {
+      if (!_notified && _checkInactivity.call(state)) {
+        _notified = true;
         await _notificationService.showInactivityNotification();
       }
     });
