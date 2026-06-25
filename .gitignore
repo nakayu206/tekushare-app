@@ -119,7 +119,10 @@ unlinked_spec.ds
 coverage/
 
 # Isar native binary（flutter testでリポジトリテストを実行するため、pubキャッシュから手動コピーが必要）
+# Windows: %LOCALAPPDATA%\Pub\Cache\hosted\pub.dev\isar_flutter_libs-x.x.x\windows\isar.dll
+# Linux:   ~/.pub-cache/hosted/pub.dev/isar_flutter_libs-x.x.x/linux/libisar.so
 isar.dll
+libisar.so
 
 # Symbols
 app.*.symbols

@@ -50,11 +50,17 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      # 7. 単体テスト（test/ 配下）
+      # 7. リポジトリテスト用の Isar ネイティブバイナリをプロジェクトルートにコピー
+      - name: Setup Isar binary for unit tests
+        run: |
+          ISAR_LIB=$(find ~/.pub-cache -name "libisar.so" | head -1)
+          cp "$ISAR_LIB" .
+
+      # 8. 単体テスト（test/ 配下）
       - name: Run unit tests
         run: flutter test --reporter expanded
 
-      # 8. 結合テスト（integration_test/ 配下）— Linux デスクトップターゲットで実行
+      # 9. 結合テスト（integration_test/ 配下）— Linux デスクトップターゲットで実行
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
 
