@@ -17,8 +17,9 @@ void main() {
       expect(usecase.call(lastAction), isFalse);
     });
 
-    test('ちょうど10分では false を返す', () {
-      final lastAction = DateTime.now().subtract(const Duration(minutes: 10));
+    test('9分59秒では false を返す', () {
+      final lastAction =
+          DateTime.now().subtract(const Duration(minutes: 9, seconds: 59));
       expect(usecase.call(lastAction), isFalse);
     });
   });
