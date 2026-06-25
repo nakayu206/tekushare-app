@@ -60,7 +60,7 @@ const WalkRouteModelSchema = CollectionSchema(
     r'walkSessionId': IndexSchema(
       id: 6869786109258476304,
       name: r'walkSessionId',
-      unique: false,
+      unique: true,
       replace: false,
       properties: [
         IndexPropertySchema(
@@ -203,6 +203,61 @@ extension WalkRouteModelByIndex on IsarCollection<WalkRouteModel> {
   List<Id> putAllByUidSync(List<WalkRouteModel> objects,
       {bool saveLinks = true}) {
     return putAllByIndexSync(r'uid', objects, saveLinks: saveLinks);
+  }
+
+  Future<WalkRouteModel?> getByWalkSessionId(String walkSessionId) {
+    return getByIndex(r'walkSessionId', [walkSessionId]);
+  }
+
+  WalkRouteModel? getByWalkSessionIdSync(String walkSessionId) {
+    return getByIndexSync(r'walkSessionId', [walkSessionId]);
+  }
+
+  Future<bool> deleteByWalkSessionId(String walkSessionId) {
+    return deleteByIndex(r'walkSessionId', [walkSessionId]);
+  }
+
+  bool deleteByWalkSessionIdSync(String walkSessionId) {
+    return deleteByIndexSync(r'walkSessionId', [walkSessionId]);
+  }
+
+  Future<List<WalkRouteModel?>> getAllByWalkSessionId(
+      List<String> walkSessionIdValues) {
+    final values = walkSessionIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'walkSessionId', values);
+  }
+
+  List<WalkRouteModel?> getAllByWalkSessionIdSync(
+      List<String> walkSessionIdValues) {
+    final values = walkSessionIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'walkSessionId', values);
+  }
+
+  Future<int> deleteAllByWalkSessionId(List<String> walkSessionIdValues) {
+    final values = walkSessionIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'walkSessionId', values);
+  }
+
+  int deleteAllByWalkSessionIdSync(List<String> walkSessionIdValues) {
+    final values = walkSessionIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'walkSessionId', values);
+  }
+
+  Future<Id> putByWalkSessionId(WalkRouteModel object) {
+    return putByIndex(r'walkSessionId', object);
+  }
+
+  Id putByWalkSessionIdSync(WalkRouteModel object, {bool saveLinks = true}) {
+    return putByIndexSync(r'walkSessionId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByWalkSessionId(List<WalkRouteModel> objects) {
+    return putAllByIndex(r'walkSessionId', objects);
+  }
+
+  List<Id> putAllByWalkSessionIdSync(List<WalkRouteModel> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'walkSessionId', objects, saveLinks: saveLinks);
   }
 }
 
