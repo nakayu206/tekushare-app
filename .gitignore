@@ -118,6 +118,9 @@ unlinked_spec.ds
 # Coverage
 coverage/
 
+# Isar native binary（flutter testでリポジトリテストを実行するため、pubキャッシュから手動コピーが必要）
+isar.dll
+
 # Symbols
 app.*.symbols
 
