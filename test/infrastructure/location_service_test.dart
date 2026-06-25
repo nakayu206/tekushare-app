@@ -65,6 +65,8 @@ void main() {
   late LocationService service;
 
   setUp(() {
+    final original = GeolocatorPlatform.instance;
+    addTearDown(() => GeolocatorPlatform.instance = original);
     mockPlatform = MockGeolocatorPlatform();
     GeolocatorPlatform.instance = mockPlatform;
     service = LocationService();
