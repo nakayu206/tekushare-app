@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
+import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 import 'package:tekushare/screens/widgets/common/primary_button.dart';
 
 /// ホーム画面
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
+class _HomePageState extends ConsumerState<HomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late List<Animation<double>> _footprintFades;
@@ -61,6 +64,16 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<WalkSession>(walkSessionProvider, (previous, next) {
+      if (next.status == WalkStatus.walking &&
+          previous?.status != WalkStatus.walking) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const WalkPage()),
+        );
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -72,10 +85,8 @@ class _HomePageState extends State<HomePage>
               opacity: _buttonFade,
               child: PrimaryButton(
                 label: AppStrings.startWalk,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const WalkPage()),
-                ),
+                onPressed: () =>
+                    ref.read(walkSessionProvider.notifier).startWalk(),
               ),
             ),
             const Spacer(),
