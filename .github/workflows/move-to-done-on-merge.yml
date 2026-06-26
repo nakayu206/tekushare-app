@@ -66,4 +66,4 @@ jobs:
             -F projectId="$PROJECT_ID" \
             -F itemId="$ITEM_ID" \
             -F fieldId="$FIELD_ID" \
-            -F optionId="$DONE_OPTION_ID"
+            -f optionId="$DONE_OPTION_ID"
