@@ -11,6 +11,10 @@ abstract class AppStrings {
 
   // 散歩モード
   static const endWalk = '散歩を終了する';
+  static const gpsAcquiring = 'GPS取得中...';
+  static const gpsUnavailableError = 'GPS信号を取得できません';
+  static const photoSpotTitle = '散歩スポット';
+  static const photoTaken = '写真を撮影しました！行きたいリストに保存してください';
   static const endWalkConfirmMessage = '散歩を終了しますか？';
   static const endWalkConfirmButton = '終了する';
   static const takePhoto = '撮影する';

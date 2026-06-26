@@ -12,6 +12,7 @@ import 'package:tekushare/domain/repositories/photo_repository.dart';
 import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/spot_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
+import 'package:tekushare/infrastructure/camera_service.dart';
 import 'package:tekushare/infrastructure/notification_service.dart';
 
 /// Isar インスタンスを非同期で提供する。
@@ -44,6 +45,10 @@ final photoRepositoryProvider = Provider<PhotoRepository>((ref) {
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService.instance;
+});
+
+final cameraServiceProvider = Provider<CameraService>((ref) {
+  return CameraService();
 });
 
 /// DB 初期化完了を表すプロバイダー。
