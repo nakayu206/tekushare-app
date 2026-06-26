@@ -6,7 +6,7 @@ class SaveSpot {
 
   final SpotRepository _repository;
 
-  Future<void> call({
+  Future<String> call({
     required String title,
     required double latitude,
     required double longitude,
@@ -14,8 +14,9 @@ class SaveSpot {
     SpotStatus status = SpotStatus.wantToGo,
   }) async {
     final now = DateTime.now();
+    final id = now.microsecondsSinceEpoch.toString();
     final spot = Spot(
-      id: now.microsecondsSinceEpoch.toString(),
+      id: id,
       title: title,
       latitude: latitude,
       longitude: longitude,
@@ -24,5 +25,6 @@ class SaveSpot {
       memo: memo,
     );
     await _repository.saveSpot(spot);
+    return id;
   }
 }
