@@ -24,6 +24,8 @@ abstract class AppSize {
   static const double mapPinSize = 36.0;
   static const double cardElevation = 2.0;
   static const double photoGridItem = 80.0;
+  static const double photoBoxWidth = 176.0;
+  static const double photoBoxHeight = 100.0;
   static const double timerFontSize = 56.0;
   static const double maxContentWidth = 480.0;
   static const double borderThin = 0.5;

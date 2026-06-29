@@ -144,7 +144,7 @@ class _GpsStatusIndicator extends StatelessWidget {
           ),
           error: (_, __) => const Text(
             AppStrings.gpsUnavailableError,
-            style: TextStyle(color: Colors.red),
+            style: TextStyle(color: AppColors.error),
           ),
         ),
       ),

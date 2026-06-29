@@ -130,7 +130,7 @@ void main() {
         locationStream: Stream.value(position),
         camera: _FakeCameraService(imagePath),
       );
-      await tester.pump(); // stream 受信
+      await tester.pump();
 
       await tester.tap(find.text(AppStrings.takePhoto));
       await tester.pumpAndSettle();
@@ -139,6 +139,24 @@ void main() {
         tester.element(find.byType(WalkPage)),
       );
       expect(container.read(pendingPhotoProvider), imagePath);
+    });
+
+    // GPS 取得済みで撮影すると photoTaken SnackBar が表示される
+    testWidgets('shows photoTaken snackbar after photo is taken',
+        (tester) async {
+      const imagePath = '/fake/photo.jpg';
+      final position = _makePosition(35.6895, 139.6917);
+
+      await pumpWalkPage(
+        tester,
+        locationStream: Stream.value(position),
+        camera: _FakeCameraService(imagePath),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text(AppStrings.takePhoto));
+      await tester.pumpAndSettle();
+
       expect(find.text(AppStrings.photoTaken), findsOneWidget);
     });
 
