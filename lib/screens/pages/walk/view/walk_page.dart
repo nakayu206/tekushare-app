@@ -33,11 +33,9 @@ class WalkPage extends ConsumerWidget {
     }
 
     final imagePath = await ref.read(cameraServiceProvider).takePhoto();
-    if (imagePath == null) return;
+    if (imagePath == null || !context.mounted) return;
 
     ref.read(pendingPhotoProvider.notifier).state = imagePath;
-
-    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text(AppStrings.photoTaken)),
     );
