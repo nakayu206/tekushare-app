@@ -29,6 +29,5 @@ void main() {
       expect(options.apiKey, isNotEmpty);
       expect(options.appId, isNotEmpty);
     });
-
   });
 }
