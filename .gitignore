@@ -45,6 +45,9 @@ analysis_benchmark.json
 # Flutter/Dart/Pub related
 **/doc/api/
 .dart_tool/
+
+# mockito 生成ファイル（dart run build_runner build で再生成可能）
+**/*.mocks.dart
 .flutter-plugins
 .flutter-plugins-dependencies
 **/generated_plugin_registrant.dart
