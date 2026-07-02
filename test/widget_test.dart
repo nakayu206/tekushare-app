@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,9 +12,9 @@ import 'package:tekushare/domain/repositories/photo_repository.dart';
 import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/spot_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
-import 'package:tekushare/screens/pages/home/view/home_page.dart';
+import 'package:tekushare/screens/pages/auth/view/email_auth_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
-import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+import 'package:tekushare/screens/providers/auth_provider.dart';
 
 class _FakeSpotRepository implements SpotRepository {
   @override
@@ -24,6 +25,23 @@ class _FakeSpotRepository implements SpotRepository {
   Future<void> updateSpotStatus(String id, SpotStatus status) async {}
   @override
   Future<void> deleteSpot(String id) async {}
+}
+
+class _FakeAuthService implements AuthService {
+  @override
+  Stream<User?> watchAuthState() => const Stream.empty();
+  @override
+  Future<void> registerWithEmail(
+    String email,
+    String password,
+    String displayName,
+  ) async {}
+  @override
+  Future<void> signInWithEmail(String email, String password) async {}
+  @override
+  Future<void> setDisplayName(String name) async {}
+  @override
+  Future<void> signOut() async {}
 }
 
 class _FakePhotoRepository implements PhotoRepository {
@@ -50,7 +68,7 @@ class _FakeRouteRepository implements RouteRepository {
 }
 
 void main() {
-  testWidgets('launches app and shows home screen', (tester) async {
+  testWidgets('未認証時はメール認証画面を表示する', (tester) async {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -60,8 +78,10 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          // DB初期化をスキップして即時解決
           appReadyProvider.overrideWith((ref) async {}),
+          authServiceProvider.overrideWithValue(_FakeAuthService()),
+          // 未認証状態（null）を返す
+          authStateProvider.overrideWith((ref) => Stream.value(null)),
           spotRepositoryProvider.overrideWithValue(_FakeSpotRepository()),
           photoRepositoryProvider.overrideWithValue(_FakePhotoRepository()),
           walkSessionRepositoryProvider
@@ -73,8 +93,6 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byType(HomePage), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.byType(AppBottomNav), findsOneWidget);
+    expect(find.byType(EmailAuthPage), findsOneWidget);
   });
 }
