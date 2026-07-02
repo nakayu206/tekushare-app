@@ -26,7 +26,7 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
   final AttachPhotoToSpot _attachPhotoToSpot;
   late final StreamSubscription<List<Spot>> _subscription;
 
-  Future<void> saveSpot({
+  Future<String> saveSpot({
     required String title,
     required double latitude,
     required double longitude,
@@ -67,6 +67,9 @@ final spotProvider = StateNotifierProvider<SpotNotifier, List<Spot>>((ref) {
     attachPhotoToSpot: AttachPhotoToSpot(photoRepo),
   );
 });
+
+/// 散歩中にカメラで撮影した写真の一時パス（WantToGoPage で使用）
+final pendingPhotoProvider = StateProvider<String?>((ref) => null);
 
 /// 現在選択中のステータスフィルタ（null = 全件）
 final selectedSpotStatusProvider = StateProvider<SpotStatus?>((ref) => null);

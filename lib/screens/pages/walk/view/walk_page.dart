@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geolocator/geolocator.dart' show Position;
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
@@ -7,16 +9,42 @@ import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/location_provider.dart';
+import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 import 'package:tekushare/screens/widgets/common/primary_button.dart';
 
 /// 散歩モード画面
-class WalkPage extends StatelessWidget {
+class WalkPage extends ConsumerWidget {
   const WalkPage({super.key});
 
+  Future<void> _onTakePhotoPressed(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<Position> locationState,
+  ) async {
+    if (!locationState.hasValue) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.gpsUnavailableError)),
+      );
+      return;
+    }
+
+    final imagePath = await ref.read(cameraServiceProvider).takePhoto();
+    if (imagePath == null || !context.mounted) return;
+
+    ref.read(pendingPhotoProvider.notifier).state = imagePath;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.photoTaken)),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locationState = ref.watch(locationProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -24,15 +52,16 @@ class WalkPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const ClockHeader(),
-            const SizedBox(height: 60),
+            const SizedBox(height: 16),
+            _GpsStatusIndicator(locationState: locationState),
+            const Spacer(flex: 2),
             Center(
               child: _WalkActionButton(
                 label: AppStrings.takePhoto,
                 svgAsset: 'assets/SVG/camera.svg',
                 fontSize: AppTextStyle.x1l,
-                onPressed: () {
-                  // TODO: 撮影処理
-                },
+                onPressed: () =>
+                    _onTakePhotoPressed(context, ref, locationState),
               ),
             ),
             const SizedBox(height: 20),
@@ -45,7 +74,7 @@ class WalkPage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 70),
+            const Spacer(flex: 3),
             Center(
               child: PrimaryButton(
                 label: AppStrings.endWalk,
@@ -55,7 +84,7 @@ class WalkPage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -74,6 +103,50 @@ class WalkPage extends StatelessWidget {
             );
           }
         },
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// GPS 状態インジケーター
+// ──────────────────────────────────────────
+
+class _GpsStatusIndicator extends StatelessWidget {
+  const _GpsStatusIndicator({required this.locationState});
+
+  final AsyncValue<Position> locationState;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: Center(
+        child: locationState.when(
+          data: (_) => const SizedBox.shrink(),
+          loading: () => const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                AppStrings.gpsAcquiring,
+                style: TextStyle(color: AppColors.textDisabled),
+              ),
+            ],
+          ),
+          error: (_, __) => const Text(
+            AppStrings.gpsUnavailableError,
+            style: TextStyle(color: AppColors.error),
+          ),
+        ),
       ),
     );
   }

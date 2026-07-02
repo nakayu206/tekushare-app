@@ -77,5 +77,18 @@ void main() {
 
       expect(captured?.status, SpotStatus.visited);
     });
+
+    test('生成したスポットIDを返す', () async {
+      Spot? captured;
+      when(mockRepo.saveSpot(any)).thenAnswer((inv) {
+        captured = inv.positionalArguments[0] as Spot;
+        return Future<void>.value();
+      });
+
+      final id = await usecase.call(title: 'テスト', latitude: 0, longitude: 0);
+
+      expect(id, isNotEmpty);
+      expect(id, captured?.id);
+    });
   });
 }

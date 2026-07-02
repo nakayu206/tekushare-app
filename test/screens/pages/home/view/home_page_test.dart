@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
@@ -10,6 +11,7 @@ import 'package:tekushare/screens/pages/home/view/home_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/clock_provider.dart';
+import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 
 class _FakeWalkSessionRepository implements WalkSessionRepository {
@@ -37,6 +39,10 @@ List<Override> get _baseOverrides => [
       walkSessionRepositoryProvider
           .overrideWithValue(_FakeWalkSessionRepository()),
       routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
+      // WalkPage の CircularProgressIndicator で pumpAndSettle がタイムアウトしないよう静的ストリームに差し替え
+      locationProvider.overrideWith(
+        (ref) => Stream<Position>.error(Exception('GPS unavailable')),
+      ),
     ];
 
 void main() {

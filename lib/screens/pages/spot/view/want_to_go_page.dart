@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/want_to_go_viewmodel.dart';
+import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
@@ -196,39 +200,60 @@ class _TitleInput extends StatelessWidget {
 // 写真エリア
 // ──────────────────────────────────────────
 
-class _PhotoBox extends StatelessWidget {
+class _PhotoBox extends ConsumerWidget {
   const _PhotoBox();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photoPath = ref.watch(pendingPhotoProvider);
+
+    if (photoPath != null) {
+      return SizedBox(
+        width: AppSize.photoBoxWidth,
+        height: AppSize.photoBoxHeight,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Image.file(
+            File(photoPath),
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _placeholder(),
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
-      width: 176,
-      height: 100,
+      width: AppSize.photoBoxWidth,
+      height: AppSize.photoBoxHeight,
       child: CustomPaint(
         painter: const DashedBorderPainter(),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/SVG/camera.svg',
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(
-                AppColors.textAccent,
-                BlendMode.srcIn,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              AppStrings.addPhoto,
-              style: TextStyle(
-                color: AppColors.textAccent,
-                fontSize: AppTextStyle.sm,
-              ),
-            ),
-          ],
-        ),
+        child: _placeholder(),
       ),
+    );
+  }
+
+  Widget _placeholder() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SvgPicture.asset(
+          'assets/SVG/camera.svg',
+          width: AppSize.iconMd,
+          height: AppSize.iconMd,
+          colorFilter: const ColorFilter.mode(
+            AppColors.textAccent,
+            BlendMode.srcIn,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        const Text(
+          AppStrings.addPhoto,
+          style: TextStyle(
+            color: AppColors.textAccent,
+            fontSize: AppTextStyle.sm,
+          ),
+        ),
+      ],
     );
   }
 }
