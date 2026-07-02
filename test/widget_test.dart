@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,6 +25,23 @@ class _FakeSpotRepository implements SpotRepository {
   Future<void> updateSpotStatus(String id, SpotStatus status) async {}
   @override
   Future<void> deleteSpot(String id) async {}
+}
+
+class _FakeAuthService implements AuthService {
+  @override
+  Stream<User?> watchAuthState() => const Stream.empty();
+  @override
+  Future<void> registerWithEmail(
+    String email,
+    String password,
+    String displayName,
+  ) async {}
+  @override
+  Future<void> signInWithEmail(String email, String password) async {}
+  @override
+  Future<void> setDisplayName(String name) async {}
+  @override
+  Future<void> signOut() async {}
 }
 
 class _FakePhotoRepository implements PhotoRepository {
@@ -61,6 +79,7 @@ void main() {
       ProviderScope(
         overrides: [
           appReadyProvider.overrideWith((ref) async {}),
+          authServiceProvider.overrideWithValue(_FakeAuthService()),
           // 未認証状態（null）を返す
           authStateProvider.overrideWith((ref) => Stream.value(null)),
           spotRepositoryProvider.overrideWithValue(_FakeSpotRepository()),
