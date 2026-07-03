@@ -177,22 +177,32 @@ class _FootprintSection extends StatelessWidget {
     (dx: -18.0, dy: 198.0, angle: -0.3),
   ];
 
+  // デザイン基準の高さ（280dp 時のサイズ・位置で設計）
+  static const double _designHeight = 280.0;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final centerX = constraints.maxWidth / 2;
+        final scale = (constraints.maxHeight / _designHeight).clamp(0.0, 1.0);
+        final fw = _Footprint.w * scale;
+        final fh = _Footprint.h * scale;
 
         return Stack(
           children: List.generate(_steps.length, (i) {
             final step = _steps[i];
 
             return Positioned(
-              left: centerX + step.dx - _Footprint.w / 2,
-              bottom: step.dy,
+              left: centerX + step.dx - fw / 2,
+              bottom: step.dy * scale,
               child: FadeTransition(
                 opacity: footprintFades[i],
-                child: _Footprint(angle: step.angle),
+                child: _Footprint(
+                  angle: step.angle,
+                  width: fw,
+                  height: fh,
+                ),
               ),
             );
           }),
@@ -203,12 +213,18 @@ class _FootprintSection extends StatelessWidget {
 }
 
 class _Footprint extends StatelessWidget {
-  const _Footprint({required this.angle});
+  const _Footprint({
+    required this.angle,
+    required this.width,
+    required this.height,
+  });
 
   static const double w = 56.0;
   static const double h = 73.0;
 
   final double angle;
+  final double width;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -216,8 +232,8 @@ class _Footprint extends StatelessWidget {
       angle: angle,
       child: SvgPicture.asset(
         'assets/SVG/foot.svg',
-        width: w,
-        height: h,
+        width: width,
+        height: height,
         colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
       ),
     );
