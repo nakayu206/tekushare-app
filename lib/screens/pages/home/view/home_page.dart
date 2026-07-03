@@ -99,26 +99,31 @@ class _HomePageState extends ConsumerState<HomePage>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            const ClockHeader(),
-            const Spacer(flex: 8),
-            FadeTransition(
-              opacity: _buttonFade,
-              child: PrimaryButton(
-                label: AppStrings.startWalk,
-                onPressed: () =>
-                    ref.read(walkSessionProvider.notifier).startWalk(),
-              ),
-            ),
-            const Spacer(),
-            Flexible(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 280),
-                child: _FootprintSection(footprintFades: _footprintFades),
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // 画面高さの 38% を上限 280px としてフットプリントエリアを確保
+            final footprintHeight =
+                (constraints.maxHeight * 0.38).clamp(0.0, 280.0);
+            return Column(
+              children: [
+                const ClockHeader(),
+                const Spacer(flex: 8),
+                FadeTransition(
+                  opacity: _buttonFade,
+                  child: PrimaryButton(
+                    label: AppStrings.startWalk,
+                    onPressed: () =>
+                        ref.read(walkSessionProvider.notifier).startWalk(),
+                  ),
+                ),
+                const Spacer(),
+                SizedBox(
+                  height: footprintHeight,
+                  child: _FootprintSection(footprintFades: _footprintFades),
+                ),
+              ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: AppBottomNav(
