@@ -4,8 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
-import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -62,7 +62,6 @@ class WalkPage extends ConsumerWidget {
               child: _WalkActionButton(
                 label: AppStrings.takePhoto,
                 svgAsset: 'assets/SVG/camera.svg',
-                fontSize: AppTextStyle.x1l,
                 onPressed: () =>
                     _onTakePhotoPressed(context, ref, locationState),
               ),
@@ -175,23 +174,27 @@ class _WalkActionButton extends StatelessWidget {
   const _WalkActionButton({
     required this.label,
     this.svgAsset,
-    this.fontSize = AppTextStyle.xl,
     required this.onPressed,
   });
 
   final String label;
   final String? svgAsset;
-  final double fontSize;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
+    final height = sizing.actionBtnHeight;
+    final fontSize = sizing.actionBtnFontSize;
+    final iconSize = sizing.actionBtnIconSize;
+    final radius = sizing.actionBtnRadius;
+
     return Container(
       width: double.infinity,
-      height: 105,
+      height: height,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(52),
+        borderRadius: BorderRadius.circular(radius),
         color: AppColors.textAccent,
         boxShadow: [
           BoxShadow(
@@ -208,7 +211,7 @@ class _WalkActionButton extends StatelessWidget {
           foregroundColor: AppColors.textOnPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(52),
+            borderRadius: BorderRadius.circular(radius),
           ),
         ),
         child: svgAsset != null
@@ -218,8 +221,8 @@ class _WalkActionButton extends StatelessWidget {
                   ExcludeSemantics(
                     child: SvgPicture.asset(
                       svgAsset!,
-                      width: 30,
-                      height: 30,
+                      width: iconSize,
+                      height: iconSize,
                       colorFilter: const ColorFilter.mode(
                         AppColors.textOnPrimary,
                         BlendMode.srcIn,

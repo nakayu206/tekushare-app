@@ -26,8 +26,9 @@ void main() {
       expect(state().inactivityEnabled, false);
       expect(state().inactivityMinutes, 15);
       expect(state().registeredContactName, null);
-      expect(state().shareSpots, false);
-      expect(state().shareRoutes, false);
+      expect(state().shareWantToGo, true);
+      expect(state().shareVisited, true);
+      expect(state().sharedAccounts, ['あかり', 'たかし', 'ゆか', 'けんじ']);
     });
 
     // タイマーON/OFF
@@ -68,16 +69,38 @@ void main() {
       expect(state().registeredContactName, '山田 太郎');
     });
 
-    // 行きたいリスト共有
-    test('setShareSpots updates shareSpots', () {
-      vm().setShareSpots(true);
-      expect(state().shareSpots, true);
+    // 行きたい！リスト共有
+    test('setShareWantToGo updates shareWantToGo', () {
+      vm().setShareWantToGo(false);
+      expect(state().shareWantToGo, false);
     });
 
-    // 散歩ルート共有
-    test('setShareRoutes updates shareRoutes', () {
-      vm().setShareRoutes(true);
-      expect(state().shareRoutes, true);
+    // 行った！リスト共有
+    test('setShareVisited updates shareVisited', () {
+      vm().setShareVisited(false);
+      expect(state().shareVisited, false);
+    });
+
+    // 共有アカウント消去
+    test('removeSharedAccount removes the specified account', () {
+      vm().removeSharedAccount('たかし');
+      expect(state().sharedAccounts, ['あかり', 'ゆか', 'けんじ']);
+    });
+
+    // 存在しないアカウントの消去は何もしない
+    test('removeSharedAccount with unknown name does not change list', () {
+      vm().removeSharedAccount('存在しない');
+      expect(state().sharedAccounts, ['あかり', 'たかし', 'ゆか', 'けんじ']);
+    });
+
+    // ログアウト（スタブ：状態変化なし）
+    test('logout does not throw', () {
+      expect(() => vm().logout(), returnsNormally);
+    });
+
+    // アカウント消去（スタブ：状態変化なし）
+    test('deleteAccount does not throw', () {
+      expect(() => vm().deleteAccount(), returnsNormally);
     });
 
     // 他フィールドに影響しない

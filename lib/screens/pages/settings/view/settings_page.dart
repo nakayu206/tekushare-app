@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/screens/pages/auth/view/email_auth_page.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -60,6 +62,44 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  void _showLogoutConfirmDialog() {
+    final vm = ref.read(settingsViewModelProvider.notifier);
+    showDialog<void>(
+      context: context,
+      builder: (_) => _ConfirmActionDialog(
+        message: AppStrings.settingsLogoutConfirmMessage,
+        confirmLabel: AppStrings.settingsLogoutConfirmButton,
+        isDestructive: false,
+        onConfirm: () {
+          vm.logout();
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const EmailAuthPage()),
+            (_) => false,
+          );
+        },
+        onCancel: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  void _showDeleteAccountConfirmDialog() {
+    final vm = ref.read(settingsViewModelProvider.notifier);
+    showDialog<void>(
+      context: context,
+      builder: (_) => _ConfirmActionDialog(
+        message: AppStrings.settingsDeleteAccountConfirmMessage,
+        confirmLabel: AppStrings.settingsDeleteAccountConfirmButton,
+        isDestructive: true,
+        onConfirm: () {
+          vm.deleteAccount();
+          Navigator.pop(context);
+        },
+        onCancel: () => Navigator.pop(context),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(settingsViewModelProvider);
@@ -91,6 +131,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
               const SizedBox(height: AppSpacing.x2lp),
               _ShareCard(state: state, vm: vm),
+              const SizedBox(height: AppSpacing.x2lp),
+              _AccountCard(
+                onLogout: _showLogoutConfirmDialog,
+                onDeleteAccount: _showDeleteAccountConfirmDialog,
+              ),
               const SizedBox(height: AppSpacing.lg),
             ],
           ),
@@ -195,10 +240,11 @@ class _SegmentBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: AppSize.segmentBtnW,
+        width: sizing.segmentBtnWidth,
         height: AppSize.segmentBtnH,
         alignment: Alignment.center,
         decoration: BoxDecoration(
@@ -467,27 +513,29 @@ class _InactivityCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.settingsInactivityTitle,
-                    style: TextStyle(
-                      fontSize: AppTextStyle.lg2,
-                      fontWeight: AppTextStyle.semiBold,
-                      color: AppColors.textPrimary,
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.settingsInactivityTitle,
+                      style: TextStyle(
+                        fontSize: AppTextStyle.lg2,
+                        fontWeight: AppTextStyle.semiBold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  Text(
-                    AppStrings.settingsInactivitySubtitle,
-                    style: TextStyle(
-                      fontSize: AppTextStyle.xs,
-                      color: AppColors.textDisabled,
+                    Text(
+                      AppStrings.settingsInactivitySubtitle,
+                      style: TextStyle(
+                        fontSize: AppTextStyle.xs,
+                        color: AppColors.textDisabled,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: AppSpacing.sm),
               GestureDetector(
                 onTap: onContactTap,
                 child: Row(
@@ -572,14 +620,6 @@ class _ShareCard extends StatelessWidget {
 
   static const _shareLink = 'https://tekushare.app/share/abc...';
 
-  static const _contacts = [
-    (name: 'あかり（娘）', registered: true),
-    (name: 'いきいき介護施設', registered: false),
-    (name: 'たかし（弟）', registered: true),
-    (name: '坂本病院', registered: false),
-    (name: '村本病院', registered: false),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return _SettingCard(
@@ -628,12 +668,52 @@ class _ShareCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          ..._contacts.map(
-            (c) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _ContactRow(name: c.name, registered: c.registered),
+          for (final name in state.sharedAccounts)
+            Dismissible(
+              key: ValueKey(name),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (_) => showDialog<bool>(
+                context: context,
+                builder: (_) => _SharedAccountDeleteDialog(
+                  name: name,
+                  onConfirm: () => Navigator.pop(context, true),
+                  onCancel: () => Navigator.pop(context, false),
+                ),
+              ).then((v) => v ?? false),
+              onDismissed: (_) => vm.removeSharedAccount(name),
+              background: Container(
+                color: Colors.red,
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: const Text(
+                  AppStrings.settingsShareDeleteAccount,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AppTextStyle.sm2,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              child: Column(
+                children: [
+                  _ContactRow(
+                    name: name,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => _SharedRoutesPage(accountName: name),
+                      ),
+                    ),
+                  ),
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: AppColors.primary,
+                  ),
+                ],
+              ),
             ),
-          ),
+          const SizedBox(height: AppSpacing.sm),
           const SizedBox(height: AppSpacing.x4lp),
           const _ShareLinkArea(link: _shareLink),
           const SizedBox(height: AppSpacing.x2lm),
@@ -660,14 +740,14 @@ class _ShareCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lgp),
           _ShareCheckbox(
-            label: AppStrings.settingsShareSpotsList,
-            value: state.shareSpots,
-            onChanged: (v) => vm.setShareSpots(v ?? false),
+            label: AppStrings.settingsShareWantToGo,
+            value: state.shareWantToGo,
+            onChanged: (v) => vm.setShareWantToGo(v ?? false),
           ),
           _ShareCheckbox(
-            label: AppStrings.settingsShareRoutesList,
-            value: state.shareRoutes,
-            onChanged: (v) => vm.setShareRoutes(v ?? false),
+            label: AppStrings.settingsShareVisited,
+            value: state.shareVisited,
+            onChanged: (v) => vm.setShareVisited(v ?? false),
           ),
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
@@ -699,50 +779,149 @@ class _ShareCard extends StatelessWidget {
 }
 
 class _ContactRow extends StatelessWidget {
-  const _ContactRow({required this.name, required this.registered});
+  const _ContactRow({required this.name, required this.onTap});
 
   final String name;
-  final bool registered;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            name,
-            style: const TextStyle(
-              fontSize: AppTextStyle.sm2,
-              color: Colors.black,
-            ),
-          ),
-        ),
-        SizedBox(
-          width: AppSize.badgeW,
-          height: AppSize.badgeH,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: registered ? Colors.transparent : AppColors.chipUnselected,
-              border: Border.all(
-                color: registered ? AppColors.primary : AppColors.textDisabled,
-              ),
-              borderRadius: BorderRadius.circular(AppRadius.full),
-            ),
-            child: Center(
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Row(
+          children: [
+            Expanded(
               child: Text(
-                registered
-                    ? AppStrings.settingsShareRegistered
-                    : AppStrings.settingsShareNotRegistered,
-                style: TextStyle(
-                  fontSize: AppTextStyle.sm,
-                  color:
-                      registered ? AppColors.primary : AppColors.textDisabled,
+                name,
+                style: const TextStyle(
+                  fontSize: AppTextStyle.sm2,
+                  color: Colors.black,
                 ),
               ),
             ),
-          ),
+            const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'スポットを見る',
+                  style: TextStyle(
+                    fontSize: AppTextStyle.xs,
+                    color: AppColors.primary,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColors.primary,
+                  size: AppSize.iconMd,
+                ),
+              ],
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _SharedRoutesPage extends StatelessWidget {
+  const _SharedRoutesPage({required this.accountName});
+
+  final String accountName;
+
+  static const _mockSpots = [
+    (name: 'お気に入り公園', category: '公園', status: '行きたい！'),
+    (name: '駅前カフェ', category: 'カフェ', status: '行った！'),
+    (name: '商店街の和食屋', category: 'ランチ', status: '行きたい！'),
+    (name: '図書館前の広場', category: 'そのほか', status: '行った！'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        title: Text(accountName),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        top: false,
+        child: ListView.separated(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          itemCount: _mockSpots.length,
+          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+          itemBuilder: (context, i) {
+            final spot = _mockSpots[i];
+            return Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: AppColors.chipUnselected),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: AppSpacing.xs,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          spot.name,
+                          style: const TextStyle(
+                            fontSize: AppTextStyle.md2,
+                            fontWeight: AppTextStyle.medium,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          spot.category,
+                          style: const TextStyle(
+                            fontSize: AppTextStyle.sm,
+                            color: AppColors.textDisabled,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      border: Border.all(color: AppColors.primary),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Text(
+                      spot.status,
+                      style: const TextStyle(
+                        fontSize: AppTextStyle.xs,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -1157,6 +1336,267 @@ class _RegisteredDialog extends StatelessWidget {
                 ),
                 child: const Text(AppStrings.closeButton),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 共有アカウント消去確認ダイアログ
+// ──────────────────────────────────────────
+
+class _SharedAccountDeleteDialog extends StatelessWidget {
+  const _SharedAccountDeleteDialog({
+    required this.name,
+    required this.onConfirm,
+    required this.onCancel,
+  });
+
+  final String name;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.x2l,
+          AppSpacing.x3l,
+          AppSpacing.x2l,
+          AppSpacing.x2l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              name,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: AppTextStyle.semiBold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text(
+              AppStrings.settingsShareDeleteConfirmMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppTextStyle.md),
+            ),
+            const SizedBox(height: AppSpacing.x2l),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onCancel,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: const Text(AppStrings.cancelButton),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child:
+                        const Text(AppStrings.settingsShareDeleteConfirmButton),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// アカウントカード
+// ──────────────────────────────────────────
+
+class _AccountCard extends StatelessWidget {
+  const _AccountCard({
+    required this.onLogout,
+    required this.onDeleteAccount,
+  });
+
+  final VoidCallback onLogout;
+  final VoidCallback onDeleteAccount;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SettingCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSize.timerCardPaddingH,
+        vertical: AppSize.timerCardPaddingV,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            AppStrings.settingsAccountTitle,
+            style: TextStyle(
+              fontSize: AppTextStyle.lg2,
+              fontWeight: AppTextStyle.semiBold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            height: AppSize.buttonHeight,
+            child: OutlinedButton(
+              onPressed: onLogout,
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.primary),
+                foregroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+              ),
+              child: const Text(
+                AppStrings.settingsLogout,
+                style: TextStyle(
+                  fontSize: AppTextStyle.lg2,
+                  fontWeight: AppTextStyle.medium,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            height: AppSize.buttonHeight,
+            child: ElevatedButton(
+              onPressed: onDeleteAccount,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+              ),
+              child: const Text(
+                AppStrings.settingsDeleteAccount,
+                style: TextStyle(
+                  fontSize: AppTextStyle.lg2,
+                  fontWeight: AppTextStyle.medium,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 汎用確認ダイアログ（ログアウト・アカウント消去）
+// ──────────────────────────────────────────
+
+class _ConfirmActionDialog extends StatelessWidget {
+  const _ConfirmActionDialog({
+    required this.message,
+    required this.confirmLabel,
+    required this.isDestructive,
+    required this.onConfirm,
+    required this.onCancel,
+  });
+
+  final String message;
+  final String confirmLabel;
+  final bool isDestructive;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.x2l,
+          AppSpacing.x3l,
+          AppSpacing.x2l,
+          AppSpacing.x2l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: AppTextStyle.md),
+            ),
+            const SizedBox(height: AppSpacing.x2l),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onCancel,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: const Text(AppStrings.cancelButton),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      backgroundColor:
+                          isDestructive ? Colors.red : AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: Text(confirmLabel),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

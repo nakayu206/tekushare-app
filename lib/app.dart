@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/auth/view/display_name_page.dart';
 import 'package:tekushare/screens/pages/auth/view/email_auth_page.dart';
 import 'package:tekushare/screens/pages/home/view/home_page.dart';
@@ -30,6 +31,15 @@ class TekuShareApp extends ConsumerWidget {
         textTheme: GoogleFonts.zenMaruGothicTextTheme(),
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        final sw = MediaQuery.sizeOf(context).width;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            extensions: [AppSizingTheme.fromScreenWidth(sw)],
+          ),
+          child: child!,
+        );
+      },
       home: ready.when(
         loading: () =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),

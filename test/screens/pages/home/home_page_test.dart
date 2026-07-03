@@ -13,6 +13,7 @@ import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/app.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/clock_provider.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
@@ -57,7 +58,18 @@ void main() {
               (ref) => Stream<Position>.error(Exception('GPS unavailable')),
             ),
           ],
-          child: const MaterialApp(home: HomePage()),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const HomePage(),
+          ),
         ),
       );
       // アニメーション（2800ms）を完了させてボタンを操作可能にする
@@ -120,9 +132,27 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            clockProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+            walkSessionRepositoryProvider
+                .overrideWithValue(_FakeWalkSessionRepository()),
+            routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
+            locationProvider.overrideWith(
+              (ref) => Stream<Position>.error(Exception('GPS unavailable')),
+            ),
+          ],
           child: MaterialApp(
             navigatorKey: navKey,
             navigatorObservers: [routeObserver],
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: const HomePage(),
           ),
         ),

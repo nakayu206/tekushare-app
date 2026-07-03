@@ -5,6 +5,7 @@ import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -23,6 +24,13 @@ class WalkRoutePage extends ConsumerStatefulWidget {
 
 class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   final _nameController = TextEditingController();
+  int _cardSlideDirection = 1;
+
+  void _selectDay(int day) {
+    final current = ref.read(walkRouteViewModelProvider).selectedDay;
+    setState(() => _cardSlideDirection = day > current ? 1 : -1);
+    ref.read(walkRouteViewModelProvider.notifier).selectDay(day);
+  }
 
   @override
   void initState() {
@@ -102,20 +110,74 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: AppSpacing.lg),
+                  _SelectedRouteCard(route: state.selectedRoute),
+                  const SizedBox(height: AppSpacing.lg),
                   _RouteListCard(
                     routes: state.routes,
                     selectedIndex: state.selectedRouteIndex,
                     onSelect: vm.selectRoute,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  _SelectedRouteCard(route: state.selectedRoute),
-                  const SizedBox(height: AppSpacing.lg),
                   _CalendarRow(
                     selectedDay: state.selectedDay,
-                    onSelect: vm.selectDay,
+                    onSelect: _selectDay,
                   ),
-                  _WalkInfoCard(
-                      log: state.selectedLog, onSave: _showSaveConfirmDialog),
+                  GestureDetector(
+                    onHorizontalDragEnd: (details) {
+                      final v = details.primaryVelocity;
+                      if (v == null) return;
+                      if (v < -200) {
+                        _selectDay(
+                          state.selectedDay < 7 ? state.selectedDay + 1 : 1,
+                        );
+                      } else if (v > 200) {
+                        _selectDay(
+                          state.selectedDay > 1 ? state.selectedDay - 1 : 7,
+                        );
+                      }
+                    },
+                    child: ClipRect(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        layoutBuilder: (currentChild, previousChildren) =>
+                            Stack(
+                          alignment: Alignment.topLeft,
+                          children: [
+                            ...previousChildren,
+                            if (currentChild != null) currentChild,
+                          ],
+                        ),
+                        transitionBuilder: (child, animation) {
+                          final isEntering =
+                              child.key == ValueKey(state.selectedDay);
+                          final begin = Offset(
+                            isEntering
+                                ? _cardSlideDirection.toDouble()
+                                : -_cardSlideDirection.toDouble(),
+                            0,
+                          );
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: begin,
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOut,
+                              )),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _WalkInfoCard(
+                          key: ValueKey(state.selectedDay),
+                          log: state.selectedLog,
+                          onSave: _showSaveConfirmDialog,
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                 ],
               ),
@@ -230,12 +292,14 @@ class _RouteListCardState extends State<_RouteListCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              AppStrings.savedRoutes,
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.lg2,
-                fontWeight: AppTextStyle.semiBold,
+            Builder(
+              builder: (context) => Text(
+                AppStrings.savedRoutes,
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: AppSizingTheme.of(context).routeListHeadingFontSize,
+                  fontWeight: AppTextStyle.semiBold,
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -372,20 +436,26 @@ class _RouteItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    route.name,
-                    style: TextStyle(
-                      fontSize: AppTextStyle.md2,
-                      fontWeight: AppTextStyle.medium,
-                      color: isSelected ? AppColors.primary : Colors.black,
+                  Builder(
+                    builder: (context) => Text(
+                      route.name,
+                      style: TextStyle(
+                        fontSize:
+                            AppSizingTheme.of(context).routeItemNameFontSize,
+                        fontWeight: AppTextStyle.medium,
+                        color: isSelected ? AppColors.primary : Colors.black,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    '距離 ${route.distance} / ${route.time}',
-                    style: TextStyle(
-                      fontSize: AppTextStyle.sm,
-                      color: isSelected ? AppColors.primary : Colors.black,
+                  Builder(
+                    builder: (context) => Text(
+                      '距離 ${route.distance} / ${route.time}',
+                      style: TextStyle(
+                        fontSize:
+                            AppSizingTheme.of(context).routeItemSubFontSize,
+                        color: isSelected ? AppColors.primary : Colors.black,
+                      ),
                     ),
                   ),
                 ],
@@ -488,15 +558,17 @@ class _SelectedRouteCard extends StatelessWidget {
             ),
           ),
           // 地図プレースホルダー
-          Container(
-            width: double.infinity,
-            height: 160,
-            color: AppColors.chipUnselected,
-            child: const Center(
-              child: Icon(
-                Icons.map_outlined,
-                size: 48,
-                color: AppColors.textDisabled,
+          Builder(
+            builder: (context) => Container(
+              width: double.infinity,
+              height: AppSizingTheme.of(context).mapPlaceholderHeight,
+              color: AppColors.chipUnselected,
+              child: const Center(
+                child: Icon(
+                  Icons.map_outlined,
+                  size: 48,
+                  color: AppColors.textDisabled,
+                ),
               ),
             ),
           ),
@@ -504,6 +576,7 @@ class _SelectedRouteCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Wrap(
               spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
               alignment: WrapAlignment.start,
               children: [
                 _RouteTag(label: route.name),
@@ -535,11 +608,13 @@ class _RouteTag extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.full),
         border: Border.all(color: AppColors.primary),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.primary,
-          fontSize: 10,
+      child: Builder(
+        builder: (context) => Text(
+          label,
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: AppSizingTheme.of(context).routeTagFontSize,
+          ),
         ),
       ),
     );
@@ -586,12 +661,14 @@ class _CalendarRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              Container(
-                height: 3,
-                width: 46,
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppRadius.xs),
+              Builder(
+                builder: (context) => Container(
+                  height: 3,
+                  width: AppSizingTheme.of(context).calendarUnderlineWidth,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                  ),
                 ),
               ),
             ],
@@ -607,7 +684,7 @@ class _CalendarRow extends StatelessWidget {
 // ──────────────────────────────────────────
 
 class _WalkInfoCard extends StatelessWidget {
-  const _WalkInfoCard({required this.log, required this.onSave});
+  const _WalkInfoCard({super.key, required this.log, required this.onSave});
 
   final WalkLog log;
   final VoidCallback onSave;
@@ -658,66 +735,49 @@ class _WalkInfoCard extends StatelessWidget {
             value: log.distance,
           ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Text(
-                '${AppStrings.walkSpotCount}：${log.spotCount}件',
-                style: const TextStyle(
-                  fontSize: AppTextStyle.md,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: 30),
-              OutlinedButton(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.primary),
-                  foregroundColor: AppColors.primary,
-                  minimumSize: const Size(108, 24),
-                  tapTargetSize: MaterialTapTargetSize.padded,
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                  ),
-                ),
-                child: const Text(
-                  AppStrings.viewDetails,
-                  style: TextStyle(fontSize: AppTextStyle.sm),
-                ),
-              ),
-            ],
+          Text(
+            '${AppStrings.walkSpotCount}：${log.spotCount}件',
+            style: const TextStyle(
+              fontSize: AppTextStyle.md,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          SizedBox(
-            width: 176,
-            height: 90,
-            child: CustomPaint(
-              painter: const DashedBorderPainter(),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ExcludeSemantics(
-                    child: SvgPicture.asset(
-                      'assets/SVG/camera.svg',
-                      width: AppSize.iconMd,
-                      height: AppSize.iconMd,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.textAccent,
-                        BlendMode.srcIn,
+          Builder(
+            builder: (context) {
+              final sizing = AppSizingTheme.of(context);
+              return SizedBox(
+                width: sizing.photoBoxWidth,
+                height: sizing.walkInfoPhotoHeight,
+                child: CustomPaint(
+                  painter: const DashedBorderPainter(),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ExcludeSemantics(
+                        child: SvgPicture.asset(
+                          'assets/SVG/camera.svg',
+                          width: AppSize.iconMd,
+                          height: AppSize.iconMd,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.textAccent,
+                            BlendMode.srcIn,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: AppSpacing.sm),
+                      const Text(
+                        AppStrings.addPhoto,
+                        style: TextStyle(
+                          color: AppColors.textAccent,
+                          fontSize: AppTextStyle.sm,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  const Text(
-                    AppStrings.addPhoto,
-                    style: TextStyle(
-                      color: AppColors.textAccent,
-                      fontSize: AppTextStyle.sm,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 30),
           SizedBox(
@@ -800,19 +860,21 @@ class _SaveConfirmDialog extends StatelessWidget {
     return '${match.group(1)}月${match.group(2)}日（${match.group(3)}）';
   }
 
-  static const double _buttonWidth = 125.0;
-
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x2l,
+        vertical: AppSpacing.x2l,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-          AppSpacing.x2l,
+          AppSpacing.lg,
           AppSpacing.x3l,
-          AppSpacing.x2l,
+          AppSpacing.lg,
           AppSpacing.x2l,
         ),
         child: Column(
@@ -869,37 +931,44 @@ class _SaveConfirmDialog extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.x2l),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: _buttonWidth,
-                  height: AppSpacing.x5l,
-                  child: ElevatedButton(
-                    onPressed: onSave,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                Expanded(
+                  child: SizedBox(
+                    height: AppSpacing.x5l,
+                    child: ElevatedButton(
+                      onPressed: onSave,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
                       ),
+                      child: const Text(AppStrings.saveButton),
                     ),
-                    child: const Text(AppStrings.saveButton),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                SizedBox(
-                  width: _buttonWidth,
-                  height: AppSpacing.x5l,
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.primary),
-                      foregroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                Expanded(
+                  child: SizedBox(
+                    height: AppSpacing.x5l,
+                    child: OutlinedButton(
+                      onPressed: onCancel,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        side: const BorderSide(color: AppColors.primary),
+                        foregroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
                       ),
+                      child: const Text(AppStrings.cancelButton),
                     ),
-                    child: const Text(AppStrings.cancelButton),
                   ),
                 ),
               ],

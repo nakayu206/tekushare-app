@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -16,8 +17,19 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: SettingsPage()),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
         ),
       );
       await tester.pump();
@@ -86,6 +98,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -119,6 +140,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -151,6 +181,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -313,38 +352,64 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: SettingsPage())),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
       );
       await tester.pump();
 
       await tester.ensureVisible(
-        find.text(AppStrings.settingsShareSpotsList),
+        find.text(AppStrings.settingsShareWantToGo),
       );
-      await tester.tap(find.text(AppStrings.settingsShareSpotsList));
+      await tester.tap(find.text(AppStrings.settingsShareWantToGo));
       await tester.pump();
 
-      expect(find.text(AppStrings.settingsShareSpotsList), findsOneWidget);
+      expect(find.text(AppStrings.settingsShareWantToGo), findsOneWidget);
     });
 
-    // シェアの散歩ルートチェックボックスをタップする
-    testWidgets('tapping share routes checkbox toggles state', (tester) async {
+    // シェアの行った！リストチェックボックスをタップする
+    testWidgets('tapping share visited checkbox toggles state', (tester) async {
       tester.view.physicalSize = const Size(1170, 6000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: SettingsPage())),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
       );
       await tester.pump();
 
       await tester.ensureVisible(
-        find.text(AppStrings.settingsShareRoutesList).first,
+        find.text(AppStrings.settingsShareVisited).first,
       );
-      await tester.tap(find.text(AppStrings.settingsShareRoutesList).first);
+      await tester.tap(find.text(AppStrings.settingsShareVisited).first);
       await tester.pump();
 
-      expect(find.text(AppStrings.settingsShareRoutesList), findsWidgets);
+      expect(find.text(AppStrings.settingsShareVisited), findsWidgets);
     });
 
     // 内容保存ボタンをタップしてもエラーにならない
@@ -355,7 +420,20 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: SettingsPage())),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
       );
       await tester.pump();
 
@@ -376,7 +454,20 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: SettingsPage())),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
       );
       await tester.pump();
 
@@ -397,7 +488,20 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: SettingsPage())),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
       );
       await tester.pump();
 
@@ -418,7 +522,20 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: SettingsPage())),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
       );
       await tester.pump();
 

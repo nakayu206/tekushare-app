@@ -10,8 +10,9 @@ class SettingsState {
     this.inactivityEnabled = false,
     this.inactivityMinutes = 15,
     this.registeredContactName,
-    this.shareSpots = false,
-    this.shareRoutes = false,
+    this.shareWantToGo = true,
+    this.shareVisited = true,
+    this.sharedAccounts = const ['あかり', 'たかし', 'ゆか', 'けんじ'],
   });
 
   final bool timerEnabled;
@@ -20,8 +21,9 @@ class SettingsState {
   final bool inactivityEnabled;
   final int inactivityMinutes;
   final String? registeredContactName;
-  final bool shareSpots;
-  final bool shareRoutes;
+  final bool shareWantToGo;
+  final bool shareVisited;
+  final List<String> sharedAccounts;
 
   SettingsState copyWith({
     bool? timerEnabled,
@@ -30,8 +32,9 @@ class SettingsState {
     bool? inactivityEnabled,
     int? inactivityMinutes,
     String? registeredContactName,
-    bool? shareSpots,
-    bool? shareRoutes,
+    bool? shareWantToGo,
+    bool? shareVisited,
+    List<String>? sharedAccounts,
   }) =>
       SettingsState(
         timerEnabled: timerEnabled ?? this.timerEnabled,
@@ -41,8 +44,9 @@ class SettingsState {
         inactivityMinutes: inactivityMinutes ?? this.inactivityMinutes,
         registeredContactName:
             registeredContactName ?? this.registeredContactName,
-        shareSpots: shareSpots ?? this.shareSpots,
-        shareRoutes: shareRoutes ?? this.shareRoutes,
+        shareWantToGo: shareWantToGo ?? this.shareWantToGo,
+        shareVisited: shareVisited ?? this.shareVisited,
+        sharedAccounts: sharedAccounts ?? this.sharedAccounts,
       );
 }
 
@@ -59,8 +63,16 @@ class SettingsViewModel extends Notifier<SettingsState> {
       state = state.copyWith(inactivityMinutes: v);
   void registerContact(String name) =>
       state = state.copyWith(registeredContactName: name);
-  void setShareSpots(bool v) => state = state.copyWith(shareSpots: v);
-  void setShareRoutes(bool v) => state = state.copyWith(shareRoutes: v);
+  void setShareWantToGo(bool v) => state = state.copyWith(shareWantToGo: v);
+  void setShareVisited(bool v) => state = state.copyWith(shareVisited: v);
+  void removeSharedAccount(String name) {
+    final updated = List<String>.from(state.sharedAccounts)..remove(name);
+    state = state.copyWith(sharedAccounts: updated);
+  }
+
+  void logout() {}
+
+  void deleteAccount() {}
 }
 
 final settingsViewModelProvider =

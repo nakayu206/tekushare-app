@@ -7,6 +7,7 @@ import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 void main() {
@@ -18,8 +19,19 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: WantToGoPage()),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WantToGoPage(),
+          ),
         ),
       );
       await tester.pump();
@@ -172,6 +184,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -209,6 +230,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -241,6 +271,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -273,6 +312,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -305,6 +353,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(

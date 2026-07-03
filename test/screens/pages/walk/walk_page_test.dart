@@ -13,6 +13,7 @@ import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 // ──────────────────────────────────────────
@@ -70,7 +71,18 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: overrides,
-          child: const MaterialApp(home: WalkPage()),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkPage(),
+          ),
         ),
       );
       await tester.pump();
@@ -199,6 +211,15 @@ void main() {
             locationProvider.overrideWith((ref) => locationStream),
           ],
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -235,6 +256,15 @@ void main() {
             locationProvider.overrideWith((ref) => locationStream),
           ],
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -268,6 +298,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -300,6 +339,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -332,6 +380,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -364,6 +421,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(

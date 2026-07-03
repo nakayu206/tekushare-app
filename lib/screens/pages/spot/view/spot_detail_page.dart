@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/spot_detail_viewmodel.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
@@ -74,6 +76,23 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     );
   }
 
+  void _onMoveToWentPressed() {
+    showDialog<void>(
+      context: context,
+      builder: (_) => _MoveToWentConfirmDialog(
+        title: _titleController.text.isEmpty
+            ? AppStrings.noTitle
+            : _titleController.text,
+        onConfirm: () {
+          Navigator.pop(context);
+          if (!mounted) return;
+          _showResultDialog(AppStrings.spotDetailMoveToWentDone);
+        },
+        onCancel: () => Navigator.pop(context),
+      ),
+    );
+  }
+
   void _showResultDialog(String message) {
     showDialog<void>(
       context: context,
@@ -114,21 +133,24 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _LocationArea(),
-              const SizedBox(height: 34),
+              SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               CategoryChipGroup(
                 categories: _categories,
                 selectedCategory: state.selectedCategory,
                 onSelected: vm.selectCategory,
               ),
-              const SizedBox(height: 34),
+              SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               _TitleInput(controller: _titleController),
-              const SizedBox(height: 34),
-              const _TwoPhotoRow(),
-              const SizedBox(height: 34),
-              _DeleteButton(onPressed: _onDeletePressed),
+              SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
+              const _PhotoBox(),
+              SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
+              if (widget.isWantToGo)
+                _MoveToWentButton(onPressed: _onMoveToWentPressed)
+              else
+                _DeleteButton(onPressed: _onDeletePressed),
               const SizedBox(height: 16),
               _SaveButton(onPressed: _onSavePressed),
-              const SizedBox(height: 34),
+              SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
             ],
           ),
         ),
@@ -174,7 +196,7 @@ class _LocationArea extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 161,
+      height: AppSizingTheme.of(context).locationAreaHeight,
       decoration: BoxDecoration(
         color: AppColors.chipUnselected,
         borderRadius: BorderRadius.circular(12),
@@ -230,32 +252,15 @@ class _TitleInput extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────
-// 写真エリア（2枚横並び）
-// ──────────────────────────────────────────
-
-class _TwoPhotoRow extends StatelessWidget {
-  const _TwoPhotoRow();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(child: _PhotoBox()),
-        SizedBox(width: 16),
-        Expanded(child: _PhotoBox()),
-      ],
-    );
-  }
-}
-
 class _PhotoBox extends StatelessWidget {
   const _PhotoBox();
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
     return SizedBox(
-      height: 100,
+      width: sizing.photoBoxWidth,
+      height: sizing.photoBoxHeight,
       child: CustomPaint(
         painter: const DashedBorderPainter(),
         child: Column(
@@ -263,14 +268,14 @@ class _PhotoBox extends StatelessWidget {
           children: [
             SvgPicture.asset(
               'assets/SVG/camera.svg',
-              width: 24,
-              height: 24,
+              width: AppSize.iconMd,
+              height: AppSize.iconMd,
               colorFilter: const ColorFilter.mode(
                 AppColors.textAccent,
                 BlendMode.srcIn,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             const Text(
               AppStrings.addPhoto,
               style: TextStyle(
@@ -296,9 +301,11 @@ class _DeleteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
+
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: sizing.detailBtnHeight,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -306,13 +313,51 @@ class _DeleteButton extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(47),
+            borderRadius: BorderRadius.circular(sizing.detailBtnRadius),
           ),
         ),
-        child: const Text(
+        child: Text(
           AppStrings.spotDetailDeleteButton,
           style: TextStyle(
-            fontSize: AppTextStyle.lg2,
+            fontSize: sizing.detailBtnFontSize,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 行った！に保存ボタン
+// ──────────────────────────────────────────
+
+class _MoveToWentButton extends StatelessWidget {
+  const _MoveToWentButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
+
+    return SizedBox(
+      width: double.infinity,
+      height: sizing.detailBtnHeight,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.listSelected,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(sizing.detailBtnRadius),
+          ),
+        ),
+        child: Text(
+          AppStrings.spotDetailMoveToWentButton,
+          style: TextStyle(
+            fontSize: sizing.detailBtnFontSize,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -332,9 +377,11 @@ class _SaveButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
+
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: sizing.detailBtnHeight,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -342,13 +389,13 @@ class _SaveButton extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(47),
+            borderRadius: BorderRadius.circular(sizing.detailBtnRadius),
           ),
         ),
-        child: const Text(
+        child: Text(
           AppStrings.spotDetailSaveButton,
           style: TextStyle(
-            fontSize: AppTextStyle.lg2,
+            fontSize: sizing.detailBtnFontSize,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -401,6 +448,9 @@ class _SaveConfirmDialog extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onConfirm,
                     style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -415,6 +465,9 @@ class _SaveConfirmDialog extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: onCancel,
                     style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -474,6 +527,9 @@ class _DeleteConfirmDialog extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onConfirm,
                     style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -488,11 +544,103 @@ class _DeleteConfirmDialog extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: onCancel,
                     style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     child: const Text(AppStrings.cancelButton),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 行った！に保存確認ダイアログ
+// ──────────────────────────────────────────
+
+class _MoveToWentConfirmDialog extends StatelessWidget {
+  const _MoveToWentConfirmDialog({
+    required this.title,
+    required this.onConfirm,
+    required this.onCancel,
+  });
+
+  final String title;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x2l,
+        vertical: AppSpacing.x2l,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          28,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              AppStrings.spotDetailMoveToWentConfirmMessage,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onCancel,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(AppStrings.cancelButton),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      backgroundColor: AppColors.listSelected,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(AppStrings.spotDetailMoveToWentButton),
                   ),
                 ),
               ],
@@ -533,7 +681,7 @@ class _ResultDialog extends StatelessWidget {
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              height: 52,
+              height: AppSizingTheme.of(context).dialogBtnHeight,
               child: ElevatedButton(
                 onPressed: onClose,
                 style: ElevatedButton.styleFrom(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
@@ -33,8 +34,19 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: WalkRoutePage()),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
         ),
       );
       await tester.pump();
@@ -103,9 +115,18 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
           child: MaterialApp(
-            home: WalkRoutePage(showSaveDialogOnLoad: true),
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(showSaveDialogOnLoad: true),
           ),
         ),
       );
@@ -122,9 +143,18 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
           child: MaterialApp(
-            home: WalkRoutePage(showSaveDialogOnLoad: true),
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(showSaveDialogOnLoad: true),
           ),
         ),
       );
@@ -144,9 +174,18 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
           child: MaterialApp(
-            home: WalkRoutePage(showSaveDialogOnLoad: true),
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(showSaveDialogOnLoad: true),
           ),
         ),
       );
@@ -166,9 +205,18 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
           child: MaterialApp(
-            home: WalkRoutePage(showSaveDialogOnLoad: true),
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(showSaveDialogOnLoad: true),
           ),
         ),
       );
@@ -191,9 +239,18 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
           child: MaterialApp(
-            home: WalkRoutePage(showSaveDialogOnLoad: true),
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(showSaveDialogOnLoad: true),
           ),
         ),
       );
@@ -220,8 +277,17 @@ void main() {
             walkRouteViewModelProvider
                 .overrideWith(_NonStandardDateViewModel.new),
           ],
-          child: const MaterialApp(
-            home: WalkRoutePage(showSaveDialogOnLoad: true),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(showSaveDialogOnLoad: true),
           ),
         ),
       );
@@ -241,6 +307,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -273,6 +348,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -305,6 +389,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -402,17 +495,6 @@ void main() {
       await tester.pump();
 
       expect(find.text('3'), findsWidgets);
-    });
-
-    // 詳細を見るボタンをスクロールして表示しタップしてもエラーにならない（line 672）
-    testWidgets('tapping view details button does not throw', (tester) async {
-      await pumpPage(tester);
-
-      await tester.ensureVisible(find.text(AppStrings.viewDetails));
-      await tester.tap(find.text(AppStrings.viewDetails));
-      await tester.pump();
-
-      expect(find.text(AppStrings.viewDetails), findsOneWidget);
     });
   });
 }

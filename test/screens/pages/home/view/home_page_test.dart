@@ -12,6 +12,7 @@ import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/clock_provider.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 
 class _FakeWalkSessionRepository implements WalkSessionRepository {
@@ -58,7 +59,18 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: _baseOverrides,
-          child: const MaterialApp(home: HomePage()),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const HomePage(),
+          ),
         ),
       );
       await tester.pump();
@@ -78,7 +90,18 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: HomePage()),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const HomePage(),
+          ),
         ),
       );
       // アニメーション完了まで進める
@@ -106,7 +129,18 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: HomePage()),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const HomePage(),
+          ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 3000));
@@ -129,7 +163,18 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: HomePage()),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const HomePage(),
+          ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 3000));
