@@ -112,9 +112,11 @@ class _HomePageState extends ConsumerState<HomePage>
               ),
             ),
             const Spacer(),
-            SizedBox(
-              height: 280,
-              child: _FootprintSection(footprintFades: _footprintFades),
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 280),
+                child: _FootprintSection(footprintFades: _footprintFades),
+              ),
             ),
           ],
         ),

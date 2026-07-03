@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
@@ -56,7 +57,8 @@ class WalkPage extends ConsumerWidget {
             const SizedBox(height: 16),
             _GpsStatusIndicator(locationState: locationState),
             const Spacer(flex: 2),
-            Center(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
               child: _WalkActionButton(
                 label: AppStrings.takePhoto,
                 svgAsset: 'assets/SVG/camera.svg',
@@ -66,7 +68,8 @@ class WalkPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Center(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
               child: _WalkActionButton(
                 label: AppStrings.saveToWantToGo,
                 onPressed: () => Navigator.push(
@@ -183,7 +186,7 @@ class _WalkActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 364,
+      width: double.infinity,
       height: 105,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
