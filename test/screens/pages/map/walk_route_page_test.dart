@@ -183,7 +183,8 @@ void main() {
     });
 
     // ルート名を入力して保存するとその名前が使われる（line 54: non-empty name branch）
-    testWidgets('saving with entered name uses the entered name', (tester) async {
+    testWidgets('saving with entered name uses the entered name',
+        (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -206,7 +207,8 @@ void main() {
     });
 
     // 日付形式が不正の場合 _shortDate はそのまま返す（line 799 regex fallback）
-    testWidgets('_shortDate falls back to raw date when regex fails', (tester) async {
+    testWidgets('_shortDate falls back to raw date when regex fails',
+        (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -215,7 +217,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            walkRouteViewModelProvider.overrideWith(_NonStandardDateViewModel.new),
+            walkRouteViewModelProvider
+                .overrideWith(_NonStandardDateViewModel.new),
           ],
           child: const MaterialApp(
             home: WalkRoutePage(showSaveDialogOnLoad: true),
@@ -228,7 +231,8 @@ void main() {
     });
 
     // ボトムナビのホームをタップすると前の画面に戻る
-    testWidgets('tapping bottom nav home goes back to previous screen', (tester) async {
+    testWidgets('tapping bottom nav home goes back to previous screen',
+        (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -259,7 +263,8 @@ void main() {
     });
 
     // ボトムナビのリストをタップすると SpotListPage へ遷移する
-    testWidgets('tapping bottom nav list navigates to SpotListPage', (tester) async {
+    testWidgets('tapping bottom nav list navigates to SpotListPage',
+        (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -290,7 +295,8 @@ void main() {
     });
 
     // ボトムナビの設定をタップすると SettingsPage へ遷移する
-    testWidgets('tapping bottom nav settings navigates to SettingsPage', (tester) async {
+    testWidgets('tapping bottom nav settings navigates to SettingsPage',
+        (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -331,7 +337,8 @@ void main() {
     });
 
     // 前のページボタンをタップするとページが戻る（line 308）
-    testWidgets('tapping previous page button shows previous page', (tester) async {
+    testWidgets('tapping previous page button shows previous page',
+        (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.byIcon(Icons.chevron_right));
@@ -357,7 +364,8 @@ void main() {
     });
 
     // 2ページ目で右フリングで前ページへ（line 213）
-    testWidgets('flinging right on page 2 navigates to previous page', (tester) async {
+    testWidgets('flinging right on page 2 navigates to previous page',
+        (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.byIcon(Icons.chevron_right));
@@ -373,7 +381,8 @@ void main() {
     });
 
     // ページ2のルートをタップすると選択が変わる（line 290 + selectRoute via pagination）
-    testWidgets('tapping route on second page changes selection', (tester) async {
+    testWidgets('tapping route on second page changes selection',
+        (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.byIcon(Icons.chevron_right));

@@ -213,7 +213,8 @@ void main() {
     });
 
     // ボトムナビのホームをタップすると最初の画面に戻る（line 117）
-    testWidgets('tapping bottom nav home returns to first screen', (tester) async {
+    testWidgets('tapping bottom nav home returns to first screen',
+        (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);

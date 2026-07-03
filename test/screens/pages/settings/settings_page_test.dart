@@ -270,7 +270,8 @@ void main() {
       await tester.tap(find.text(AppStrings.settingsPhoneRegisterConfirm));
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.settingsPhoneRegisteredMessage), findsOneWidget);
+      expect(
+          find.text(AppStrings.settingsPhoneRegisteredMessage), findsOneWidget);
     });
 
     // 登録完了ダイアログを閉じる
@@ -286,7 +287,8 @@ void main() {
       await tester.tap(find.text(AppStrings.closeButton));
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.settingsPhoneRegisteredMessage), findsNothing);
+      expect(
+          find.text(AppStrings.settingsPhoneRegisteredMessage), findsNothing);
     });
 
     // 確認ダイアログのキャンセル
@@ -448,7 +450,8 @@ void main() {
     });
 
     // ピッカーをスクロールすると onSelectedItemChanged が呼ばれる（lines 281-282）
-    testWidgets('scrolling picker triggers onSelectedItemChanged', (tester) async {
+    testWidgets('scrolling picker triggers onSelectedItemChanged',
+        (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.text('30${AppStrings.minuteSuffix}').first);
