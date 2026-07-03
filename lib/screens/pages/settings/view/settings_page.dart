@@ -754,7 +754,11 @@ class _ShareCard extends StatelessWidget {
             width: double.infinity,
             height: AppSize.buttonHeight,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text(AppStrings.saved)),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -1556,7 +1560,7 @@ class _ConfirmActionDialog extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: AppTextStyle.md),
+              style: const TextStyle(fontSize: AppTextStyle.sm2),
             ),
             const SizedBox(height: AppSpacing.x2l),
             Row(
