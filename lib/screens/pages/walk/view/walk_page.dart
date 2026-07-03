@@ -79,7 +79,8 @@ class WalkPage extends ConsumerWidget {
               ),
             ),
             const Spacer(flex: 3),
-            Center(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
               child: PrimaryButton(
                 label: AppStrings.endWalk,
                 onPressed: () => Navigator.push(

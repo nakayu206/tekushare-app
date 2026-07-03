@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/app.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
@@ -110,10 +111,15 @@ class _HomePageState extends ConsumerState<HomePage>
                 const Spacer(flex: 8),
                 FadeTransition(
                   opacity: _buttonFade,
-                  child: PrimaryButton(
-                    label: AppStrings.startWalk,
-                    onPressed: () =>
-                        ref.read(walkSessionProvider.notifier).startWalk(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.x2l,
+                    ),
+                    child: PrimaryButton(
+                      label: AppStrings.startWalk,
+                      onPressed: () =>
+                          ref.read(walkSessionProvider.notifier).startWalk(),
+                    ),
                   ),
                 ),
                 const Spacer(),

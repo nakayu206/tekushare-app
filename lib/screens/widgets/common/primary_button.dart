@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 
 // ボタンの寸法・スタイル定数
-const _kWidth = 362.0;
-const _kHeight = 120.0;
-const _kBorderRadius = 60.0;
-const _kFontSize = 28.0;
+// デザイン基準値（390dp 幅のデバイスで使用した値）
+const _kDesignWidth = 390.0;
+const _kHeightRatio = 120.0 / _kDesignWidth; // ≈ 0.308
+const _kFontRatio = 28.0 / _kDesignWidth; // ≈ 0.072
+const _kBorderRadiusRatio = 60.0 / _kDesignWidth;
 const _kShadowOpacity = 0.25;
 const _kShadowOffsetY = 4.0;
 const _kShadowBlur = 4.0;
 
 /// アプリ共通のプライマリボタン
-/// [label] に表示テキスト、[onPressed] にタップ時のコールバックを渡す
+/// 幅は親ウィジェットに従う（呼び出し側で Padding などで余白を指定）。
+/// 高さ・フォントサイズは画面幅に比例してスケーリングされる。
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,
@@ -25,12 +27,17 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.sizeOf(context).width;
+    final height = (sw * _kHeightRatio).clamp(72.0, 120.0);
+    final fontSize = (sw * _kFontRatio).clamp(18.0, 28.0);
+    final radius = (sw * _kBorderRadiusRatio).clamp(36.0, 60.0);
+
     return Container(
-      width: _kWidth,
-      height: _kHeight,
+      width: double.infinity,
+      height: height,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_kBorderRadius),
+        borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: _kShadowOpacity),
@@ -46,13 +53,13 @@ class PrimaryButton extends StatelessWidget {
           foregroundColor: AppColors.textOnPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_kBorderRadius),
+            borderRadius: BorderRadius.circular(radius),
           ),
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            fontSize: _kFontSize,
+          style: TextStyle(
+            fontSize: fontSize,
             fontWeight: FontWeight.w500,
           ),
         ),
