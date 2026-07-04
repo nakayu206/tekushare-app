@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart' show Position;
@@ -47,76 +48,79 @@ class WalkPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locationState = ref.watch(locationProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const ClockHeader(),
-            const SizedBox(height: 16),
-            _GpsStatusIndicator(locationState: locationState),
-            const Spacer(flex: 2),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
-              child: _WalkActionButton(
-                label: AppStrings.takePhoto,
-                svgAsset: 'assets/SVG/camera.svg',
-                onPressed: () =>
-                    _onTakePhotoPressed(context, ref, locationState),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
-              child: _WalkActionButton(
-                label: AppStrings.saveToWantToGo,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const WantToGoPage()),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const ClockHeader(),
+              const SizedBox(height: 16),
+              _GpsStatusIndicator(locationState: locationState),
+              const Spacer(flex: 2),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
+                child: _WalkActionButton(
+                  label: AppStrings.takePhoto,
+                  svgAsset: 'assets/SVG/camera.svg',
+                  onPressed: () =>
+                      _onTakePhotoPressed(context, ref, locationState),
                 ),
               ),
-            ),
-            const Spacer(flex: 3),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
-              child: PrimaryButton(
-                label: AppStrings.endWalk,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const EndWalkPage()),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
+                child: _WalkActionButton(
+                  label: AppStrings.saveToWantToGo,
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WantToGoPage()),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const Spacer(flex: 3),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
+                child: PrimaryButton(
+                  label: AppStrings.endWalk,
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EndWalkPage()),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: AppBottomNav(
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.popUntil(context, (route) => route.isFirst);
-          } else if (index == 1) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const SpotListPage()),
-              (route) => route.isFirst,
-            );
-          } else if (index == 2) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const WalkRoutePage()),
-              (route) => route.isFirst,
-            );
-          } else if (index == 3) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsPage()),
-              (route) => route.isFirst,
-            );
-          }
-        },
+        bottomNavigationBar: AppBottomNav(
+          currentIndex: 0,
+          onTap: (index) {
+            if (index == 0) {
+              Navigator.popUntil(context, (route) => route.isFirst);
+            } else if (index == 1) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const SpotListPage()),
+                (route) => route.isFirst,
+              );
+            } else if (index == 2) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+                (route) => route.isFirst,
+              );
+            } else if (index == 3) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+                (route) => route.isFirst,
+              );
+            }
+          },
+        ),
       ),
     );
   }

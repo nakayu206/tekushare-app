@@ -105,6 +105,7 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
     state = const EmailAuthLoading();
     try {
       await _service.registerWithEmail(email, password, displayName);
+      state = const EmailAuthIdle();
     } on FirebaseAuthException catch (e) {
       state = EmailAuthError(_mapErrorCode(e.code));
     } catch (_) {
@@ -116,6 +117,7 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
     state = const EmailAuthLoading();
     try {
       await _service.signInWithEmail(email, password);
+      state = const EmailAuthIdle();
     } on FirebaseAuthException catch (e) {
       state = EmailAuthError(_mapErrorCode(e.code));
     } catch (_) {

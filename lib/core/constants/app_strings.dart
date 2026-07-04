@@ -1,4 +1,8 @@
 abstract class AppStrings {
+  // アプリ共通
+  static const appTitle = 'てくしぇあ';
+  static const appTagline = '〜散歩の記録・発見・見守りをシェア〜';
+
   // ナビゲーション
   static const navHome = 'ホーム';
   static const navList = 'リスト';

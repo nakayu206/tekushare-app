@@ -445,6 +445,21 @@ class _SaveConfirmDialog extends StatelessWidget {
             Row(
               children: [
                 Expanded(
+                  child: OutlinedButton(
+                    onPressed: onCancel,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(AppStrings.cancelButton),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
                   child: ElevatedButton(
                     onPressed: onConfirm,
                     style: ElevatedButton.styleFrom(
@@ -458,21 +473,6 @@ class _SaveConfirmDialog extends StatelessWidget {
                       ),
                     ),
                     child: const Text(AppStrings.saveButton),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(AppStrings.cancelButton),
                   ),
                 ),
               ],
@@ -511,6 +511,7 @@ class _DeleteConfirmDialog extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
+                color: AppColors.primary,
                 fontSize: AppTextStyle.lg2,
                 fontWeight: FontWeight.w600,
               ),
@@ -523,6 +524,21 @@ class _DeleteConfirmDialog extends StatelessWidget {
             const SizedBox(height: 24),
             Row(
               children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onCancel,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(AppStrings.cancelButton),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: onConfirm,
@@ -537,21 +553,6 @@ class _DeleteConfirmDialog extends StatelessWidget {
                       ),
                     ),
                     child: const Text(AppStrings.spotDetailDeleteButton),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(AppStrings.cancelButton),
                   ),
                 ),
               ],

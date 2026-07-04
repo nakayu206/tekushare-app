@@ -50,9 +50,15 @@ class TekuShareApp extends ConsumerWidget {
           error: (e, _) => Scaffold(body: Center(child: Text('認証エラー: $e'))),
           data: (user) {
             if (user == null) return const EmailAuthPage();
-            if (user.displayName == null || user.displayName!.isEmpty) {
-              return const DisplayNamePage();
+            final name = user.displayName;
+            // null は Firebase がプロフィールを同期中の一時状態。
+            // ローディングを挟み DisplayNamePage が誤表示されるのを防ぐ。
+            if (name == null) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
             }
+            if (name.isEmpty) return const DisplayNamePage();
             return const HomePage();
           },
         ),

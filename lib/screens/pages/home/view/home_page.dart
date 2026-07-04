@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/app.dart';
@@ -38,7 +39,9 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void didPopNext() {
     if (ref.read(walkSessionProvider).status == WalkStatus.walking) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      // pop() のロック解除後（マイクロタスク）に push する。
+      // 直接呼ぶと Navigator がロック中で _debugLocked アサーションが発生する。
+      Future.microtask(() {
         if (mounted) {
           Navigator.push(
             context,
@@ -97,64 +100,70 @@ class _HomePageState extends ConsumerState<HomePage>
       }
     });
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            // 画面高さの 38% を上限 280px としてフットプリントエリアを確保
-            final footprintHeight =
-                (constraints.maxHeight * 0.38).clamp(0.0, 280.0);
-            return Column(
-              children: [
-                const ClockHeader(),
-                const Spacer(flex: 8),
-                FadeTransition(
-                  opacity: _buttonFade,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.x2l,
-                    ),
-                    child: PrimaryButton(
-                      label: AppStrings.startWalk,
-                      onPressed: () =>
-                          ref.read(walkSessionProvider.notifier).startWalk(),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        resizeToAvoidBottomInset: false,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // 画面高さの 38% を上限 280px としてフットプリントエリアを確保
+              final footprintHeight =
+                  (constraints.maxHeight * 0.38).clamp(0.0, 280.0);
+              return Column(
+                children: [
+                  const ClockHeader(),
+                  const Spacer(flex: 8),
+                  FadeTransition(
+                    opacity: _buttonFade,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.x2l,
+                      ),
+                      child: PrimaryButton(
+                        label: AppStrings.startWalk,
+                        onPressed: () =>
+                            ref.read(walkSessionProvider.notifier).startWalk(),
+                      ),
                     ),
                   ),
-                ),
-                const Spacer(),
-                SizedBox(
-                  height: footprintHeight,
-                  child: _FootprintSection(footprintFades: _footprintFades),
-                ),
-              ],
-            );
+                  const Spacer(),
+                  SizedBox(
+                    height: footprintHeight,
+                    child: _FootprintSection(footprintFades: _footprintFades),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        bottomNavigationBar: AppBottomNav(
+          currentIndex: 0,
+          onTap: (index) {
+            if (index == 1 && ModalRoute.of(context)?.isCurrent == true) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const SpotListPage()),
+                (route) => route.isFirst,
+              );
+            } else if (index == 2 &&
+                ModalRoute.of(context)?.isCurrent == true) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+                (route) => route.isFirst,
+              );
+            } else if (index == 3 &&
+                ModalRoute.of(context)?.isCurrent == true) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+                (route) => route.isFirst,
+              );
+            }
           },
         ),
-      ),
-      bottomNavigationBar: AppBottomNav(
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 1 && ModalRoute.of(context)?.isCurrent == true) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const SpotListPage()),
-              (route) => route.isFirst,
-            );
-          } else if (index == 2 && ModalRoute.of(context)?.isCurrent == true) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const WalkRoutePage()),
-              (route) => route.isFirst,
-            );
-          } else if (index == 3 && ModalRoute.of(context)?.isCurrent == true) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsPage()),
-              (route) => route.isFirst,
-            );
-          }
-        },
       ),
     );
   }

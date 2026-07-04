@@ -7,7 +7,7 @@ abstract class AppColors {
   static const textDisabled = Color(0xFFB0B0B0);
   static const textLight = Color(0xFFDCE8EB);
   static const textOnPrimary = Color(0xFFFFFFFF);
-  static const background = Color(0xFFFFFCF3);
+  static const background = Color(0xFFFFF8E7);
   static const surface = Color(0xFFFFFFFF);
   static const chipUnselected = Color(0xFFD9D9D9);
   static const listSelected = Color(0xFF17A6C8);
