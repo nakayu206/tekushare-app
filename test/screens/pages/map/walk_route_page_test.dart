@@ -230,8 +230,8 @@ void main() {
       expect(find.text(AppStrings.saved), findsNothing);
     });
 
-    // ルート名を入力して保存するとその名前が使われる（line 54: non-empty name branch）
-    testWidgets('saving with entered name uses the entered name',
+    // ルート名を入力して保存すると保存完了が表示される（line 54: non-empty name branch）
+    testWidgets('saving with entered name shows saved confirmation',
         (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
@@ -473,8 +473,8 @@ void main() {
       expect(find.byType(WalkRoutePage), findsOneWidget);
     });
 
-    // ページ2のルートをタップすると選択が変わる（line 290 + selectRoute via pagination）
-    testWidgets('tapping route on second page changes selection',
+    // ページ2のルートをタップしてもページが表示されている（line 290 + selectRoute via pagination）
+    testWidgets('tapping route on second page keeps page visible',
         (tester) async {
       await pumpPage(tester);
 
@@ -487,8 +487,8 @@ void main() {
       expect(find.byType(WalkRoutePage), findsOneWidget);
     });
 
-    // カレンダーの日付をタップすると選択が変わる（line 569）
-    testWidgets('tapping a calendar day changes selected day', (tester) async {
+    // カレンダーの日付をタップしてもページが表示されている（line 569）
+    testWidgets('tapping a calendar day keeps page visible', (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.text('3'));

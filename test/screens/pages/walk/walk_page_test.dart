@@ -290,10 +290,7 @@ void main() {
     // ボトムナビのホームをタップすると前の画面に戻る
     testWidgets('tapping bottom nav home goes back to previous screen',
         (tester) async {
-      tester.view.physicalSize = const Size(1170, 3000);
-      tester.view.devicePixelRatio = 3.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+      setDisplaySize(tester);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -331,10 +328,7 @@ void main() {
     // ボトムナビのリストをタップすると SpotListPage へ遷移する
     testWidgets('tapping bottom nav list navigates to SpotListPage',
         (tester) async {
-      tester.view.physicalSize = const Size(1170, 3000);
-      tester.view.devicePixelRatio = 3.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+      setDisplaySize(tester);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -372,10 +366,7 @@ void main() {
     // ボトムナビのルートをタップすると WalkRoutePage へ遷移する
     testWidgets('tapping bottom nav route navigates to WalkRoutePage',
         (tester) async {
-      tester.view.physicalSize = const Size(1170, 3000);
-      tester.view.devicePixelRatio = 3.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+      setDisplaySize(tester);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -413,10 +404,7 @@ void main() {
     // ボトムナビの設定をタップすると SettingsPage へ遷移する
     testWidgets('tapping bottom nav settings navigates to SettingsPage',
         (tester) async {
-      tester.view.physicalSize = const Size(1170, 3000);
-      tester.view.devicePixelRatio = 3.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+      setDisplaySize(tester);
 
       await tester.pumpWidget(
         ProviderScope(

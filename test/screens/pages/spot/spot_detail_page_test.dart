@@ -121,7 +121,7 @@ void main() {
     });
 
     // 写真を追加エリアが表示される
-    testWidgets('shows two add photo areas', (tester) async {
+    testWidgets('shows one add photo area', (tester) async {
       await pumpPage(tester);
 
       expect(find.text(AppStrings.addPhoto), findsOneWidget);

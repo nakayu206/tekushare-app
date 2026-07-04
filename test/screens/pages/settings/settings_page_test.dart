@@ -87,8 +87,8 @@ void main() {
       expect(find.text(AppStrings.switchOff), findsOneWidget);
     });
 
-    // ボトムナビのリストタップで前の画面に戻る
-    testWidgets('tapping bottom nav list goes to previous screen',
+    // ボトムナビのホームタップで前の画面に戻る
+    testWidgets('tapping bottom nav home goes to previous screen',
         (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
@@ -216,9 +216,8 @@ void main() {
       expect(find.byType(WalkRoutePage), findsOneWidget);
     });
 
-    // タイマー 片道 セグメントをタップすると往復がオフになる
-    testWidgets('tapping one-way segment sets roundTrip to false',
-        (tester) async {
+    // タイマー 片道 セグメントをタップしてもページが表示されている
+    testWidgets('tapping one-way segment keeps page visible', (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.text(AppStrings.oneWay));
@@ -227,8 +226,8 @@ void main() {
       expect(find.text(AppStrings.oneWay), findsOneWidget);
     });
 
-    // 往復セグメントをタップしても状態が変わらない（すでに往復）
-    testWidgets('tapping round-trip segment keeps roundTrip true',
+    // 往復セグメントをタップしてもページが表示されている
+    testWidgets('tapping round-trip segment keeps page visible',
         (tester) async {
       await pumpPage(tester);
 
