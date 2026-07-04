@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
-import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
@@ -45,64 +48,79 @@ class WalkPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locationState = ref.watch(locationProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const ClockHeader(),
-            const SizedBox(height: 16),
-            _GpsStatusIndicator(locationState: locationState),
-            const Spacer(flex: 2),
-            Center(
-              child: _WalkActionButton(
-                label: AppStrings.takePhoto,
-                svgAsset: 'assets/SVG/camera.svg',
-                fontSize: AppTextStyle.x1l,
-                onPressed: () =>
-                    _onTakePhotoPressed(context, ref, locationState),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: _WalkActionButton(
-                label: AppStrings.saveToWantToGo,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const WantToGoPage()),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const ClockHeader(),
+              const SizedBox(height: 16),
+              _GpsStatusIndicator(locationState: locationState),
+              const Spacer(flex: 2),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
+                child: _WalkActionButton(
+                  label: AppStrings.takePhoto,
+                  svgAsset: 'assets/SVG/camera.svg',
+                  onPressed: () =>
+                      _onTakePhotoPressed(context, ref, locationState),
                 ),
               ),
-            ),
-            const Spacer(flex: 3),
-            Center(
-              child: PrimaryButton(
-                label: AppStrings.endWalk,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const EndWalkPage()),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
+                child: _WalkActionButton(
+                  label: AppStrings.saveToWantToGo,
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WantToGoPage()),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const Spacer(flex: 3),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
+                child: PrimaryButton(
+                  label: AppStrings.endWalk,
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EndWalkPage()),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: AppBottomNav(
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SpotListPage()),
-            );
-          } else if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const WalkRoutePage()),
-            );
-          }
-        },
+        bottomNavigationBar: AppBottomNav(
+          currentIndex: 0,
+          onTap: (index) {
+            if (index == 0) {
+              Navigator.popUntil(context, (route) => route.isFirst);
+            } else if (index == 1) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const SpotListPage()),
+                (route) => route.isFirst,
+              );
+            } else if (index == 2) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+                (route) => route.isFirst,
+              );
+            } else if (index == 3) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+                (route) => route.isFirst,
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -160,23 +178,27 @@ class _WalkActionButton extends StatelessWidget {
   const _WalkActionButton({
     required this.label,
     this.svgAsset,
-    this.fontSize = AppTextStyle.xl,
     required this.onPressed,
   });
 
   final String label;
   final String? svgAsset;
-  final double fontSize;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
+    final height = sizing.actionBtnHeight;
+    final fontSize = sizing.actionBtnFontSize;
+    final iconSize = sizing.actionBtnIconSize;
+    final radius = sizing.actionBtnRadius;
+
     return Container(
-      width: 364,
-      height: 105,
+      width: double.infinity,
+      height: height,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(52),
+        borderRadius: BorderRadius.circular(radius),
         color: AppColors.textAccent,
         boxShadow: [
           BoxShadow(
@@ -193,7 +215,7 @@ class _WalkActionButton extends StatelessWidget {
           foregroundColor: AppColors.textOnPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(52),
+            borderRadius: BorderRadius.circular(radius),
           ),
         ),
         child: svgAsset != null
@@ -203,8 +225,8 @@ class _WalkActionButton extends StatelessWidget {
                   ExcludeSemantics(
                     child: SvgPicture.asset(
                       svgAsset!,
-                      width: 30,
-                      height: 30,
+                      width: iconSize,
+                      height: iconSize,
                       colorFilter: const ColorFilter.mode(
                         AppColors.textOnPrimary,
                         BlendMode.srcIn,

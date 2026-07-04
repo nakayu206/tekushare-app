@@ -2,8 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/domain/entities/walk_route.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/domain/repositories/route_repository.dart';
+import 'package:tekushare/domain/repositories/walk_session_repository.dart';
+import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
+import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+
+class _FakeWalkSessionRepository implements WalkSessionRepository {
+  @override
+  Future<void> saveSession(WalkSession session) async {}
+  @override
+  Future<List<WalkSession>> getAllSessions() async => [];
+  @override
+  Future<WalkSession?> getSessionById(String id) async => null;
+}
+
+class _FakeRouteRepository implements RouteRepository {
+  @override
+  Future<void> saveRoute(WalkRoute route) async {}
+  @override
+  Future<WalkRoute?> getRouteBySessionId(String sessionId) async => null;
+  @override
+  Future<List<WalkRoute>> getAllRoutes() async => [];
+}
 
 void main() {
   group('EndWalkPage', () {
@@ -14,8 +41,19 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: EndWalkPage()),
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const EndWalkPage(),
+          ),
         ),
       );
       await tester.pump();
@@ -59,6 +97,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -90,7 +137,21 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            walkSessionRepositoryProvider
+                .overrideWithValue(_FakeWalkSessionRepository()),
+            routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
+          ],
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -110,6 +171,170 @@ void main() {
 
       await tester.tap(find.text(AppStrings.endWalkConfirmButton));
       await tester.pumpAndSettle();
+      expect(find.byType(EndWalkPage), findsNothing);
+    });
+
+    // ボトムナビのリストをタップすると SpotListPage へ遷移する
+    testWidgets('tapping bottom nav list navigates to SpotListPage',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EndWalkPage()),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.navList));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotListPage), findsOneWidget);
+    });
+
+    // ボトムナビのルートをタップすると WalkRoutePage へ遷移する
+    testWidgets('tapping bottom nav route navigates to WalkRoutePage',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EndWalkPage()),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.navRoute));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WalkRoutePage), findsOneWidget);
+    });
+
+    // ボトムナビの設定をタップすると SettingsPage へ遷移する
+    testWidgets('tapping bottom nav settings navigates to SettingsPage',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EndWalkPage()),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.navSettings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsOneWidget);
+    });
+
+    // ボトムナビのホームをタップすると最初の画面に戻る（line 117）
+    testWidgets('tapping bottom nav home returns to first screen',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EndWalkPage()),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.navHome));
+      await tester.pumpAndSettle();
+
       expect(find.byType(EndWalkPage), findsNothing);
     });
   });

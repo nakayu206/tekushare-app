@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/walk_session_provider.dart';
 
 /// アプリ共通のボトムナビゲーションバー（Material 3 NavigationBar）
-class AppBottomNav extends StatelessWidget {
+class AppBottomNav extends ConsumerWidget {
   const AppBottomNav({super.key, required this.currentIndex, this.onTap});
 
   final int currentIndex;
@@ -30,7 +34,7 @@ class AppBottomNav extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Theme(
       data: Theme.of(context).copyWith(
         navigationBarTheme: NavigationBarThemeData(
@@ -46,7 +50,33 @@ class AppBottomNav extends StatelessWidget {
       ),
       child: NavigationBar(
         selectedIndex: currentIndex,
-        onDestinationSelected: onTap,
+        onDestinationSelected: onTap == null
+            ? null
+            : (index) {
+                // 遷移アニメーション中の連打で例外が出ないよう、
+                // このルートが現在アクティブな場合のみタップを受け付ける。
+                if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+
+                // 散歩中に他タブ（currentIndex != 0）からホームを押した場合は
+                // HomePage を経由せず WalkPage へ直接遷移し一瞬表示を防ぐ。
+                if (index == 0 && currentIndex != 0) {
+                  // DB が準備できていない場合（テスト等）は通常ナビにフォールバック
+                  final appReady = ref.read(appReadyProvider);
+                  final isWalking = appReady.hasValue &&
+                      ref.read(walkSessionProvider).status ==
+                          WalkStatus.walking;
+                  if (isWalking) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const WalkPage()),
+                      (route) => route.isFirst,
+                    );
+                    return;
+                  }
+                }
+
+                onTap!(index);
+              },
         backgroundColor: AppColors.primary,
         surfaceTintColor: Colors.transparent,
         height: 90,

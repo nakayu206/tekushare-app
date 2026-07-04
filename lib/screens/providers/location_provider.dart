@@ -10,11 +10,14 @@ final locationServiceProvider = Provider<LocationService>((ref) {
 
 /// 歩行中のみ位置情報 Stream を購読する。
 /// 非歩行中（idle / finished）は Stream.empty() を返す。
-/// autoDispose により参照がなくなると自動でキャンセルされる。
+/// 散歩中は WalkPage が非表示でも Stream を維持するため keepAlive を使用する。
 final locationProvider = StreamProvider.autoDispose<Position>((ref) {
   final status = ref.watch(walkSessionProvider.select((s) => s.status));
   if (status != WalkStatus.walking) {
     return const Stream.empty();
   }
+  // 散歩中は他タブに移動しても GPS ストリームを継続する。
+  // 散歩終了（status 変化）でプロバイダーが再評価される際に keepAlive は自動解除される。
+  ref.keepAlive();
   return ref.watch(locationServiceProvider).positionStream();
 });

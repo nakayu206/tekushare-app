@@ -4,6 +4,7 @@ import 'app_colors.dart';
 
 abstract class AppTextStyle {
   // サイズ定数
+  static const double xxs = 9.0;
   static const double xs = 11.0;
   static const double sm = 13.0;
   static const double sm2 = 14.0;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
@@ -38,7 +39,33 @@ class _DisplayNamePageState extends ConsumerState<DisplayNamePage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        elevation: 0,
+        toolbarHeight: 72,
+        title: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              AppStrings.appTitle,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              AppStrings.appTagline,
+              style: TextStyle(fontSize: 12, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
+        top: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.x3l,
@@ -47,7 +74,6 @@ class _DisplayNamePageState extends ConsumerState<DisplayNamePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppSpacing.x6l),
               const Text('ニックネームを設定', style: AppTextStyle.titleLarge),
               const SizedBox(height: AppSpacing.sm),
               Text(

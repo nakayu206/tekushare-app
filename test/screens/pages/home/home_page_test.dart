@@ -8,11 +8,16 @@ import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/screens/pages/home/view/home_page.dart';
+import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
+import 'package:tekushare/app.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/clock_provider.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
+import 'package:tekushare/screens/providers/walk_session_provider.dart';
 
 class _FakeWalkSessionRepository implements WalkSessionRepository {
   @override
@@ -53,7 +58,18 @@ void main() {
               (ref) => Stream<Position>.error(Exception('GPS unavailable')),
             ),
           ],
-          child: const MaterialApp(home: HomePage()),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const HomePage(),
+          ),
         ),
       );
       // アニメーション（2800ms）を完了させてボタンを操作可能にする
@@ -80,6 +96,86 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SpotListPage), findsOneWidget);
+    });
+
+    // ボトムナビのルートをタップすると WalkRoutePage へ遷移する
+    testWidgets('navigates to WalkRoutePage when bottom nav route is tapped',
+        (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.navRoute));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WalkRoutePage), findsOneWidget);
+    });
+
+    // ボトムナビの設定をタップすると SettingsPage へ遷移する
+    testWidgets('navigates to SettingsPage when bottom nav settings is tapped',
+        (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text(AppStrings.navSettings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsOneWidget);
+    });
+
+    // 散歩中に別ページからホームに戻ると WalkPage へ自動遷移する
+    testWidgets('didPopNext navigates to WalkPage when walk session is active',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final navKey = GlobalKey<NavigatorState>();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            clockProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+            walkSessionRepositoryProvider
+                .overrideWithValue(_FakeWalkSessionRepository()),
+            routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
+            locationProvider.overrideWith(
+              (ref) => Stream<Position>.error(Exception('GPS unavailable')),
+            ),
+          ],
+          child: MaterialApp(
+            navigatorKey: navKey,
+            navigatorObservers: [routeObserver],
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const HomePage(),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 3));
+
+      // ProviderScope のコンテナから walkSession を起動する
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(HomePage)),
+      );
+      container.read(walkSessionProvider.notifier).startWalk();
+
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (_) => const Scaffold(body: Text('dummy')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      navKey.currentState!.pop();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WalkPage), findsOneWidget);
     });
   });
 }

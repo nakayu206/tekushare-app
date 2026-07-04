@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
-import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/spot_list_viewmodel.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 
@@ -27,6 +28,8 @@ class SpotListPage extends ConsumerWidget {
     final state = ref.watch(spotListViewModelProvider);
     final vm = ref.read(spotListViewModelProvider.notifier);
 
+    final sizing = AppSizingTheme.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -41,17 +44,20 @@ class SpotListPage extends ConsumerWidget {
         bottom: false,
         child: Column(
           children: [
-            const SizedBox(height: 34),
+            SizedBox(height: sizing.sectionSpacing),
             _TabRow(
               isWantToGo: state.isWantToGoTab,
               onTap: vm.selectTab,
             ),
             const SizedBox(height: 32),
             // TODO(#8): カテゴリフィルタリングはデータ連携issueで実装
-            CategoryChipGroup(
-              categories: _categories,
-              selectedCategory: state.selectedCategory,
-              onSelected: vm.selectCategory,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: CategoryChipGroup(
+                categories: _categories,
+                selectedCategory: state.selectedCategory,
+                onSelected: vm.selectCategory,
+              ),
             ),
             const SizedBox(height: 32),
             Expanded(
@@ -78,12 +84,19 @@ class SpotListPage extends ConsumerWidget {
       bottomNavigationBar: AppBottomNav(
         currentIndex: 1,
         onTap: (index) {
-          if (index == 0 && Navigator.canPop(context)) {
-            Navigator.pop(context);
+          if (index == 0) {
+            Navigator.popUntil(context, (route) => route.isFirst);
           } else if (index == 2) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+              (route) => route.isFirst,
+            );
+          } else if (index == 3) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+              (route) => route.isFirst,
             );
           }
         },
@@ -123,9 +136,9 @@ class _TabRow extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Container(
-                  width: 160,
                   height: 5,
                   decoration: BoxDecoration(
                     color: isWantToGo ? AppColors.primary : null,
@@ -135,9 +148,9 @@ class _TabRow extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Container(
-                  width: 160,
                   height: 5,
                   decoration: BoxDecoration(
                     color: !isWantToGo ? AppColors.primary : null,
@@ -166,6 +179,7 @@ class _TabLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -177,7 +191,7 @@ class _TabLabel extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isSelected ? AppColors.primary : AppColors.textDisabled,
-                fontSize: AppTextStyle.x2l,
+                fontSize: sizing.tabLabelFontSize,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -225,32 +239,37 @@ class _ListItem extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Text(
-              date,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.xl,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(width: 32),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontSize: AppTextStyle.xl,
-                  fontWeight: FontWeight.w500,
+        child: Builder(
+          builder: (context) {
+            final sizing = AppSizingTheme.of(context);
+            return Row(
+              children: [
+                Text(
+                  date,
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: sizing.listItemFontSize,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.primary,
-            ),
-          ],
+                const SizedBox(width: 32),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: sizing.listItemFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.primary,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

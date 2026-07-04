@@ -1,4 +1,8 @@
 abstract class AppStrings {
+  // アプリ共通
+  static const appTitle = 'てくしぇあ';
+  static const appTagline = '〜散歩の記録・発見・見守りをシェア〜';
+
   // ナビゲーション
   static const navHome = 'ホーム';
   static const navList = 'リスト';
@@ -69,7 +73,54 @@ abstract class AppStrings {
   // スポット詳細
   static const spotDetailSaveButton = '上書き保存';
   static const spotDetailDeleteButton = '削除する';
+  static const spotDetailMoveToWentButton = '行った！に保存';
   static const spotDetailSaveConfirmMessage = '上書き保存しますか？';
   static const spotDetailDeleteConfirmMessage = '削除しますか？';
+  static const spotDetailMoveToWentConfirmMessage = '「行った！」に保存しますか？';
   static const spotDetailDeleted = '削除しました！';
+  static const spotDetailMoveToWentDone = '行った！に保存しました！';
+
+  // 設定画面
+  static const settingsTitle = '設定';
+  static const settingsTimerTitle = 'タイマー';
+  static const settingsTimerSubtitle = 'タイマーで知らせる時間を設定';
+  static const settingsTimerRoundTrip = '往復';
+  static const settingsInactivityTitle = '安否確認';
+  static const settingsInactivitySubtitle = '無動作感知システム';
+  static const settingsInactivityContact = '通知先';
+  static const settingsInactivityContactSet = '設定する';
+  static const settingsShareTitle = 'シェア';
+  static const settingsShareSubtitle = '共有するアカウント設定';
+  static const settingsShareRegistered = '登録済み';
+  static const settingsShareNotRegistered = '未登録';
+  static const settingsShareLinkLabel = '共有リンク';
+  static const settingsShareLinkCopy = 'コピー';
+  static const settingsShareViaApp = 'アプリで共有';
+  static const settingsShareContent = '共有する内容';
+  static const settingsShareWantToGo = '行きたい！リスト';
+  static const settingsShareVisited = '行った！リスト';
+  static const settingsShareSendButton = 'リンクを送る';
+  static const settingsShareSaveButton = '内容保存';
+  static const settingsShareDeleteAccount = '消去';
+  static const settingsShareDeleteConfirmMessage = '本当に消去してよろしいですか？';
+  static const settingsShareDeleteConfirmButton = '消去する';
+  static const pickerDone = '完了';
+  static const minuteSuffix = '分';
+  static const switchOn = 'ON';
+  static const switchOff = 'OFF';
+  static const settingsPhoneSelectTitle = '電話番号を選択';
+  static const settingsPhoneRegisterButton = 'この番号を登録する';
+  static const settingsPhoneConfirmMessage = '安否確認先の電話番号に\n登録しますか？';
+  static const settingsPhoneRegisterConfirm = '登録する';
+  static const settingsPhoneRegisteredMessage = '登録しました！';
+
+  // アカウント管理
+  static const settingsAccountTitle = 'アカウント';
+  static const settingsLogout = 'ログアウト';
+  static const settingsDeleteAccount = 'アカウントを消去';
+  static const settingsLogoutConfirmMessage = 'ログアウトしますか？';
+  static const settingsDeleteAccountConfirmMessage =
+      'アカウントを消去しますか？\nこの操作は取り消せません。';
+  static const settingsLogoutConfirmButton = 'ログアウト';
+  static const settingsDeleteAccountConfirmButton = '消去する';
 }

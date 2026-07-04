@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:tekushare/core/constants/app_colors.dart';
-
-// ボタンの寸法・スタイル定数
-const _kWidth = 362.0;
-const _kHeight = 120.0;
-const _kBorderRadius = 60.0;
-const _kFontSize = 28.0;
-const _kShadowOpacity = 0.25;
-const _kShadowOffsetY = 4.0;
-const _kShadowBlur = 4.0;
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 
 /// アプリ共通のプライマリボタン
-/// [label] に表示テキスト、[onPressed] にタップ時のコールバックを渡す
+/// 幅は親ウィジェットに従う（呼び出し側で Padding などで余白を指定）。
+/// 高さ・フォントサイズ・角丸は AppSizingTheme から取得する。
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,
@@ -25,17 +18,19 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
+
     return Container(
-      width: _kWidth,
-      height: _kHeight,
+      width: double.infinity,
+      height: sizing.primaryBtnHeight,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_kBorderRadius),
+        borderRadius: BorderRadius.circular(sizing.primaryBtnRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: _kShadowOpacity),
-            offset: const Offset(0, _kShadowOffsetY),
-            blurRadius: _kShadowBlur,
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 4),
+            blurRadius: 4,
           ),
         ],
       ),
@@ -46,13 +41,13 @@ class PrimaryButton extends StatelessWidget {
           foregroundColor: AppColors.textOnPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_kBorderRadius),
+            borderRadius: BorderRadius.circular(sizing.primaryBtnRadius),
           ),
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            fontSize: _kFontSize,
+          style: TextStyle(
+            fontSize: sizing.primaryBtnFontSize,
             fontWeight: FontWeight.w500,
           ),
         ),

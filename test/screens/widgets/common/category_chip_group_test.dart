@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 
 void main() {
@@ -13,19 +14,29 @@ void main() {
     AppStrings.categoryOther,
   ];
 
+  Widget buildApp(Widget child) => MaterialApp(
+        builder: (context, app) {
+          final sw = MediaQuery.sizeOf(context).width;
+          return Theme(
+            data: Theme.of(context).copyWith(
+              extensions: [AppSizingTheme.fromScreenWidth(sw)],
+            ),
+            child: Scaffold(body: child),
+          );
+        },
+      );
+
   Future<void> pumpWidget(
     WidgetTester tester, {
     String selected = AppStrings.categoryPark,
     ValueChanged<String>? onSelected,
   }) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: CategoryChipGroup(
-            categories: categories,
-            selectedCategory: selected,
-            onSelected: onSelected ?? (_) {},
-          ),
+      buildApp(
+        CategoryChipGroup(
+          categories: categories,
+          selectedCategory: selected,
+          onSelected: onSelected ?? (_) {},
         ),
       ),
     );
@@ -57,13 +68,11 @@ void main() {
 
       await tester.pumpWidget(
         StatefulBuilder(
-          builder: (context, setState) => MaterialApp(
-            home: Scaffold(
-              body: CategoryChipGroup(
-                categories: categories,
-                selectedCategory: selected,
-                onSelected: (cat) => setState(() => selected = cat),
-              ),
+          builder: (context, setState) => buildApp(
+            CategoryChipGroup(
+              categories: categories,
+              selectedCategory: selected,
+              onSelected: (cat) => setState(() => selected = cat),
             ),
           ),
         ),

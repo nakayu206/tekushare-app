@@ -22,6 +22,10 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
     final finished = await _endWalk.call(state, route);
     state = finished;
   }
+
+  void resetWalk() {
+    state = const WalkSession(id: '', status: WalkStatus.idle);
+  }
 }
 
 final walkSessionProvider =

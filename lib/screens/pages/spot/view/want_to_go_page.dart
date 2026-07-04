@@ -10,7 +10,9 @@ import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/want_to_go_viewmodel.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
@@ -72,6 +74,7 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
     final state = ref.watch(wantToGoViewModelProvider);
     final vm = ref.read(wantToGoViewModelProvider.notifier);
 
@@ -92,19 +95,19 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _LocationArea(),
-              const SizedBox(height: 34),
+              SizedBox(height: sizing.sectionSpacing),
               CategoryChipGroup(
                 categories: _categories,
                 selectedCategory: state.selectedCategory,
                 onSelected: vm.selectCategory,
               ),
-              const SizedBox(height: 34),
+              SizedBox(height: sizing.sectionSpacing),
               _TitleInput(controller: _titleController),
-              const SizedBox(height: 34),
+              SizedBox(height: sizing.sectionSpacing),
               const _PhotoBox(),
-              const SizedBox(height: 34),
+              SizedBox(height: sizing.sectionSpacing),
               _SaveButton(onPressed: _onSavePressed),
-              const SizedBox(height: 34),
+              SizedBox(height: sizing.sectionSpacing),
             ],
           ),
         ),
@@ -115,14 +118,22 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
           if (index == 0) {
             Navigator.popUntil(context, (route) => route.isFirst);
           } else if (index == 1) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
+              (route) => route.isFirst,
             );
           } else if (index == 2) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+              (route) => route.isFirst,
+            );
+          } else if (index == 3) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+              (route) => route.isFirst,
             );
           }
         },
@@ -142,7 +153,7 @@ class _LocationArea extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 161,
+      height: AppSizingTheme.of(context).locationAreaHeight,
       decoration: BoxDecoration(
         color: AppColors.chipUnselected,
         borderRadius: BorderRadius.circular(12),
@@ -205,12 +216,13 @@ class _PhotoBox extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sizing = AppSizingTheme.of(context);
     final photoPath = ref.watch(pendingPhotoProvider);
 
     if (photoPath != null) {
       return SizedBox(
-        width: AppSize.photoBoxWidth,
-        height: AppSize.photoBoxHeight,
+        width: sizing.photoBoxWidth,
+        height: sizing.photoBoxHeight,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.sm),
           child: Image.file(
@@ -223,8 +235,8 @@ class _PhotoBox extends ConsumerWidget {
     }
 
     return SizedBox(
-      width: AppSize.photoBoxWidth,
-      height: AppSize.photoBoxHeight,
+      width: sizing.photoBoxWidth,
+      height: sizing.photoBoxHeight,
       child: CustomPaint(
         painter: const DashedBorderPainter(),
         child: _placeholder(),
@@ -269,9 +281,11 @@ class _SaveButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
+
     return SizedBox(
       width: double.infinity,
-      height: 94,
+      height: sizing.largeBtnHeight,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -279,13 +293,15 @@ class _SaveButton extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(47),
+            borderRadius: BorderRadius.circular(sizing.detailBtnRadius),
           ),
         ),
-        child: const Text(
+        child: Text(
           AppStrings.wantToGoSave,
           style: TextStyle(
-              fontSize: AppTextStyle.lg2, fontWeight: FontWeight.w500),
+            fontSize: sizing.detailBtnFontSize,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -310,9 +326,18 @@ class _ConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x2l,
+        vertical: AppSpacing.x2l,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          28,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -336,6 +361,9 @@ class _ConfirmDialog extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: onCancel,
                     style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -348,6 +376,9 @@ class _ConfirmDialog extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onConfirm,
                     style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -392,7 +423,7 @@ class _SavedDialog extends StatelessWidget {
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              height: 52,
+              height: AppSizingTheme.of(context).dialogBtnHeight,
               child: ElevatedButton(
                 onPressed: onClose,
                 style: ElevatedButton.styleFrom(

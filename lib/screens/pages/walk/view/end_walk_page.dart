@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 
 /// 散歩終了確認ページ
-class EndWalkPage extends StatefulWidget {
+class EndWalkPage extends ConsumerStatefulWidget {
   const EndWalkPage({super.key});
 
   @override
-  State<EndWalkPage> createState() => _EndWalkPageState();
+  ConsumerState<EndWalkPage> createState() => _EndWalkPageState();
 }
 
-class _EndWalkPageState extends State<EndWalkPage>
+class _EndWalkPageState extends ConsumerState<EndWalkPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late List<Animation<double>> _footprintFades;
@@ -67,6 +71,7 @@ class _EndWalkPageState extends State<EndWalkPage>
 
   @override
   Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -76,7 +81,7 @@ class _EndWalkPageState extends State<EndWalkPage>
             final h = constraints.maxHeight;
             return Stack(
               children: [
-                ..._buildFootprints(w, h),
+                ..._buildFootprints(w, h, sizing),
                 Column(
                   children: [
                     const ClockHeader(),
@@ -85,15 +90,18 @@ class _EndWalkPageState extends State<EndWalkPage>
                       opacity: _cardFade,
                       child: _ConfirmCard(
                         onCancel: () => Navigator.pop(context),
-                        onConfirm: () => Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const WalkRoutePage(
-                              showSaveDialogOnLoad: true,
+                        onConfirm: () {
+                          ref.read(walkSessionProvider.notifier).resetWalk();
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const WalkRoutePage(
+                                showSaveDialogOnLoad: true,
+                              ),
                             ),
-                          ),
-                          (route) => route.isFirst,
-                        ),
+                            (route) => route.isFirst,
+                          );
+                        },
                       ),
                     ),
                     const Spacer(flex: 3),
@@ -110,14 +118,22 @@ class _EndWalkPageState extends State<EndWalkPage>
           if (index == 0) {
             Navigator.popUntil(context, (route) => route.isFirst);
           } else if (index == 1) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
+              (route) => route.isFirst,
             );
           } else if (index == 2) {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+              (route) => route.isFirst,
+            );
+          } else if (index == 3) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+              (route) => route.isFirst,
             );
           }
         },
@@ -125,7 +141,7 @@ class _EndWalkPageState extends State<EndWalkPage>
     );
   }
 
-  List<Widget> _buildFootprints(double w, double h) {
+  List<Widget> _buildFootprints(double w, double h, AppSizingTheme sizing) {
     return List.generate(_steps.length, (i) {
       final step = _steps[i];
       return Positioned(
@@ -138,8 +154,8 @@ class _EndWalkPageState extends State<EndWalkPage>
             child: ExcludeSemantics(
               child: SvgPicture.asset(
                 'assets/SVG/foot2.svg',
-                width: 33,
-                height: 49,
+                width: sizing.foot2Width,
+                height: sizing.foot2Height,
                 colorFilter: const ColorFilter.mode(
                   AppColors.primary,
                   BlendMode.srcIn,
@@ -162,8 +178,6 @@ class _ConfirmCard extends StatelessWidget {
 
   final VoidCallback onCancel;
   final VoidCallback onConfirm;
-
-  static const double _buttonWidth = 125.0;
 
   @override
   Widget build(BuildContext context) {
@@ -195,37 +209,44 @@ class _ConfirmCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.x2l),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                width: _buttonWidth,
-                height: AppSpacing.x5l,
-                child: OutlinedButton(
-                  onPressed: onCancel,
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.primary),
-                    foregroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
+              Expanded(
+                child: SizedBox(
+                  height: AppSpacing.x5l,
+                  child: OutlinedButton(
+                    onPressed: onCancel,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
                     ),
+                    child: const Text(AppStrings.cancelButton),
                   ),
-                  child: const Text(AppStrings.cancelButton),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              SizedBox(
-                width: _buttonWidth,
-                height: AppSpacing.x5l,
-                child: ElevatedButton(
-                  onPressed: onConfirm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
+              Expanded(
+                child: SizedBox(
+                  height: AppSpacing.x5l,
+                  child: ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
                     ),
+                    child: const Text(AppStrings.endWalkConfirmButton),
                   ),
-                  child: const Text(AppStrings.endWalkConfirmButton),
                 ),
               ),
             ],

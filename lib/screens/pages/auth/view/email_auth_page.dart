@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
@@ -36,7 +37,33 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        elevation: 0,
+        toolbarHeight: 72,
+        title: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              AppStrings.appTitle,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              AppStrings.appTagline,
+              style: TextStyle(fontSize: 12, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
+        top: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.x3l,
@@ -45,7 +72,6 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppSpacing.x6l),
               Text(
                 _isRegisterMode ? '新規登録' : 'ログイン',
                 style: AppTextStyle.titleLarge,
@@ -79,6 +105,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                   labelText: 'メールアドレス',
                   hintText: 'example@mail.com',
                   errorText: error,
+                  errorMaxLines: 3,
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.mail_outline),
                 ),
@@ -160,6 +187,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
   }
 
   void _submit() {
+    FocusScope.of(context).unfocus();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 

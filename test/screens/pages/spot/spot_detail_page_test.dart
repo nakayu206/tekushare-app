@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 void main() {
@@ -19,7 +22,18 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(home: SpotDetailPage(isWantToGo: isWantToGo)),
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: SpotDetailPage(isWantToGo: isWantToGo),
+          ),
         ),
       );
       await tester.pump();
@@ -37,6 +51,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
             home: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
@@ -97,16 +120,16 @@ void main() {
       expect(find.text(AppStrings.categoryOther), findsOneWidget);
     });
 
-    // 写真を追加エリアが2つ表示される
-    testWidgets('shows two add photo areas', (tester) async {
+    // 写真を追加エリアが表示される
+    testWidgets('shows one add photo area', (tester) async {
       await pumpPage(tester);
 
-      expect(find.text(AppStrings.addPhoto), findsNWidgets(2));
+      expect(find.text(AppStrings.addPhoto), findsOneWidget);
     });
 
-    // 削除ボタンが表示される
+    // 削除ボタンが表示される（行った！モード）
     testWidgets('shows delete button', (tester) async {
-      await pumpPage(tester);
+      await pumpPage(tester, isWantToGo: false);
 
       expect(find.text(AppStrings.spotDetailDeleteButton), findsOneWidget);
     });
@@ -194,6 +217,28 @@ void main() {
       expect(find.byType(SpotDetailPage), findsNothing);
     });
 
+    // ボトムナビのルートをタップすると WalkRoutePage へ遷移する
+    testWidgets('tapping bottom nav route navigates to WalkRoutePage',
+        (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.navRoute));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WalkRoutePage), findsOneWidget);
+    });
+
+    // ボトムナビの設定をタップすると SettingsPage へ遷移する
+    testWidgets('tapping bottom nav settings navigates to SettingsPage',
+        (tester) async {
+      await pumpPushedPage(tester);
+
+      await tester.tap(find.text(AppStrings.navSettings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsOneWidget);
+    });
+
     // ──────────────────────────────────────────
     // 削除フロー
     // ──────────────────────────────────────────
@@ -201,7 +246,7 @@ void main() {
     // タイトル入力時の削除確認ダイアログに入力値が表示される
     testWidgets('delete confirmation dialog shows entered title',
         (tester) async {
-      await pumpPage(tester);
+      await pumpPage(tester, isWantToGo: false);
 
       await tester.enterText(find.byType(TextField), 'テストスポット');
       await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
@@ -219,7 +264,7 @@ void main() {
     // 削除ボタンを押すと削除確認ダイアログが表示される
     testWidgets('pressing delete button shows delete confirmation dialog',
         (tester) async {
-      await pumpPage(tester);
+      await pumpPage(tester, isWantToGo: false);
 
       await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
       await tester.pumpAndSettle();
@@ -230,7 +275,7 @@ void main() {
 
     // 削除確認のキャンセルでダイアログが閉じる
     testWidgets('canceling delete confirmation closes dialog', (tester) async {
-      await pumpPage(tester);
+      await pumpPage(tester, isWantToGo: false);
 
       await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
       await tester.pumpAndSettle();
@@ -244,7 +289,7 @@ void main() {
     // 削除確認で削除完了ダイアログが表示される
     testWidgets('confirming delete shows deletion complete dialog',
         (tester) async {
-      await pumpPage(tester);
+      await pumpPage(tester, isWantToGo: false);
 
       await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
       await tester.pumpAndSettle();
@@ -262,7 +307,7 @@ void main() {
     // 削除完了ダイアログの閉じるでページを離れる
     testWidgets('closing deletion complete dialog leaves the page',
         (tester) async {
-      await pumpPushedPage(tester);
+      await pumpPushedPage(tester, isWantToGo: false);
 
       await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
       await tester.pumpAndSettle();
