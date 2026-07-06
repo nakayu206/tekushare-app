@@ -8,6 +8,7 @@ import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/want_to_go_viewmodel.dart';
+import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
@@ -44,14 +45,32 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
   }
 
   void _onSavePressed() {
+    final title = _titleController.text.isEmpty
+        ? AppStrings.noTitle
+        : _titleController.text;
+    final location = ref.read(locationProvider).valueOrNull;
+    if (location == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.gpsUnavailableError)),
+      );
+      return;
+    }
     showDialog<void>(
       context: context,
       builder: (_) => _ConfirmDialog(
-        title: _titleController.text.isEmpty
-            ? AppStrings.noTitle
-            : _titleController.text,
-        onConfirm: () {
+        title: title,
+        onConfirm: () async {
           Navigator.pop(context);
+          final spotId = await ref.read(spotProvider.notifier).saveSpot(
+                title: title,
+                latitude: location.latitude,
+                longitude: location.longitude,
+              );
+          final photo = ref.read(pendingPhotoProvider);
+          if (photo != null) {
+            await ref.read(spotProvider.notifier).attachPhoto(spotId, photo);
+            ref.read(pendingPhotoProvider.notifier).state = null;
+          }
           if (!mounted) return;
           _showSavedDialog();
         },
