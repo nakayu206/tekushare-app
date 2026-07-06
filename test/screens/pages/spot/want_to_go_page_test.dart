@@ -1,14 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
+import 'package:tekushare/domain/usecases/spot/get_spots.dart';
+import 'package:tekushare/domain/usecases/spot/save_spot.dart';
+import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/screens/providers/location_provider.dart';
+import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+
+class _FakeSaveSpot implements SaveSpot {
+  const _FakeSaveSpot();
+  @override
+  Future<String> call({
+    required String title,
+    required double latitude,
+    required double longitude,
+    String? memo,
+    SpotStatus status = SpotStatus.wantToGo,
+  }) async =>
+      'fake-spot-id';
+}
+
+class _FakeGetSpots implements GetSpots {
+  const _FakeGetSpots();
+  @override
+  Stream<List<Spot>> call({SpotStatus? filter}) => const Stream.empty();
+}
+
+class _FakeUpdateSpotStatus implements UpdateSpotStatus {
+  const _FakeUpdateSpotStatus();
+  @override
+  Future<void> call(String spotId, SpotStatus status) async {}
+}
+
+class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
+  const _FakeAttachPhotoToSpot();
+  @override
+  Future<void> call(String spotId, String imagePath) async {}
+}
+
+Position _makePosition(double lat, double lng) => Position(
+      latitude: lat,
+      longitude: lng,
+      timestamp: DateTime.now(),
+      accuracy: 0,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    );
+
+final _locationOverride = locationProvider.overrideWith(
+  (ref) => Stream.value(_makePosition(35.0, 135.0)),
+);
+
+final _spotOverride = spotProvider.overrideWith(
+  (ref) => SpotNotifier(
+    saveSpot: const _FakeSaveSpot(),
+    getSpots: const _FakeGetSpots(),
+    updateSpotStatus: const _FakeUpdateSpotStatus(),
+    attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+  ),
+);
 
 void main() {
   group('WantToGoPage', () {
@@ -20,6 +85,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_locationOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -30,11 +96,17 @@ void main() {
                 child: child!,
               );
             },
-            home: const WantToGoPage(),
+            home: Consumer(
+              builder: (_, ref, child) {
+                ref.watch(locationProvider); // autoDisposeを防いでStreamを定着させる
+                return child!;
+              },
+              child: const WantToGoPage(),
+            ),
           ),
         ),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
     }
 
     // ページタイトルが表示される
@@ -110,10 +182,44 @@ void main() {
       );
     });
 
+    // GPS未取得時に保存ボタンを押すとスナックバーが表示される
+    testWidgets('pressing save button without GPS shows snackbar',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [_spotOverride],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WantToGoPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text(AppStrings.wantToGoSave));
+      await tester.pump();
+
+      expect(find.text(AppStrings.gpsUnavailableError), findsOneWidget);
+    });
+
     // 保存ボタンを押すと確認ダイアログが表示される
     testWidgets('pressing save button shows confirmation dialog',
         (tester) async {
       await pumpPage(tester);
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
@@ -126,6 +232,7 @@ void main() {
         'confirmation dialog shows no-title placeholder when title is empty',
         (tester) async {
       await pumpPage(tester);
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
@@ -136,6 +243,7 @@ void main() {
     // タイトル入力時の確認ダイアログに入力値が表示される
     testWidgets('confirmation dialog shows entered title', (tester) async {
       await pumpPage(tester);
+      await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'テストスポット');
       await tester.tap(find.text(AppStrings.wantToGoSave));
@@ -153,6 +261,7 @@ void main() {
     // 確認ダイアログのキャンセルでダイアログが閉じる
     testWidgets('canceling confirmation dialog closes dialog', (tester) async {
       await pumpPage(tester);
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
@@ -162,9 +271,11 @@ void main() {
       expect(find.text(AppStrings.wantToGoConfirmMessage), findsNothing);
     });
 
-    // 確認ダイアログの保存で保存完了ダイアログが表示される
-    testWidgets('confirming save shows save complete dialog', (tester) async {
+    // 確認ダイアログの保存でスポットが保存されて完了ダイアログが表示される
+    testWidgets('confirming save stores spot and shows save complete dialog',
+        (tester) async {
       await pumpPage(tester);
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
@@ -183,6 +294,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_locationOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -197,7 +309,15 @@ void main() {
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const WantToGoPage()),
+                  MaterialPageRoute(
+                    builder: (_) => Consumer(
+                      builder: (_, ref, child) {
+                        ref.watch(locationProvider);
+                        return child!;
+                      },
+                      child: const WantToGoPage(),
+                    ),
+                  ),
                 ),
                 child: const Text('start'),
               ),
@@ -229,6 +349,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_locationOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -270,6 +391,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_locationOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -311,6 +433,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_locationOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -352,6 +475,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_locationOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
