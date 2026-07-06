@@ -3,11 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+
+Spot _makeSpot({SpotStatus status = SpotStatus.wantToGo}) => Spot(
+      id: 'test-id',
+      title: 'テストスポット',
+      latitude: 35.0,
+      longitude: 135.0,
+      status: status,
+      createdAt: DateTime(2024, 1, 1),
+    );
 
 void main() {
   group('SpotDetailPage', () {
@@ -32,7 +42,11 @@ void main() {
                 child: child!,
               );
             },
-            home: SpotDetailPage(isWantToGo: isWantToGo),
+            home: SpotDetailPage(
+              spot: _makeSpot(
+                status: isWantToGo ? SpotStatus.wantToGo : SpotStatus.visited,
+              ),
+            ),
           ),
         ),
       );
@@ -65,7 +79,13 @@ void main() {
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => SpotDetailPage(isWantToGo: isWantToGo),
+                    builder: (_) => SpotDetailPage(
+                      spot: _makeSpot(
+                        status: isWantToGo
+                            ? SpotStatus.wantToGo
+                            : SpotStatus.visited,
+                      ),
+                    ),
                   ),
                 ),
                 child: const Text('start'),
