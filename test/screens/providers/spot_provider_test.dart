@@ -97,6 +97,7 @@ void main() {
       final container = makeContainer();
       addTearDown(container.dispose);
 
+      container.read(selectedSpotStatusProvider.notifier).state = null;
       container.read(spotProvider); // notifier を生成してストリーム購読を開始
       await Future<void>.delayed(Duration.zero); // ストリームの emit を待つ
       final result = container.read(filteredSpotsProvider);

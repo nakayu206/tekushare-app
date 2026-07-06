@@ -24,10 +24,7 @@ class SpotListState {
 
 class SpotListViewModel extends Notifier<SpotListState> {
   @override
-  SpotListState build() {
-    ref.read(selectedSpotStatusProvider.notifier).state = SpotStatus.wantToGo;
-    return const SpotListState();
-  }
+  SpotListState build() => const SpotListState();
 
   void selectTab(bool isWantToGo) {
     state = state.copyWith(isWantToGoTab: isWantToGo);
