@@ -8,10 +8,12 @@ import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
+import 'package:tekushare/infrastructure/camera_service.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
@@ -46,14 +48,12 @@ class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
-final _spotOverride = spotProvider.overrideWith(
-  (ref) => SpotNotifier(
-    saveSpot: const _FakeSaveSpot(),
-    getSpots: const _FakeGetSpots(),
-    updateSpotStatus: const _FakeUpdateSpotStatus(),
-    attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
-  ),
-);
+class _FakeCameraService extends Fake implements CameraService {
+  _FakeCameraService(this._path);
+  final String? _path;
+  @override
+  Future<String?> takePhoto() async => _path;
+}
 
 Spot _makeSpot({SpotStatus status = SpotStatus.wantToGo}) => Spot(
       id: 'test-id',
@@ -64,11 +64,25 @@ Spot _makeSpot({SpotStatus status = SpotStatus.wantToGo}) => Spot(
       createdAt: DateTime(2024, 1, 1),
     );
 
+final _spotOverride = spotProvider.overrideWith(
+  (ref) => SpotNotifier(
+    saveSpot: const _FakeSaveSpot(),
+    getSpots: const _FakeGetSpots(),
+    updateSpotStatus: const _FakeUpdateSpotStatus(),
+    attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+  ),
+);
+
+final _cameraOverride = cameraServiceProvider.overrideWith(
+  (ref) => _FakeCameraService(null),
+);
+
 void main() {
   group('SpotDetailPage', () {
     Future<void> pumpPage(
       WidgetTester tester, {
       bool isWantToGo = true,
+      CameraService? camera,
     }) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
@@ -77,7 +91,13 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_spotOverride],
+          overrides: [
+            _spotOverride,
+            if (camera != null)
+              cameraServiceProvider.overrideWith((ref) => camera)
+            else
+              _cameraOverride,
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -110,7 +130,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_spotOverride],
+          overrides: [_spotOverride, _cameraOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -220,7 +240,6 @@ void main() {
         (tester) async {
       await pumpPage(tester);
 
-      // タップ前：公園が選択色
       expect(
         find.ancestor(
           of: find.text(AppStrings.categoryPark),
@@ -235,7 +254,6 @@ void main() {
       await tester.tap(find.text(AppStrings.categoryCafe));
       await tester.pump();
 
-      // タップ後：カフェが選択色、公園は非選択色
       expect(
         find.ancestor(
           of: find.text(AppStrings.categoryCafe),
@@ -304,6 +322,87 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SettingsPage), findsOneWidget);
+    });
+
+    // ──────────────────────────────────────────
+    // 行った！フロー
+    // ──────────────────────────────────────────
+
+    // 行った！に保存ボタンを押すと確認ダイアログが表示される
+    testWidgets('pressing move to went button shows confirmation dialog',
+        (tester) async {
+      await pumpPage(tester, isWantToGo: true);
+
+      await tester.tap(find.text(AppStrings.spotDetailMoveToWentButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.spotDetailMoveToWentConfirmMessage),
+          findsOneWidget);
+    });
+
+    // 行った！確認でステータス変更完了ダイアログが表示される
+    testWidgets('confirming move to went shows result dialog', (tester) async {
+      await pumpPage(tester, isWantToGo: true);
+
+      await tester.tap(find.text(AppStrings.spotDetailMoveToWentButton));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(AppStrings.spotDetailMoveToWentButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.spotDetailMoveToWentDone), findsOneWidget);
+    });
+
+    // 行った！完了ダイアログの閉じるでページを離れる
+    testWidgets('closing move-to-went result dialog leaves the page',
+        (tester) async {
+      await pumpPushedPage(tester, isWantToGo: true);
+
+      await tester.tap(find.text(AppStrings.spotDetailMoveToWentButton));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(AppStrings.spotDetailMoveToWentButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.closeButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpotDetailPage), findsNothing);
+    });
+
+    // 行った！確認のキャンセルでダイアログが閉じる
+    testWidgets('canceling move to went closes dialog', (tester) async {
+      await pumpPage(tester, isWantToGo: true);
+
+      await tester.tap(find.text(AppStrings.spotDetailMoveToWentButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.cancelButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.spotDetailMoveToWentConfirmMessage),
+          findsNothing);
+    });
+
+    // ──────────────────────────────────────────
+    // 写真フロー
+    // ──────────────────────────────────────────
+
+    // 写真エリアをタップしてカメラをキャンセルしても写真なし状態のまま
+    testWidgets('tapping photo area with camera cancelled keeps placeholder',
+        (tester) async {
+      await pumpPage(tester, camera: _FakeCameraService(null));
+
+      await tester.tap(find.text(AppStrings.addPhoto));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.addPhoto), findsOneWidget);
     });
 
     // ──────────────────────────────────────────

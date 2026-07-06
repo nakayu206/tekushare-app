@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,6 +13,8 @@ import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/spot_detail_viewmodel.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
@@ -27,6 +31,7 @@ class SpotDetailPage extends ConsumerStatefulWidget {
 
 class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   final _titleController = TextEditingController();
+  String? _photoPath;
 
   static const _categories = [
     AppStrings.categoryPark,
@@ -38,9 +43,23 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _photoPath = widget.spot.photoPath;
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onPhotoTap() async {
+    final path = await ref.read(cameraServiceProvider).takePhoto();
+    if (path == null || !mounted) return;
+    await ref.read(spotProvider.notifier).attachPhoto(widget.spot.id, path);
+    if (!mounted) return;
+    setState(() => _photoPath = path);
   }
 
   void _onSavePressed() {
@@ -84,8 +103,11 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         title: _titleController.text.isEmpty
             ? AppStrings.noTitle
             : _titleController.text,
-        onConfirm: () {
+        onConfirm: () async {
           Navigator.pop(context);
+          await ref
+              .read(spotProvider.notifier)
+              .updateStatus(widget.spot.id, SpotStatus.visited);
           if (!mounted) return;
           _showResultDialog(AppStrings.spotDetailMoveToWentDone);
         },
@@ -143,7 +165,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               _TitleInput(controller: _titleController),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
-              const _PhotoBox(),
+              _PhotoBox(photoPath: _photoPath, onTap: _onPhotoTap),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               if (widget.spot.status == SpotStatus.wantToGo)
                 _MoveToWentButton(onPressed: _onMoveToWentPressed)
@@ -254,39 +276,68 @@ class _TitleInput extends StatelessWidget {
 }
 
 class _PhotoBox extends StatelessWidget {
-  const _PhotoBox();
+  const _PhotoBox({required this.photoPath, required this.onTap});
+
+  final String? photoPath;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final sizing = AppSizingTheme.of(context);
-    return SizedBox(
-      width: sizing.photoBoxWidth,
-      height: sizing.photoBoxHeight,
-      child: CustomPaint(
-        painter: const DashedBorderPainter(),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/SVG/camera.svg',
-              width: AppSize.iconMd,
-              height: AppSize.iconMd,
-              colorFilter: const ColorFilter.mode(
-                AppColors.textAccent,
-                BlendMode.srcIn,
-              ),
+
+    if (photoPath != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: SizedBox(
+          width: sizing.photoBoxWidth,
+          height: sizing.photoBoxHeight,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: Image.file(
+              File(photoPath!),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _placeholder(sizing),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            const Text(
-              AppStrings.addPhoto,
-              style: TextStyle(
-                color: AppColors.textAccent,
-                fontSize: AppTextStyle.sm,
-              ),
-            ),
-          ],
+          ),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: sizing.photoBoxWidth,
+        height: sizing.photoBoxHeight,
+        child: CustomPaint(
+          painter: const DashedBorderPainter(),
+          child: _placeholder(sizing),
         ),
       ),
+    );
+  }
+
+  Widget _placeholder(AppSizingTheme sizing) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SvgPicture.asset(
+          'assets/SVG/camera.svg',
+          width: AppSize.iconMd,
+          height: AppSize.iconMd,
+          colorFilter: const ColorFilter.mode(
+            AppColors.textAccent,
+            BlendMode.srcIn,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        const Text(
+          AppStrings.addPhoto,
+          style: TextStyle(
+            color: AppColors.textAccent,
+            fontSize: AppTextStyle.sm,
+          ),
+        ),
+      ],
     );
   }
 }
