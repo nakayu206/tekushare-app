@@ -71,8 +71,9 @@ final spotProvider = StateNotifierProvider<SpotNotifier, List<Spot>>((ref) {
 /// 散歩中にカメラで撮影した写真の一時パス（WantToGoPage で使用）
 final pendingPhotoProvider = StateProvider<String?>((ref) => null);
 
-/// 現在選択中のステータスフィルタ（null = 全件）
-final selectedSpotStatusProvider = StateProvider<SpotStatus?>((ref) => null);
+/// 現在選択中のステータスフィルタ（null = 全件、デフォルトは行きたい！）
+final selectedSpotStatusProvider =
+    StateProvider<SpotStatus?>((ref) => SpotStatus.wantToGo);
 
 /// selectedSpotStatusProvider と連動してフィルタリングしたスポット一覧
 final filteredSpotsProvider = Provider<List<Spot>>((ref) {

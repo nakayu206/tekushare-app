@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/screens/providers/spot_provider.dart';
 
 class SpotListState {
   const SpotListState({
@@ -26,6 +28,8 @@ class SpotListViewModel extends Notifier<SpotListState> {
 
   void selectTab(bool isWantToGo) {
     state = state.copyWith(isWantToGoTab: isWantToGo);
+    ref.read(selectedSpotStatusProvider.notifier).state =
+        isWantToGo ? SpotStatus.wantToGo : SpotStatus.visited;
   }
 
   void selectCategory(String category) {

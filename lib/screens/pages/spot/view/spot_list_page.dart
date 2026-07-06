@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
-import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
@@ -31,10 +30,7 @@ class SpotListPage extends ConsumerWidget {
     final state = ref.watch(spotListViewModelProvider);
     final vm = ref.read(spotListViewModelProvider.notifier);
 
-    final spots = ref.watch(spotProvider);
-    final filter =
-        state.isWantToGoTab ? SpotStatus.wantToGo : SpotStatus.visited;
-    final filtered = spots.where((s) => s.status == filter).toList();
+    final filtered = ref.watch(filteredSpotsProvider);
 
     final sizing = AppSizingTheme.of(context);
 
@@ -85,7 +81,8 @@ class SpotListPage extends ConsumerWidget {
                       itemBuilder: (context, i) {
                         final spot = filtered[i];
                         return _ListItem(
-                          date: '${spot.createdAt.month}/${spot.createdAt.day}',
+                          date:
+                              '${spot.createdAt.month.toString().padLeft(2, '0')}/${spot.createdAt.day.toString().padLeft(2, '0')}',
                           title: spot.title,
                           onTap: () => Navigator.push(
                             context,

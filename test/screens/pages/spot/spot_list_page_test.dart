@@ -214,7 +214,7 @@ void main() {
     testWidgets('shows date and arrow icon in list', (tester) async {
       await pumpPage(tester);
 
-      expect(find.text('4/12'), findsOneWidget);
+      expect(find.text('04/12'), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right), findsWidgets);
     });
 

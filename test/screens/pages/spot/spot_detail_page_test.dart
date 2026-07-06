@@ -33,7 +33,7 @@ class _FakeSaveSpot implements SaveSpot {
 class _FakeGetSpots implements GetSpots {
   const _FakeGetSpots();
   @override
-  Stream<List<Spot>> call({SpotStatus? filter}) => const Stream.empty();
+  Stream<List<Spot>> call({SpotStatus? filter}) => Stream.value(const []);
 }
 
 class _FakeUpdateSpotStatus implements UpdateSpotStatus {
