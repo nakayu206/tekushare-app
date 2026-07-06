@@ -96,11 +96,17 @@ void main() {
                 child: child!,
               );
             },
-            home: const WantToGoPage(),
+            home: Consumer(
+              builder: (_, ref, child) {
+                ref.watch(locationProvider); // autoDisposeを防いでStreamを定着させる
+                return child!;
+              },
+              child: const WantToGoPage(),
+            ),
           ),
         ),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
     }
 
     // ページタイトルが表示される
@@ -303,7 +309,15 @@ void main() {
               builder: (context) => ElevatedButton(
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const WantToGoPage()),
+                  MaterialPageRoute(
+                    builder: (_) => Consumer(
+                      builder: (_, ref, child) {
+                        ref.watch(locationProvider);
+                        return child!;
+                      },
+                      child: const WantToGoPage(),
+                    ),
+                  ),
                 ),
                 child: const Text('start'),
               ),
