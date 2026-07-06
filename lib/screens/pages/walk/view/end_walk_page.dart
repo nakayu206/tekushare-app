@@ -6,6 +6,7 @@ import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -69,6 +70,20 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
     super.dispose();
   }
 
+  Future<void> _onConfirm() async {
+    final session = ref.read(walkSessionProvider);
+    final now = DateTime.now();
+    final route = WalkRoute(
+      id: now.microsecondsSinceEpoch.toString(),
+      walkSessionId: session.id,
+      points: const [],
+      createdAt: now,
+    );
+    await ref.read(walkSessionProvider.notifier).endWalk(route);
+    if (!mounted) return;
+    Navigator.popUntil(context, (r) => r.isFirst);
+  }
+
   @override
   Widget build(BuildContext context) {
     final sizing = AppSizingTheme.of(context);
@@ -90,18 +105,7 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
                       opacity: _cardFade,
                       child: _ConfirmCard(
                         onCancel: () => Navigator.pop(context),
-                        onConfirm: () {
-                          ref.read(walkSessionProvider.notifier).resetWalk();
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const WalkRoutePage(
-                                showSaveDialogOnLoad: true,
-                              ),
-                            ),
-                            (route) => route.isFirst,
-                          );
-                        },
+                        onConfirm: () => _onConfirm(),
                       ),
                     ),
                     const Spacer(flex: 3),
