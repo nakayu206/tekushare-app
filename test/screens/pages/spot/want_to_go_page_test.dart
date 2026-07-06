@@ -18,10 +18,6 @@ import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
-// ──────────────────────────────────────────
-// フェイク実装
-// ──────────────────────────────────────────
-
 class _FakeSaveSpot implements SaveSpot {
   const _FakeSaveSpot();
   @override
@@ -78,10 +74,6 @@ final _spotOverride = spotProvider.overrideWith(
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
   ),
 );
-
-// ──────────────────────────────────────────
-// テスト
-// ──────────────────────────────────────────
 
 void main() {
   group('WantToGoPage', () {
