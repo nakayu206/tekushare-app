@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -9,6 +12,7 @@ import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
 
@@ -24,6 +28,9 @@ class WalkRoutePage extends ConsumerStatefulWidget {
 
 class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   final _nameController = TextEditingController();
+  final _mapController = MapController();
+  final _trackPoints = <LatLng>[];
+  LatLng? _currentPosition;
   int _cardSlideDirection = 1;
 
   void _selectDay(int day) {
@@ -45,6 +52,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _mapController.dispose();
     super.dispose();
   }
 
@@ -87,6 +95,17 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<Position>>(locationProvider, (_, next) {
+      next.whenData((pos) {
+        final point = LatLng(pos.latitude, pos.longitude);
+        setState(() {
+          _currentPosition = point;
+          _trackPoints.add(point);
+        });
+        _mapController.move(point, _mapController.camera.zoom);
+      });
+    });
+
     final state = ref.watch(walkRouteViewModelProvider);
     final vm = ref.read(walkRouteViewModelProvider.notifier);
 
@@ -110,7 +129,12 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: AppSpacing.lg),
-                  _SelectedRouteCard(route: state.selectedRoute),
+                  _SelectedRouteCard(
+                    route: state.selectedRoute,
+                    mapController: _mapController,
+                    trackPoints: _trackPoints,
+                    currentPosition: _currentPosition,
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   _RouteListCard(
                     routes: state.routes,
@@ -517,12 +541,23 @@ class _RouteItem extends StatelessWidget {
 // ──────────────────────────────────────────
 
 class _SelectedRouteCard extends StatelessWidget {
-  const _SelectedRouteCard({required this.route});
+  const _SelectedRouteCard({
+    required this.route,
+    required this.mapController,
+    required this.trackPoints,
+    this.currentPosition,
+  });
 
   final WalkRoute route;
+  final MapController mapController;
+  final List<LatLng> trackPoints;
+  final LatLng? currentPosition;
 
   @override
   Widget build(BuildContext context) {
+    final mapHeight = AppSizingTheme.of(context).mapPlaceholderHeight;
+    final hasTrack = trackPoints.isNotEmpty || currentPosition != null;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -557,20 +592,57 @@ class _SelectedRouteCard extends StatelessWidget {
               ),
             ),
           ),
-          // 地図プレースホルダー
-          Builder(
-            builder: (context) => Container(
-              width: double.infinity,
-              height: AppSizingTheme.of(context).mapPlaceholderHeight,
-              color: AppColors.chipUnselected,
-              child: const Center(
-                child: Icon(
-                  Icons.map_outlined,
-                  size: 48,
-                  color: AppColors.textDisabled,
-                ),
-              ),
-            ),
+          SizedBox(
+            width: double.infinity,
+            height: mapHeight,
+            child: hasTrack
+                ? FlutterMap(
+                    mapController: mapController,
+                    options: MapOptions(
+                      initialCenter: currentPosition ?? trackPoints.last,
+                      initialZoom: 15,
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.example.tekushare',
+                      ),
+                      if (trackPoints.length >= 2)
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: trackPoints,
+                              color: AppColors.primary,
+                              strokeWidth: 3,
+                            ),
+                          ],
+                        ),
+                      if (currentPosition != null)
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: currentPosition!,
+                              child: const Icon(
+                                Icons.location_on,
+                                color: Colors.red,
+                                size: 24,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  )
+                : Container(
+                    color: AppColors.chipUnselected,
+                    child: const Center(
+                      child: Icon(
+                        Icons.map_outlined,
+                        size: 48,
+                        color: AppColors.textDisabled,
+                      ),
+                    ),
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
