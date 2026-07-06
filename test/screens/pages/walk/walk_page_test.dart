@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
+import 'package:tekushare/domain/usecases/spot/get_spots.dart';
+import 'package:tekushare/domain/usecases/spot/save_spot.dart';
+import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
 import 'package:tekushare/infrastructure/camera_service.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
@@ -19,6 +24,46 @@ import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 // ──────────────────────────────────────────
 // フェイク実装
 // ──────────────────────────────────────────
+
+class _FakeSaveSpot implements SaveSpot {
+  const _FakeSaveSpot();
+  @override
+  Future<String> call({
+    required String title,
+    required double latitude,
+    required double longitude,
+    String? memo,
+    SpotStatus status = SpotStatus.wantToGo,
+  }) async =>
+      'fake-id';
+}
+
+class _FakeGetSpots implements GetSpots {
+  const _FakeGetSpots();
+  @override
+  Stream<List<Spot>> call({SpotStatus? filter}) => Stream.value(const []);
+}
+
+class _FakeUpdateSpotStatus implements UpdateSpotStatus {
+  const _FakeUpdateSpotStatus();
+  @override
+  Future<void> call(String spotId, SpotStatus status) async {}
+}
+
+class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
+  const _FakeAttachPhotoToSpot();
+  @override
+  Future<void> call(String spotId, String imagePath) async {}
+}
+
+final _spotOverride = spotProvider.overrideWith(
+  (ref) => SpotNotifier(
+    saveSpot: const _FakeSaveSpot(),
+    getSpots: const _FakeGetSpots(),
+    updateSpotStatus: const _FakeUpdateSpotStatus(),
+    attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+  ),
+);
 
 class _FakeCameraService extends Fake implements CameraService {
   _FakeCameraService(this._returnPath);
@@ -332,6 +377,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;

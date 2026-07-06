@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/spot_list_viewmodel.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 
@@ -27,6 +29,8 @@ class SpotListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(spotListViewModelProvider);
     final vm = ref.read(spotListViewModelProvider.notifier);
+
+    final filtered = ref.watch(filteredSpotsProvider);
 
     final sizing = AppSizingTheme.of(context);
 
@@ -50,7 +54,6 @@ class SpotListPage extends ConsumerWidget {
               onTap: vm.selectTab,
             ),
             const SizedBox(height: 32),
-            // TODO(#8): カテゴリフィルタリングはデータ連携issueで実装
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: CategoryChipGroup(
@@ -61,22 +64,35 @@ class SpotListPage extends ConsumerWidget {
             ),
             const SizedBox(height: 32),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: state.currentItems.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, i) => _ListItem(
-                  date: state.currentItems[i].date,
-                  title: state.currentItems[i].title,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          SpotDetailPage(isWantToGo: state.isWantToGoTab),
+              child: filtered.isEmpty
+                  ? const Center(
+                      child: Text(
+                        AppStrings.spotListEmpty,
+                        style: TextStyle(
+                          color: AppColors.textDisabled,
+                          fontSize: AppTextStyle.md2,
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, i) {
+                        final spot = filtered[i];
+                        return _ListItem(
+                          date:
+                              '${spot.createdAt.month.toString().padLeft(2, '0')}/${spot.createdAt.day.toString().padLeft(2, '0')}',
+                          title: spot.title,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SpotDetailPage(spot: spot),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                ),
-              ),
             ),
           ],
         ),

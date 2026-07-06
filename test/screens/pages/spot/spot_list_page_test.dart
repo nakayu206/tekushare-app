@@ -3,12 +3,86 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
+import 'package:tekushare/domain/usecases/spot/get_spots.dart';
+import 'package:tekushare/domain/usecases/spot/save_spot.dart';
+import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+
+class _FakeSaveSpot implements SaveSpot {
+  const _FakeSaveSpot();
+  @override
+  Future<String> call({
+    required String title,
+    required double latitude,
+    required double longitude,
+    String? memo,
+    SpotStatus status = SpotStatus.wantToGo,
+  }) async =>
+      'fake-id';
+}
+
+class _FakeGetSpots implements GetSpots {
+  const _FakeGetSpots(this._spots);
+  final List<Spot> _spots;
+  @override
+  Stream<List<Spot>> call({SpotStatus? filter}) => Stream.value(_spots);
+}
+
+class _FakeUpdateSpotStatus implements UpdateSpotStatus {
+  const _FakeUpdateSpotStatus();
+  @override
+  Future<void> call(String spotId, SpotStatus status) async {}
+}
+
+class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
+  const _FakeAttachPhotoToSpot();
+  @override
+  Future<void> call(String spotId, String imagePath) async {}
+}
+
+final _fakeSpots = [
+  Spot(
+    id: '1',
+    title: 'ひだまりパーク',
+    latitude: 0,
+    longitude: 0,
+    status: SpotStatus.wantToGo,
+    createdAt: DateTime(2024, 4, 12),
+  ),
+  Spot(
+    id: '2',
+    title: 'Cafe&Gallery',
+    latitude: 0,
+    longitude: 0,
+    status: SpotStatus.wantToGo,
+    createdAt: DateTime(2024, 5, 12),
+  ),
+  Spot(
+    id: '8',
+    title: '新宿御苑',
+    latitude: 0,
+    longitude: 0,
+    status: SpotStatus.visited,
+    createdAt: DateTime(2024, 1, 15),
+  ),
+];
+
+final _spotOverride = spotProvider.overrideWith(
+  (ref) => SpotNotifier(
+    saveSpot: const _FakeSaveSpot(),
+    getSpots: _FakeGetSpots(_fakeSpots),
+    updateSpotStatus: const _FakeUpdateSpotStatus(),
+    attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+  ),
+);
 
 void main() {
   group('SpotListPage', () {
@@ -20,6 +94,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -67,7 +142,6 @@ void main() {
     testWidgets('want-to-go tab is selected by default', (tester) async {
       await pumpPage(tester);
 
-      // 行きたい専用アイテムが表示され、行った専用アイテムは非表示
       expect(find.text(wantToGoOnly), findsOneWidget);
       expect(find.text(wentOnly), findsNothing);
     });
@@ -79,7 +153,6 @@ void main() {
       await tester.tap(find.text(AppStrings.listWentTab));
       await tester.pump();
 
-      // 行った専用アイテムが表示され、行きたい専用アイテムは非表示
       expect(find.text(wentOnly), findsOneWidget);
       expect(find.text(wantToGoOnly), findsNothing);
     });
@@ -89,7 +162,6 @@ void main() {
       await pumpPage(tester);
 
       expect(find.text(AppStrings.categoryPark), findsOneWidget);
-      expect(find.text(AppStrings.categoryCafe), findsOneWidget);
       expect(find.text(AppStrings.categoryCafe), findsOneWidget);
       expect(find.text(AppStrings.categoryLunch), findsOneWidget);
       expect(find.text(AppStrings.categoryDinner), findsOneWidget);
@@ -102,7 +174,6 @@ void main() {
         (tester) async {
       await pumpPage(tester);
 
-      // 初期は公園が選択色
       expect(
         find.ancestor(
           of: find.text(AppStrings.categoryPark),
@@ -117,7 +188,6 @@ void main() {
       await tester.tap(find.text(AppStrings.categoryCafe));
       await tester.pump();
 
-      // カフェが選択色になり、公園は非選択色になる
       expect(
         find.ancestor(
           of: find.text(AppStrings.categoryCafe),
@@ -144,8 +214,47 @@ void main() {
     testWidgets('shows date and arrow icon in list', (tester) async {
       await pumpPage(tester);
 
-      expect(find.text('4/12'), findsOneWidget);
+      expect(find.text('04/12'), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right), findsWidgets);
+    });
+
+    // スポットが空のときは空状態メッセージが表示される
+    testWidgets('shows empty message when no spots in current tab',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final emptyOverride = spotProvider.overrideWith(
+        (ref) => SpotNotifier(
+          saveSpot: const _FakeSaveSpot(),
+          getSpots: const _FakeGetSpots([]),
+          updateSpotStatus: const _FakeUpdateSpotStatus(),
+          attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [emptyOverride],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SpotListPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text(AppStrings.spotListEmpty), findsOneWidget);
     });
 
     // ボトムナビが表示される
@@ -159,6 +268,7 @@ void main() {
     testWidgets('shows back button in AppBar', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -193,12 +303,10 @@ void main() {
         (tester) async {
       await pumpPage(tester);
 
-      // 行った！タブに切り替え
       await tester.tap(find.text(AppStrings.listWentTab));
       await tester.pump();
       expect(find.text(wentOnly), findsOneWidget);
 
-      // 行きたい！タブに戻す
       await tester.tap(find.text(AppStrings.wantToGo));
       await tester.pump();
 
@@ -216,6 +324,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -259,6 +368,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -300,6 +410,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;

@@ -5,6 +5,7 @@ import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -16,9 +17,9 @@ import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
 
 /// 行きたい！／行った！共通詳細ページ
 class SpotDetailPage extends ConsumerStatefulWidget {
-  const SpotDetailPage({super.key, required this.isWantToGo});
+  const SpotDetailPage({super.key, required this.spot});
 
-  final bool isWantToGo;
+  final Spot spot;
 
   @override
   ConsumerState<SpotDetailPage> createState() => _SpotDetailPageState();
@@ -117,7 +118,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: Text(
-          widget.isWantToGo
+          widget.spot.status == SpotStatus.wantToGo
               ? AppStrings.wantToGoPageTitle
               : AppStrings.listWentTab,
         ),
@@ -144,7 +145,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               const _PhotoBox(),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
-              if (widget.isWantToGo)
+              if (widget.spot.status == SpotStatus.wantToGo)
                 _MoveToWentButton(onPressed: _onMoveToWentPressed)
               else
                 _DeleteButton(onPressed: _onDeletePressed),

@@ -51,6 +51,7 @@ abstract class AppStrings {
 
   // リストページ
   static const listWentTab = '行った！';
+  static const spotListEmpty = 'スポットがありません';
 
   // スポット
   static const statusWantToGo = '行きたい';
