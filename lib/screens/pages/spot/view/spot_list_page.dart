@@ -81,7 +81,8 @@ class SpotListPage extends ConsumerWidget {
                       itemBuilder: (context, i) {
                         final spot = filtered[i];
                         return _ListItem(
-                          date: '${spot.createdAt.month}/${spot.createdAt.day}',
+                          date:
+                              '${spot.createdAt.month.toString().padLeft(2, '0')}/${spot.createdAt.day.toString().padLeft(2, '0')}',
                           title: spot.title,
                           onTap: () => Navigator.push(
                             context,
