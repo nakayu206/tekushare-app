@@ -45,6 +45,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
   int? _inactSecondsLeft;
   bool _turnFired = false;
   bool _inactFired = false;
+  bool _turnAlertShown = false;
 
   @override
   void initState() {
@@ -77,11 +78,46 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     if (_turnSecondsLeft == 0 && !_turnFired) {
       _turnFired = true;
       await svc.showTurnaroundNotification();
+      _showTimerFinishedAlert();
     }
     if (_inactSecondsLeft == 0 && !_inactFired) {
       _inactFired = true;
       await svc.showInactivityNotification();
     }
+  }
+
+  void _resetTimer() {
+    final settings = ref.read(settingsViewModelProvider);
+    setState(() {
+      _turnSecondsLeft = settings.timerMinutes * 60;
+      _turnFired = false;
+      _turnAlertShown = false;
+    });
+  }
+
+  void _showTimerFinishedAlert() {
+    if (!mounted || _turnAlertShown) return;
+    _turnAlertShown = true;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text(AppStrings.timerFinishedTitle),
+        content: const Text(AppStrings.timerFinishedMessage),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _resetTimer();
+            },
+            child: const Text(AppStrings.timerReset),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(AppStrings.closeButton),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -154,7 +190,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
               ClockHeader(countdownSeconds: _turnSecondsLeft),
               const SizedBox(height: AppSpacing.lg),
               _GpsStatusIndicator(locationState: locationState),
-              if (_inactSecondsLeft != null)
+              if (_inactSecondsLeft != null || _turnSecondsLeft != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.x2l,
@@ -163,11 +199,17 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _WalkTimerChip(
-                        label: AppStrings.timerInactivity,
-                        icon: Icons.directions_walk,
-                        seconds: _inactSecondsLeft!,
-                      ),
+                      if (_inactSecondsLeft != null) ...[
+                        _WalkTimerChip(
+                          label: AppStrings.timerInactivity,
+                          icon: Icons.directions_walk,
+                          seconds: _inactSecondsLeft!,
+                        ),
+                        if (_turnSecondsLeft != null)
+                          const SizedBox(width: AppSpacing.sm),
+                      ],
+                      if (_turnSecondsLeft != null)
+                        _WalkResetChip(onTap: _resetTimer),
                     ],
                   ),
                 ),
@@ -489,6 +531,48 @@ class _WalkTimerChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// タイマーリセットチップ
+// ──────────────────────────────────────────
+
+class _WalkResetChip extends StatelessWidget {
+  const _WalkResetChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(AppRadius.full),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.refresh, size: AppSize.iconXs, color: AppColors.primary),
+            SizedBox(width: AppSpacing.xs),
+            Text(
+              AppStrings.timerReset,
+              style: TextStyle(
+                fontSize: AppSize.timerChipLabelFontSize,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

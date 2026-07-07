@@ -27,6 +27,9 @@ abstract class AppStrings {
   static const recenterMap = '現在地に戻る';
   static const timerTurnaround = '折り返し';
   static const timerInactivity = '不活動';
+  static const timerReset = 'リセット';
+  static const timerFinishedTitle = 'タイムアップ';
+  static const timerFinishedMessage = '設定した時間になりました。';
   static const safetyOk = '元気です';
 
   // 行きたい！ページ

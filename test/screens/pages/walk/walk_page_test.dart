@@ -114,6 +114,19 @@ class _TimerDisabledSettingsViewModel extends SettingsViewModel {
       );
 }
 
+class _TimerZeroSettingsViewModel extends SettingsViewModel {
+  @override
+  SettingsState build() => const SettingsState(
+        timerEnabled: true,
+        timerMinutes: 0,
+        inactivityEnabled: false,
+      );
+}
+
+final _timerZeroOverride = settingsViewModelProvider.overrideWith(
+  _TimerZeroSettingsViewModel.new,
+);
+
 final _timerEnabledOverride = settingsViewModelProvider.overrideWith(
   _TimerEnabledSettingsViewModel.new,
 );
@@ -623,6 +636,107 @@ void main() {
       await tester.pump();
 
       expect(find.text(AppStrings.timerInactivity), findsOneWidget);
+    });
+
+    // タイマー有効時はリセットチップが表示される
+    testWidgets('shows reset chip when timer is enabled', (tester) async {
+      setDisplaySize(tester);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            locationProvider.overrideWith((ref) => const Stream.empty()),
+            _timerEnabledOverride,
+            _notificationOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text(AppStrings.timerReset), findsOneWidget);
+    });
+
+    // タイマー0秒でアラートダイアログが表示される
+    testWidgets('shows timer finished dialog when timer reaches zero',
+        (tester) async {
+      setDisplaySize(tester);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            locationProvider.overrideWith((ref) => const Stream.empty()),
+            _timerZeroOverride,
+            _notificationOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(Duration.zero); // 非同期通知を完了
+      await tester.pump(); // showDialog を処理
+
+      expect(find.text(AppStrings.timerFinishedTitle), findsOneWidget);
+    });
+
+    // アラートのリセットボタンでダイアログが閉じる
+    testWidgets('closes dialog and resets timer when reset tapped in dialog',
+        (tester) async {
+      setDisplaySize(tester);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            locationProvider.overrideWith((ref) => const Stream.empty()),
+            _timerZeroOverride,
+            _notificationOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(Duration.zero);
+      await tester.pump();
+
+      await tester.tap(find.text(AppStrings.timerReset).last);
+      await tester.pump();
+
+      expect(find.text(AppStrings.timerFinishedTitle), findsNothing);
     });
 
     // タイマー無効時はチップが表示されない
