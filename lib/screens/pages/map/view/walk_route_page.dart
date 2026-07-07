@@ -209,7 +209,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
         currentIndex: 2,
         onTap: (index) {
           if (index == 0) {
-            Navigator.popUntil(context, (route) => route.isFirst);
+            Navigator.pop(context);
           } else if (index == 1) {
             Navigator.pushAndRemoveUntil(
               context,

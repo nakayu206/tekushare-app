@@ -142,7 +142,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         currentIndex: 3,
         onTap: (index) {
           if (index == 0) {
-            Navigator.popUntil(context, (route) => route.isFirst);
+            Navigator.pop(context);
           } else if (index == 1) {
             Navigator.pushAndRemoveUntil(
               context,
