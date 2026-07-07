@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -22,7 +24,7 @@ import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 import 'package:tekushare/screens/widgets/common/primary_button.dart';
 
-/// 散歩モード画���
+/// 散歩モード画面
 class WalkPage extends ConsumerStatefulWidget {
   const WalkPage({super.key});
 
@@ -33,6 +35,7 @@ class WalkPage extends ConsumerStatefulWidget {
 class _WalkPageState extends ConsumerState<WalkPage> {
   final _mapController = MapController();
   final _trackPoints = <LatLng>[];
+  final _photoMarkers = <({LatLng point, String imagePath})>[];
   LatLng? _currentPosition;
 
   @override
@@ -56,6 +59,11 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     if (imagePath == null || !context.mounted) return;
 
     ref.read(pendingPhotoProvider.notifier).state = imagePath;
+    if (_currentPosition != null) {
+      setState(() {
+        _photoMarkers.add((point: _currentPosition!, imagePath: imagePath));
+      });
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text(AppStrings.photoTaken)),
     );
@@ -80,6 +88,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     });
 
     final locationState = ref.watch(locationProvider);
+    final sizing = AppSizingTheme.of(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -90,7 +99,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const ClockHeader(),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               _GpsStatusIndicator(locationState: locationState),
               Expanded(
                 child: _currentPosition != null
@@ -128,6 +137,37 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                               ),
                             ],
                           ),
+                          if (_photoMarkers.isNotEmpty)
+                            MarkerLayer(
+                              markers: _photoMarkers
+                                  .map(
+                                    (m) => Marker(
+                                      point: m.point,
+                                      width: MapConstants.photoThumbnailSize,
+                                      height: MapConstants.photoThumbnailSize,
+                                      child: ClipOval(
+                                        child: Image.file(
+                                          File(m.imagePath),
+                                          width:
+                                              MapConstants.photoThumbnailSize,
+                                          height:
+                                              MapConstants.photoThumbnailSize,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              const ColoredBox(
+                                            color: AppColors.textDisabled,
+                                            child: Icon(
+                                              Icons.photo,
+                                              color: AppColors.textOnPrimary,
+                                              size: AppSize.iconSm,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
                           Align(
                             alignment: Alignment.bottomRight,
                             child: Container(
@@ -149,38 +189,53 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                       )
                     : const SizedBox.shrink(),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.sm),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
-                child: _WalkActionButton(
-                  label: AppStrings.takePhoto,
-                  svgAsset: 'assets/SVG/camera.svg',
-                  onPressed: () => _onTakePhotoPressed(context, locationState),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.x2l,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _WalkActionButton(
+                        label: AppStrings.takePhoto,
+                        svgAsset: 'assets/SVG/camera.svg',
+                        onPressed: () =>
+                            _onTakePhotoPressed(context, locationState),
+                        compact: true,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _WalkActionButton(
+                        label: AppStrings.wantToGo,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const WantToGoPage(),
+                          ),
+                        ),
+                        compact: true,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.sm),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
-                child: _WalkActionButton(
-                  label: AppStrings.saveToWantToGo,
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const WantToGoPage()),
-                  ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.x2l,
                 ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
                 child: PrimaryButton(
                   label: AppStrings.endWalk,
+                  height: sizing.largeBtnHeight,
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const EndWalkPage()),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),
@@ -217,7 +272,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
 
 // ──────────────────────────────────────────
 // GPS 状態インジケーター
-// ────────────────────────��─────────────────
+// ──────────────────────────────────────────
 
 class _GpsStatusIndicator extends StatelessWidget {
   const _GpsStatusIndicator({required this.locationState});
@@ -226,12 +281,12 @@ class _GpsStatusIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: Center(
-        child: locationState.when(
-          data: (_) => const SizedBox.shrink(),
-          loading: () => const Row(
+    return locationState.when(
+      data: (_) => const SizedBox.shrink(),
+      loading: () => const SizedBox(
+        height: 40,
+        child: Center(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
@@ -242,14 +297,19 @@ class _GpsStatusIndicator extends StatelessWidget {
                   color: AppColors.primary,
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 AppStrings.gpsAcquiring,
                 style: TextStyle(color: AppColors.textDisabled),
               ),
             ],
           ),
-          error: (_, __) => const Text(
+        ),
+      ),
+      error: (_, __) => const SizedBox(
+        height: 40,
+        child: Center(
+          child: Text(
             AppStrings.gpsUnavailableError,
             style: TextStyle(color: AppColors.error),
           ),
@@ -259,28 +319,32 @@ class _GpsStatusIndicator extends StatelessWidget {
   }
 }
 
-// ───────────��──────────────────────────────
+// ──────────────────────────────────────────
 // 散歩アクションボタン（ブラウン）
-// ──���───────────────────────────────────────
+// ──────────────────────────────────────────
 
 class _WalkActionButton extends StatelessWidget {
   const _WalkActionButton({
     required this.label,
     this.svgAsset,
     required this.onPressed,
+    this.compact = false,
   });
 
   final String label;
   final String? svgAsset;
   final VoidCallback onPressed;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final sizing = AppSizingTheme.of(context);
-    final height = sizing.actionBtnHeight;
-    final fontSize = sizing.actionBtnFontSize;
-    final iconSize = sizing.actionBtnIconSize;
-    final radius = sizing.actionBtnRadius;
+    final height = compact ? sizing.detailBtnHeight : sizing.actionBtnHeight;
+    final fontSize =
+        compact ? sizing.detailBtnFontSize : sizing.actionBtnFontSize;
+    final iconSize =
+        compact ? sizing.actionBtnIconSize * 0.7 : sizing.actionBtnIconSize;
+    final radius = compact ? sizing.detailBtnRadius : sizing.actionBtnRadius;
 
     return Container(
       width: double.infinity,
@@ -322,7 +386,7 @@ class _WalkActionButton extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     label,
                     style: TextStyle(

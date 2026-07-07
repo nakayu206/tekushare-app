@@ -139,7 +139,7 @@ void main() {
       await pumpWalkPage(tester);
 
       expect(find.text(AppStrings.takePhoto), findsOneWidget);
-      expect(find.text(AppStrings.saveToWantToGo), findsOneWidget);
+      expect(find.text(AppStrings.wantToGo), findsOneWidget);
       expect(find.text(AppStrings.endWalk), findsOneWidget);
     });
 
@@ -242,9 +242,8 @@ void main() {
       expect(container.read(pendingPhotoProvider), isNull);
     });
 
-    // 行きたいリストに保存ボタンをタップすると WantToGoPage へ遷移する
-    testWidgets(
-        'navigates to WantToGoPage when save to want-to-go button is tapped',
+    // 行きたいボタンをタップすると WantToGoPage へ遷移する
+    testWidgets('navigates to WantToGoPage when want-to-go button is tapped',
         (tester) async {
       setDisplaySize(tester);
 
@@ -282,7 +281,7 @@ void main() {
       await tester.tap(find.text('start'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(AppStrings.saveToWantToGo));
+      await tester.tap(find.text(AppStrings.wantToGo));
       await tester.pumpAndSettle();
 
       expect(find.byType(WantToGoPage), findsOneWidget);
@@ -506,6 +505,44 @@ void main() {
       await pumpWalkPage(tester, locationStream: const Stream.empty());
 
       expect(find.byType(FlutterMap), findsNothing);
+    });
+
+    // 撮影すると地図上に ClipOval サムネイルが追加される
+    testWidgets('adds photo marker on map after taking photo', (tester) async {
+      const imagePath = '/fake/photo.jpg';
+      final position = _makePosition(35.6895, 139.6917);
+
+      await pumpWalkPage(
+        tester,
+        locationStream: Stream.value(position),
+        camera: _FakeCameraService(imagePath),
+      );
+      await tester.pump();
+
+      expect(find.byType(ClipOval), findsNothing);
+
+      await tester.tap(find.text(AppStrings.takePhoto));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ClipOval), findsOneWidget);
+    });
+
+    // 撮影をキャンセルした場合は地図上にサムネイルが追加されない
+    testWidgets('does not add photo marker when camera is cancelled',
+        (tester) async {
+      final position = _makePosition(35.0, 139.0);
+
+      await pumpWalkPage(
+        tester,
+        locationStream: Stream.value(position),
+        camera: _FakeCameraService(null),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text(AppStrings.takePhoto));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ClipOval), findsNothing);
     });
   });
 }

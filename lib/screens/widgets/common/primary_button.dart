@@ -11,10 +11,12 @@ class PrimaryButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.height,
   });
 
   final String label;
   final VoidCallback onPressed;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +24,7 @@ class PrimaryButton extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      height: sizing.primaryBtnHeight,
+      height: height ?? sizing.primaryBtnHeight,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(sizing.primaryBtnRadius),
