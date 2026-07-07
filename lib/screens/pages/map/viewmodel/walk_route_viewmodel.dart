@@ -136,7 +136,11 @@ class WalkRouteViewModel extends Notifier<WalkRouteState> {
   }
 
   void saveRoute(WalkRoute route) {
-    state = state.copyWith(routes: [route, ...state.routes]);
+    final updated = [...state.routes, route];
+    state = state.copyWith(
+      routes: updated,
+      selectedRouteIndex: updated.length - 1,
+    );
   }
 
   void setLogs(List<WalkLog> logs) {
