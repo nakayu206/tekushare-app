@@ -211,12 +211,12 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
           if (index == 0) {
             Navigator.pop(context);
           } else if (index == 1) {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
             );
           } else if (index == 3) {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             );

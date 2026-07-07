@@ -11,7 +11,9 @@ import 'package:tekushare/infrastructure/notification_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await NotificationService.instance.initialize();
+  try {
+    await NotificationService.instance.initialize();
+  } catch (_) {}
   AppConfig.setFlavor(Flavor.dev);
   runApp(const ProviderScope(child: TekuShareApp()));
 }

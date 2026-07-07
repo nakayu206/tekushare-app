@@ -70,14 +70,17 @@ class ClockHeader extends ConsumerWidget {
                 ),
               ),
               if (onReset != null) ...[
-                const SizedBox(width: AppSpacing.xs),
-                GestureDetector(
-                  onTap: onReset,
-                  child: Icon(
+                IconButton(
+                  onPressed: onReset,
+                  icon: Icon(
                     Icons.refresh,
                     size: sizing.clockLabelFontSize + 2,
                     color: AppColors.primary,
                   ),
+                  tooltip: 'タイマーをリセット',
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
                 ),
               ],
             ],
