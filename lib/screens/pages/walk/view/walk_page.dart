@@ -172,8 +172,9 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                             alignment: Alignment.bottomLeft,
                             child: Padding(
                               padding: const EdgeInsets.all(AppSpacing.sm),
-                              child: FloatingActionButton.small(
+                              child: FloatingActionButton(
                                 heroTag: 'recenter',
+                                tooltip: AppStrings.recenterMap,
                                 onPressed: () {
                                   if (_currentPosition != null) {
                                     _mapController.move(
@@ -305,16 +306,16 @@ class _GpsStatusIndicator extends StatelessWidget {
     return locationState.when(
       data: (_) => const SizedBox.shrink(),
       loading: () => const SizedBox(
-        height: 40,
+        height: AppSize.gpsIndicatorHeight,
         child: Center(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                width: 14,
-                height: 14,
+                width: AppSize.gpsSpinnerSize,
+                height: AppSize.gpsSpinnerSize,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
+                  strokeWidth: AppSize.gpsSpinnerStroke,
                   color: AppColors.primary,
                 ),
               ),
@@ -328,7 +329,7 @@ class _GpsStatusIndicator extends StatelessWidget {
         ),
       ),
       error: (_, __) => const SizedBox(
-        height: 40,
+        height: AppSize.gpsIndicatorHeight,
         child: Center(
           child: Text(
             AppStrings.gpsUnavailableError,
@@ -363,8 +364,7 @@ class _WalkActionButton extends StatelessWidget {
     final height = compact ? sizing.detailBtnHeight : sizing.actionBtnHeight;
     final fontSize =
         compact ? sizing.detailBtnFontSize : sizing.actionBtnFontSize;
-    final iconSize =
-        compact ? sizing.actionBtnIconSize * 0.7 : sizing.actionBtnIconSize;
+    final iconSize = compact ? AppSize.iconMd : sizing.actionBtnIconSize;
     final radius = compact ? sizing.detailBtnRadius : sizing.actionBtnRadius;
 
     return Container(
