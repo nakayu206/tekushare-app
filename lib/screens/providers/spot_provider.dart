@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
+import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
@@ -14,9 +15,11 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
     required GetSpots getSpots,
     required UpdateSpotStatus updateSpotStatus,
     required AttachPhotoToSpot attachPhotoToSpot,
+    required RemovePhotoFromSpot removePhotoFromSpot,
   })  : _saveSpot = saveSpot,
         _updateSpotStatus = updateSpotStatus,
         _attachPhotoToSpot = attachPhotoToSpot,
+        _removePhotoFromSpot = removePhotoFromSpot,
         super([]) {
     _subscription = getSpots.call().listen((spots) => state = spots);
   }
@@ -24,6 +27,7 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
   final SaveSpot _saveSpot;
   final UpdateSpotStatus _updateSpotStatus;
   final AttachPhotoToSpot _attachPhotoToSpot;
+  final RemovePhotoFromSpot _removePhotoFromSpot;
   late final StreamSubscription<List<Spot>> _subscription;
 
   Future<String> saveSpot({
@@ -50,6 +54,10 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
     return _attachPhotoToSpot.call(spotId, imagePath);
   }
 
+  Future<void> removePhoto(String spotId, String imagePath) {
+    return _removePhotoFromSpot.call(spotId, imagePath);
+  }
+
   @override
   void dispose() {
     _subscription.cancel();
@@ -65,11 +73,12 @@ final spotProvider = StateNotifierProvider<SpotNotifier, List<Spot>>((ref) {
     getSpots: GetSpots(spotRepo),
     updateSpotStatus: UpdateSpotStatus(spotRepo),
     attachPhotoToSpot: AttachPhotoToSpot(photoRepo),
+    removePhotoFromSpot: RemovePhotoFromSpot(photoRepo),
   );
 });
 
-/// 散歩中にカメラで撮影した写真の一時パス（WantToGoPage で使用）
-final pendingPhotoProvider = StateProvider<String?>((ref) => null);
+/// 行きたい！ページで撮影した写真の一時パスリスト
+final pendingPhotoProvider = StateProvider<List<String>>((ref) => []);
 
 /// 現在選択中のステータスフィルタ（null = 全件、デフォルトは行きたい！）
 final selectedSpotStatusProvider =

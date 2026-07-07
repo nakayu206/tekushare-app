@@ -9,6 +9,7 @@ import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
+import 'package:tekushare/screens/providers/walk_timer_provider.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
@@ -71,6 +72,7 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
 
   void _onConfirm() {
     ref.read(walkSessionProvider.notifier).resetWalk();
+    ref.read(walkTimerProvider.notifier).reset();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(

@@ -101,18 +101,16 @@ class SpotListPage extends ConsumerWidget {
         currentIndex: 1,
         onTap: (index) {
           if (index == 0) {
-            Navigator.popUntil(context, (route) => route.isFirst);
+            Navigator.pop(context);
           } else if (index == 2) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
-              (route) => route.isFirst,
             );
           } else if (index == 3) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
-              (route) => route.isFirst,
             );
           }
         },

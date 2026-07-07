@@ -17,7 +17,7 @@ class SpotModel {
   late SpotStatus status;
 
   String? memo;
-  String? photoPath;
+  List<String> photoPaths = [];
   late DateTime createdAt;
 
   Spot toEntity() {
@@ -28,7 +28,7 @@ class SpotModel {
       longitude: longitude,
       status: status,
       memo: memo,
-      photoPath: photoPath,
+      photoPaths: photoPaths,
       createdAt: createdAt,
     );
   }
@@ -41,7 +41,7 @@ class SpotModel {
       ..longitude = spot.longitude
       ..status = spot.status
       ..memo = spot.memo
-      ..photoPath = spot.photoPath
+      ..photoPaths = spot.photoPaths
       ..createdAt = spot.createdAt;
   }
 }

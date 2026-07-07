@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/domain/entities/spot.dart';
@@ -31,7 +32,7 @@ class SpotDetailPage extends ConsumerStatefulWidget {
 
 class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   final _titleController = TextEditingController();
-  String? _photoPath;
+  late List<String> _photoPaths;
 
   static const _categories = [
     AppStrings.categoryPark,
@@ -45,7 +46,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   @override
   void initState() {
     super.initState();
-    _photoPath = widget.spot.photoPath;
+    _photoPaths = List.of(widget.spot.photoPaths);
   }
 
   @override
@@ -59,7 +60,13 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     if (path == null || !mounted) return;
     await ref.read(spotProvider.notifier).attachPhoto(widget.spot.id, path);
     if (!mounted) return;
-    setState(() => _photoPath = path);
+    setState(() => _photoPaths = [..._photoPaths, path]);
+  }
+
+  Future<void> _onPhotoDelete(String path) async {
+    await ref.read(spotProvider.notifier).removePhoto(widget.spot.id, path);
+    if (!mounted) return;
+    setState(() => _photoPaths = _photoPaths.where((p) => p != path).toList());
   }
 
   void _onSavePressed() {
@@ -165,7 +172,11 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               _TitleInput(controller: _titleController),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
-              _PhotoBox(photoPath: _photoPath, onTap: _onPhotoTap),
+              _PhotoBox(
+                photoPaths: _photoPaths,
+                onTap: _onPhotoTap,
+                onDelete: _onPhotoDelete,
+              ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               if (widget.spot.status == SpotStatus.wantToGo)
                 _MoveToWentButton(onPressed: _onMoveToWentPressed)
@@ -182,24 +193,21 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         currentIndex: 1,
         onTap: (index) {
           if (index == 0) {
-            Navigator.popUntil(context, (route) => route.isFirst);
+            Navigator.pop(context);
           } else if (index == 1) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
-              (route) => route.isFirst,
             );
           } else if (index == 2) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
-              (route) => route.isFirst,
             );
           } else if (index == 3) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
-              (route) => route.isFirst,
             );
           }
         },
@@ -276,43 +284,79 @@ class _TitleInput extends StatelessWidget {
 }
 
 class _PhotoBox extends StatelessWidget {
-  const _PhotoBox({required this.photoPath, required this.onTap});
+  const _PhotoBox({
+    required this.photoPaths,
+    required this.onTap,
+    required this.onDelete,
+  });
 
-  final String? photoPath;
+  final List<String> photoPaths;
   final VoidCallback onTap;
+  final void Function(String) onDelete;
 
   @override
   Widget build(BuildContext context) {
     final sizing = AppSizingTheme.of(context);
+    final screenW = MediaQuery.sizeOf(context).width;
+    final tileW = (screenW - 32 - AppSpacing.md) / 2;
+    final tileH = sizing.photoBoxHeight;
 
-    if (photoPath != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: SizedBox(
-          width: sizing.photoBoxWidth,
-          height: sizing.photoBoxHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            child: Image.file(
-              File(photoPath!),
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _placeholder(sizing),
+    return Wrap(
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.md,
+      children: [
+        for (final path in photoPaths)
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: SizedBox(
+                  width: tileW,
+                  height: tileH,
+                  child: Image.file(
+                    File(path),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _placeholder(sizing),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: () => onDelete(path),
+                  child: Container(
+                    width: MapConstants.photoDeleteBadgeSize + 2,
+                    height: MapConstants.photoDeleteBadgeSize + 2,
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(AppRadius.sm),
+                        bottomLeft: Radius.circular(AppRadius.xs),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      size: MapConstants.photoDeleteIconSize + 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        GestureDetector(
+          onTap: onTap,
+          child: SizedBox(
+            width: tileW,
+            height: tileH,
+            child: CustomPaint(
+              painter: const DashedBorderPainter(),
+              child: _placeholder(sizing),
             ),
           ),
         ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: sizing.photoBoxWidth,
-        height: sizing.photoBoxHeight,
-        child: CustomPaint(
-          painter: const DashedBorderPainter(),
-          child: _placeholder(sizing),
-        ),
-      ),
+      ],
     );
   }
 

@@ -45,16 +45,16 @@ android {
         create("dev") {
             dimension = "env"
             applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "TekuShare Dev")
+            resValue("string", "app_name", "てくしぇあ Dev")
         }
         create("stg") {
             dimension = "env"
             applicationIdSuffix = ".stg"
-            resValue("string", "app_name", "TekuShare Stg")
+            resValue("string", "app_name", "てくしぇあ Stg")
         }
         create("prod") {
             dimension = "env"
-            resValue("string", "app_name", "TekuShare")
+            resValue("string", "app_name", "てくしぇあ")
         }
     }
 }

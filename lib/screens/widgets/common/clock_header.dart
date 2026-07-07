@@ -9,10 +9,13 @@ import 'package:tekushare/screens/providers/clock_provider.dart';
 
 /// 時刻・片道設定を表示する共通ヘッダー
 class ClockHeader extends ConsumerWidget {
-  const ClockHeader({super.key, this.countdownSeconds});
+  const ClockHeader({super.key, this.countdownSeconds, this.onReset});
 
   /// 指定するとリアルタイムカウントダウン（MM:SS）を表示する
   final int? countdownSeconds;
+
+  /// 指定するとカウントダウン横にリセットアイコンを表示する
+  final VoidCallback? onReset;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,18 +24,16 @@ class ClockHeader extends ConsumerWidget {
     final m = now.minute.toString().padLeft(2, '0');
 
     final settings = ref.watch(settingsViewModelProvider);
-    final oneWayMinutes = settings.timerRoundTrip
-        ? settings.timerMinutes ~/ 2
-        : settings.timerMinutes;
+    final label = settings.timerRoundTrip ? '往復' : '片道';
 
     final String timeLabel;
     if (countdownSeconds != null) {
       final mm = (countdownSeconds! ~/ 60).toString().padLeft(2, '0');
       final ss = (countdownSeconds! % 60).toString().padLeft(2, '0');
-      timeLabel = '片道  $mm:$ss';
+      timeLabel = '$label  $mm:$ss';
     } else {
-      final mm = oneWayMinutes.toString().padLeft(2, '0');
-      timeLabel = '片道  00:$mm';
+      final mm = settings.timerMinutes.toString().padLeft(2, '0');
+      timeLabel = '$label  $mm:00';
     }
 
     // 99px はスクリーン最上端からの距離のため SafeArea 分を差し引く
@@ -55,14 +56,34 @@ class ClockHeader extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            timeLabel,
-            style: AppTextStyle.bodyMedium.copyWith(
-              color: AppColors.primary,
-              fontSize: sizing.clockLabelFontSize,
-              fontWeight: FontWeight.w500,
-              height: 1.0,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                timeLabel,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.primary,
+                  fontSize: sizing.clockLabelFontSize,
+                  fontWeight: FontWeight.w500,
+                  height: 1.0,
+                ),
+              ),
+              if (onReset != null) ...[
+                IconButton(
+                  onPressed: onReset,
+                  icon: Icon(
+                    Icons.refresh,
+                    size: sizing.clockLabelFontSize + 2,
+                    color: AppColors.primary,
+                  ),
+                  tooltip: 'タイマーをリセット',
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
+                ),
+              ],
+            ],
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
+import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
@@ -48,6 +49,12 @@ class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
+  const _FakeRemovePhotoFromSpot();
+  @override
+  Future<void> call(String spotId, String imagePath) async {}
+}
+
 class _FakeCameraService extends Fake implements CameraService {
   _FakeCameraService(this._path);
   final String? _path;
@@ -70,6 +77,7 @@ final _spotOverride = spotProvider.overrideWith(
     getSpots: const _FakeGetSpots(),
     updateSpotStatus: const _FakeUpdateSpotStatus(),
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+    removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
   ),
 );
 

@@ -27,6 +27,9 @@ abstract class AppStrings {
   static const recenterMap = '現在地に戻る';
   static const timerTurnaround = '折り返し';
   static const timerInactivity = '不活動';
+  static const timerReset = 'リセット';
+  static const timerFinishedTitle = 'タイムアップ';
+  static const timerFinishedMessage = '設定した時間になりました。';
   static const safetyOk = '元気です';
 
   // 行きたい！ページ
@@ -38,6 +41,7 @@ abstract class AppStrings {
   static const closeButton = '閉じる';
   static const realtimeLocation = 'リアルタイム位置';
   static const addPhoto = '写真を追加';
+  static const removePhoto = '写真を削除';
   static const titleHint = 'タイトルを設定する';
 
   // 共通
@@ -73,6 +77,10 @@ abstract class AppStrings {
   static const walkDistanceLabel = '距離';
   static const walkSpotCount = '行きたいスポット';
   static const viewDetails = '詳しく見る';
+
+  // 履歴ページ
+  static const historyPageTitle = '散歩履歴';
+  static const historyEmpty = '散歩の記録がありません';
 
   // スポット詳細
   static const spotDetailSaveButton = '上書き保存';

@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/screens/pages/spot/viewmodel/want_to_go_viewmodel.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
@@ -44,6 +46,18 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
     super.dispose();
   }
 
+  Future<void> _onPhotoTap() async {
+    final path = await ref.read(cameraServiceProvider).takePhoto();
+    if (path == null || !mounted) return;
+    ref.read(pendingPhotoProvider.notifier).update((l) => [...l, path]);
+  }
+
+  void _onPhotoDelete(String path) {
+    ref
+        .read(pendingPhotoProvider.notifier)
+        .update((l) => l.where((e) => e != path).toList());
+  }
+
   void _onSavePressed() {
     final title = _titleController.text.isEmpty
         ? AppStrings.noTitle
@@ -66,11 +80,11 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
                 latitude: location.latitude,
                 longitude: location.longitude,
               );
-          final photo = ref.read(pendingPhotoProvider);
-          if (photo != null) {
+          final photos = ref.read(pendingPhotoProvider);
+          for (final photo in photos) {
             await ref.read(spotProvider.notifier).attachPhoto(spotId, photo);
-            ref.read(pendingPhotoProvider.notifier).state = null;
           }
+          ref.read(pendingPhotoProvider.notifier).state = [];
           if (!mounted) return;
           _showSavedDialog();
         },
@@ -123,7 +137,7 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
               SizedBox(height: sizing.sectionSpacing),
               _TitleInput(controller: _titleController),
               SizedBox(height: sizing.sectionSpacing),
-              const _PhotoBox(),
+              _PhotoBox(onTap: _onPhotoTap, onDelete: _onPhotoDelete),
               SizedBox(height: sizing.sectionSpacing),
               _SaveButton(onPressed: _onSavePressed),
               SizedBox(height: sizing.sectionSpacing),
@@ -135,24 +149,21 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
         currentIndex: 0,
         onTap: (index) {
           if (index == 0) {
-            Navigator.popUntil(context, (route) => route.isFirst);
+            Navigator.pop(context);
           } else if (index == 1) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
-              (route) => route.isFirst,
             );
           } else if (index == 2) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
-              (route) => route.isFirst,
             );
           } else if (index == 3) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
-              (route) => route.isFirst,
             );
           }
         },
@@ -231,35 +242,76 @@ class _TitleInput extends StatelessWidget {
 // ──────────────────────────────────────────
 
 class _PhotoBox extends ConsumerWidget {
-  const _PhotoBox();
+  const _PhotoBox({required this.onTap, required this.onDelete});
+
+  final VoidCallback onTap;
+  final void Function(String) onDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sizing = AppSizingTheme.of(context);
-    final photoPath = ref.watch(pendingPhotoProvider);
+    final photos = ref.watch(pendingPhotoProvider);
 
-    if (photoPath != null) {
-      return SizedBox(
-        width: sizing.photoBoxWidth,
-        height: sizing.photoBoxHeight,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          child: Image.file(
-            File(photoPath),
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _placeholder(),
+    final screenW = MediaQuery.sizeOf(context).width;
+    final tileW = (screenW - 32 - AppSpacing.md) / 2;
+    final tileH = sizing.photoBoxHeight;
+
+    return Wrap(
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.md,
+      children: [
+        for (final path in photos)
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: SizedBox(
+                  width: tileW,
+                  height: tileH,
+                  child: Image.file(
+                    File(path),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _placeholder(),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: () => onDelete(path),
+                  child: Container(
+                    width: MapConstants.photoDeleteBadgeSize + 2,
+                    height: MapConstants.photoDeleteBadgeSize + 2,
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(AppRadius.sm),
+                        bottomLeft: Radius.circular(AppRadius.xs),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      size: MapConstants.photoDeleteIconSize + 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        GestureDetector(
+          onTap: onTap,
+          child: SizedBox(
+            width: tileW,
+            height: tileH,
+            child: CustomPaint(
+              painter: const DashedBorderPainter(),
+              child: _placeholder(),
+            ),
           ),
         ),
-      );
-    }
-
-    return SizedBox(
-      width: sizing.photoBoxWidth,
-      height: sizing.photoBoxHeight,
-      child: CustomPaint(
-        painter: const DashedBorderPainter(),
-        child: _placeholder(),
-      ),
+      ],
     );
   }
 
@@ -276,7 +328,7 @@ class _PhotoBox extends ConsumerWidget {
             BlendMode.srcIn,
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.xs),
         const Text(
           AppStrings.addPhoto,
           style: TextStyle(

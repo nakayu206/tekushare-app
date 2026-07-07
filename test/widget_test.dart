@@ -47,6 +47,8 @@ class _FakeAuthService implements AuthService {
 class _FakePhotoRepository implements PhotoRepository {
   @override
   Future<void> attachPhoto(String spotId, String imagePath) async {}
+  @override
+  Future<void> removePhoto(String spotId, String imagePath) async {}
 }
 
 class _FakeWalkSessionRepository implements WalkSessionRepository {

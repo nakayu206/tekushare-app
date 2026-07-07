@@ -25,7 +25,7 @@ void main() {
       expect(spot.longitude, 139.6917);
       expect(spot.status, SpotStatus.wantToGo);
       expect(spot.memo, isNull);
-      expect(spot.photoPath, isNull);
+      expect(spot.photoPaths, isEmpty);
       expect(spot.createdAt, createdAt);
     });
 
@@ -58,11 +58,11 @@ void main() {
       final spot = makeSpot();
       final updated = spot.copyWith(
         memo: 'おすすめのカフェ',
-        photoPath: '/photos/cafe.jpg',
+        photoPaths: ['/photos/cafe.jpg'],
       );
 
       expect(updated.memo, 'おすすめのカフェ');
-      expect(updated.photoPath, '/photos/cafe.jpg');
+      expect(updated.photoPaths, ['/photos/cafe.jpg']);
     });
 
     test('copyWith で memo を null に戻せる', () {
@@ -72,11 +72,11 @@ void main() {
       expect(updated.memo, isNull);
     });
 
-    test('copyWith で photoPath を null に戻せる', () {
-      final spot = makeSpot().copyWith(photoPath: '/photos/cafe.jpg');
-      final updated = spot.copyWith(photoPath: null);
+    test('copyWith で photoPaths を空リストに戻せる', () {
+      final spot = makeSpot().copyWith(photoPaths: ['/photos/cafe.jpg']);
+      final updated = spot.copyWith(photoPaths: []);
 
-      expect(updated.photoPath, isNull);
+      expect(updated.photoPaths, isEmpty);
     });
 
     test('copyWith で memo を指定しないと元の値を保持する', () {

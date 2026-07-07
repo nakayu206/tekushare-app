@@ -37,10 +37,10 @@ const SpotModelSchema = CollectionSchema(
       name: r'memo',
       type: IsarType.string,
     ),
-    r'photoPath': PropertySchema(
+    r'photoPaths': PropertySchema(
       id: 4,
-      name: r'photoPath',
-      type: IsarType.string,
+      name: r'photoPaths',
+      type: IsarType.stringList,
     ),
     r'status': PropertySchema(
       id: 5,
@@ -99,10 +99,11 @@ int _spotModelEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.photoPaths.length * 3;
   {
-    final value = object.photoPath;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
+    for (var i = 0; i < object.photoPaths.length; i++) {
+      final value = object.photoPaths[i];
+      bytesCount += value.length * 3;
     }
   }
   bytesCount += 3 + object.status.name.length * 3;
@@ -121,7 +122,7 @@ void _spotModelSerialize(
   writer.writeDouble(offsets[1], object.latitude);
   writer.writeDouble(offsets[2], object.longitude);
   writer.writeString(offsets[3], object.memo);
-  writer.writeString(offsets[4], object.photoPath);
+  writer.writeStringList(offsets[4], object.photoPaths);
   writer.writeString(offsets[5], object.status.name);
   writer.writeString(offsets[6], object.title);
   writer.writeString(offsets[7], object.uid);
@@ -139,7 +140,7 @@ SpotModel _spotModelDeserialize(
   object.latitude = reader.readDouble(offsets[1]);
   object.longitude = reader.readDouble(offsets[2]);
   object.memo = reader.readStringOrNull(offsets[3]);
-  object.photoPath = reader.readStringOrNull(offsets[4]);
+  object.photoPaths = reader.readStringList(offsets[4]) ?? [];
   object.status =
       _SpotModelstatusValueEnumMap[reader.readStringOrNull(offsets[5])] ??
           SpotStatus.wantToGo;
@@ -164,7 +165,7 @@ P _spotModelDeserializeProp<P>(
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 5:
       return (_SpotModelstatusValueEnumMap[reader.readStringOrNull(offset)] ??
           SpotStatus.wantToGo) as P;
@@ -753,30 +754,14 @@ extension SpotModelQueryFilter
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'photoPath',
-      ));
-    });
-  }
-
   QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
-      photoPathIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'photoPath',
-      ));
-    });
-  }
-
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathEqualTo(
-    String? value, {
+      photoPathsElementEqualTo(
+    String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'photoPath',
+        property: r'photoPaths',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -784,46 +769,48 @@ extension SpotModelQueryFilter
   }
 
   QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
-      photoPathGreaterThan(
-    String? value, {
+      photoPathsElementGreaterThan(
+    String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'photoPath',
+        property: r'photoPaths',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathLessThan(
-    String? value, {
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsElementLessThan(
+    String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'photoPath',
+        property: r'photoPaths',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathBetween(
-    String? lower,
-    String? upper, {
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsElementBetween(
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'photoPath',
+        property: r'photoPaths',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -833,72 +820,162 @@ extension SpotModelQueryFilter
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathStartsWith(
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsElementStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'photoPath',
+        property: r'photoPaths',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathEndsWith(
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsElementEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'photoPath',
+        property: r'photoPaths',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsElementContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'photoPath',
+        property: r'photoPaths',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsElementMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'photoPath',
+        property: r'photoPaths',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> photoPathIsEmpty() {
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'photoPath',
+        property: r'photoPaths',
         value: '',
       ));
     });
   }
 
   QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
-      photoPathIsNotEmpty() {
+      photoPathsElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'photoPath',
+        property: r'photoPaths',
         value: '',
       ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      photoPathsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -1348,18 +1425,6 @@ extension SpotModelQuerySortBy on QueryBuilder<SpotModel, SpotModel, QSortBy> {
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterSortBy> sortByPhotoPath() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'photoPath', Sort.asc);
-    });
-  }
-
-  QueryBuilder<SpotModel, SpotModel, QAfterSortBy> sortByPhotoPathDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'photoPath', Sort.desc);
-    });
-  }
-
   QueryBuilder<SpotModel, SpotModel, QAfterSortBy> sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -1459,18 +1524,6 @@ extension SpotModelQuerySortThenBy
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QAfterSortBy> thenByPhotoPath() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'photoPath', Sort.asc);
-    });
-  }
-
-  QueryBuilder<SpotModel, SpotModel, QAfterSortBy> thenByPhotoPathDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'photoPath', Sort.desc);
-    });
-  }
-
   QueryBuilder<SpotModel, SpotModel, QAfterSortBy> thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -1535,10 +1588,9 @@ extension SpotModelQueryWhereDistinct
     });
   }
 
-  QueryBuilder<SpotModel, SpotModel, QDistinct> distinctByPhotoPath(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SpotModel, SpotModel, QDistinct> distinctByPhotoPaths() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'photoPath', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'photoPaths');
     });
   }
 
@@ -1596,9 +1648,9 @@ extension SpotModelQueryProperty
     });
   }
 
-  QueryBuilder<SpotModel, String?, QQueryOperations> photoPathProperty() {
+  QueryBuilder<SpotModel, List<String>, QQueryOperations> photoPathsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'photoPath');
+      return query.addPropertyName(r'photoPaths');
     });
   }
 
