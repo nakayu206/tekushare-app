@@ -603,10 +603,10 @@ void main() {
     testWidgets('tapping a calendar day keeps page visible', (tester) async {
       await pumpPage(tester);
 
-      await tester.tap(find.text('3'));
+      await tester.tap(find.text('3回'));
       await tester.pump();
 
-      expect(find.text('3'), findsWidgets);
+      expect(find.text('3回'), findsWidgets);
     });
   });
 }

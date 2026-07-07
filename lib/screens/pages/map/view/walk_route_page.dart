@@ -725,7 +725,7 @@ class _CalendarRow extends StatelessWidget {
                 ),
               ),
               Text(
-                '$day',
+                '$day回',
                 style: TextStyle(
                   fontSize: isSelected ? AppTextStyle.xl : AppTextStyle.md2,
                   fontWeight:
