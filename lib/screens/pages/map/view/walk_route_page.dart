@@ -20,14 +20,12 @@ List<WalkLog> _buildSessionLogs(List<WalkSession> sessions) {
   final finished = sessions
       .where((s) => s.status == WalkStatus.finished && s.startedAt != null)
       .toList()
-    ..sort((a, b) => a.startedAt!.compareTo(b.startedAt!));
+    ..sort((a, b) => b.startedAt!.compareTo(a.startedAt!));
 
-  final last7 =
-      finished.length > 7 ? finished.sublist(finished.length - 7) : finished;
+  final last7 = finished.length > 7 ? finished.sublist(0, 7) : finished;
 
   return List.generate(7, (i) {
-    final sessionIndex = i - (7 - last7.length);
-    if (sessionIndex < 0) {
+    if (i >= last7.length) {
       return (
         date: '-',
         startEndTime: '-',
@@ -38,7 +36,7 @@ List<WalkLog> _buildSessionLogs(List<WalkSession> sessions) {
       );
     }
 
-    final session = last7[sessionIndex];
+    final session = last7[i];
     final start = session.startedAt!;
     final end = session.finishedAt;
     final dayLabel = _weekdayNames[start.weekday % 7];
@@ -92,7 +90,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     if (finished.isEmpty) return;
     final vm = ref.read(walkRouteViewModelProvider.notifier);
     vm.setLogs(_buildSessionLogs(sessions));
-    vm.selectDay(7);
+    vm.selectDay(1);
   }
 
   @override
@@ -724,13 +722,34 @@ class _CalendarRow extends StatelessWidget {
                   color: AppColors.textDisabled,
                 ),
               ),
-              Text(
-                '$day回',
-                style: TextStyle(
-                  fontSize: isSelected ? AppTextStyle.xl : AppTextStyle.md2,
-                  fontWeight:
-                      isSelected ? AppTextStyle.semiBold : AppTextStyle.regular,
-                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$day',
+                      style: TextStyle(
+                        fontSize:
+                            isSelected ? AppTextStyle.xl : AppTextStyle.md2,
+                        fontWeight: isSelected
+                            ? AppTextStyle.semiBold
+                            : AppTextStyle.regular,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '回',
+                      style: TextStyle(
+                        fontSize:
+                            isSelected ? AppTextStyle.xs : AppTextStyle.xs,
+                        fontWeight: AppTextStyle.regular,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),

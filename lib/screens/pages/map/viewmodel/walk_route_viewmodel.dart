@@ -13,7 +13,7 @@ typedef WalkLog = ({
 class WalkRouteState {
   const WalkRouteState({
     this.selectedRouteIndex = 0,
-    this.selectedDay = 2,
+    this.selectedDay = 1,
     this.routes = _defaultRoutes,
     this.logs = _defaultLogs,
   });
@@ -35,44 +35,12 @@ class WalkRouteState {
 
   static const _defaultLogs = <WalkLog>[
     (
-      date: '2026年02月01日(日)',
-      startEndTime: '6:30~6:45',
+      date: '2026年02月07日(土)',
+      startEndTime: '9:00~9:15',
       duration: '00:15',
       distance: '1.2km',
       spotCount: 1,
-      dayLabel: '日',
-    ),
-    (
-      date: '2026年02月02日(月)',
-      startEndTime: '7:05~7:20',
-      duration: '00:15',
-      distance: '1.2km',
-      spotCount: 1,
-      dayLabel: '月',
-    ),
-    (
-      date: '2026年02月03日(火)',
-      startEndTime: '8:00~8:30',
-      duration: '00:30',
-      distance: '2.5km',
-      spotCount: 2,
-      dayLabel: '火',
-    ),
-    (
-      date: '2026年02月04日(水)',
-      startEndTime: '7:00~7:15',
-      duration: '00:15',
-      distance: '1.2km',
-      spotCount: 1,
-      dayLabel: '水',
-    ),
-    (
-      date: '2026年02月05日(木)',
-      startEndTime: '7:30~7:45',
-      duration: '00:15',
-      distance: '1.2km',
-      spotCount: 1,
-      dayLabel: '木',
+      dayLabel: '土',
     ),
     (
       date: '2026年02月06日(金)',
@@ -83,12 +51,44 @@ class WalkRouteState {
       dayLabel: '金',
     ),
     (
-      date: '2026年02月07日(土)',
-      startEndTime: '9:00~9:15',
+      date: '2026年02月05日(木)',
+      startEndTime: '7:30~7:45',
       duration: '00:15',
       distance: '1.2km',
       spotCount: 1,
-      dayLabel: '土',
+      dayLabel: '木',
+    ),
+    (
+      date: '2026年02月04日(水)',
+      startEndTime: '7:00~7:15',
+      duration: '00:15',
+      distance: '1.2km',
+      spotCount: 1,
+      dayLabel: '水',
+    ),
+    (
+      date: '2026年02月03日(火)',
+      startEndTime: '8:00~8:30',
+      duration: '00:30',
+      distance: '2.5km',
+      spotCount: 2,
+      dayLabel: '火',
+    ),
+    (
+      date: '2026年02月02日(月)',
+      startEndTime: '7:05~7:20',
+      duration: '00:15',
+      distance: '1.2km',
+      spotCount: 1,
+      dayLabel: '月',
+    ),
+    (
+      date: '2026年02月01日(日)',
+      startEndTime: '6:30~6:45',
+      duration: '00:15',
+      distance: '1.2km',
+      spotCount: 1,
+      dayLabel: '日',
     ),
   ];
 
