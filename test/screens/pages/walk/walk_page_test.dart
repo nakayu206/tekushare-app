@@ -623,7 +623,6 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text(AppStrings.timerTurnaround), findsOneWidget);
       expect(find.text(AppStrings.timerInactivity), findsOneWidget);
     });
 

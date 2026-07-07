@@ -154,10 +154,10 @@ class _WalkPageState extends ConsumerState<WalkPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const ClockHeader(),
+              ClockHeader(countdownSeconds: _turnSecondsLeft),
               const SizedBox(height: AppSpacing.lg),
               _GpsStatusIndicator(locationState: locationState),
-              if (_turnSecondsLeft != null || _inactSecondsLeft != null)
+              if (_inactSecondsLeft != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.x2l,
@@ -166,133 +166,138 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (_turnSecondsLeft != null) ...[
-                        _WalkTimerChip(
-                          label: AppStrings.timerTurnaround,
-                          icon: Icons.notifications_outlined,
-                          seconds: _turnSecondsLeft!,
-                        ),
-                        if (_inactSecondsLeft != null)
-                          const SizedBox(width: AppSpacing.sm),
-                      ],
-                      if (_inactSecondsLeft != null)
-                        _WalkTimerChip(
-                          label: AppStrings.timerInactivity,
-                          icon: Icons.directions_walk,
-                          seconds: _inactSecondsLeft!,
-                        ),
+                      _WalkTimerChip(
+                        label: AppStrings.timerInactivity,
+                        icon: Icons.directions_walk,
+                        seconds: _inactSecondsLeft!,
+                      ),
                     ],
                   ),
                 ),
               Expanded(
-                child: _currentPosition != null
-                    ? FlutterMap(
-                        mapController: _mapController,
-                        options: MapOptions(
-                          initialCenter: _currentPosition!,
-                          initialZoom: MapConstants.defaultZoom,
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate:
-                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            userAgentPackageName: 'com.example.tekushare',
-                          ),
-                          if (_trackPoints.length >= 2)
-                            PolylineLayer(
-                              polylines: [
-                                Polyline(
-                                  points: _trackPoints,
-                                  color: AppColors.primary,
-                                  strokeWidth: MapConstants.polylineStrokeWidth,
-                                ),
-                              ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    child: _currentPosition != null
+                        ? FlutterMap(
+                            mapController: _mapController,
+                            options: MapOptions(
+                              initialCenter: _currentPosition!,
+                              initialZoom: MapConstants.defaultZoom,
                             ),
-                          MarkerLayer(
-                            markers: [
-                              Marker(
-                                point: _currentPosition!,
-                                child: const Icon(
-                                  Icons.location_on,
-                                  color: Colors.red,
-                                  size: AppSize.iconMd,
-                                ),
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                userAgentPackageName: 'com.example.tekushare',
                               ),
-                            ],
-                          ),
-                          if (_photoMarkers.isNotEmpty)
-                            MarkerLayer(
-                              markers: _photoMarkers
-                                  .map(
-                                    (m) => Marker(
-                                      point: m.point,
-                                      width: MapConstants.photoThumbnailSize,
-                                      height: MapConstants.photoThumbnailSize,
-                                      child: ClipOval(
-                                        child: Image.file(
-                                          File(m.imagePath),
+                              if (_trackPoints.length >= 2)
+                                PolylineLayer(
+                                  polylines: [
+                                    Polyline(
+                                      points: _trackPoints,
+                                      color: AppColors.primary,
+                                      strokeWidth:
+                                          MapConstants.polylineStrokeWidth,
+                                    ),
+                                  ],
+                                ),
+                              MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    point: _currentPosition!,
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      color: Colors.red,
+                                      size: AppSize.iconMd,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (_photoMarkers.isNotEmpty)
+                                MarkerLayer(
+                                  markers: _photoMarkers
+                                      .map(
+                                        (m) => Marker(
+                                          point: m.point,
                                           width:
                                               MapConstants.photoThumbnailSize,
                                           height:
                                               MapConstants.photoThumbnailSize,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              const ColoredBox(
-                                            color: AppColors.textDisabled,
-                                            child: Icon(
-                                              Icons.photo,
-                                              color: AppColors.textOnPrimary,
-                                              size: AppSize.iconSm,
+                                          child: ClipOval(
+                                            child: Image.file(
+                                              File(m.imagePath),
+                                              width: MapConstants
+                                                  .photoThumbnailSize,
+                                              height: MapConstants
+                                                  .photoThumbnailSize,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const ColoredBox(
+                                                color: AppColors.textDisabled,
+                                                child: Icon(
+                                                  Icons.photo,
+                                                  color:
+                                                      AppColors.textOnPrimary,
+                                                  size: AppSize.iconSm,
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                            ),
-                          Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                              child: FloatingActionButton(
-                                heroTag: 'recenter',
-                                tooltip: AppStrings.recenterMap,
-                                onPressed: () {
-                                  if (_currentPosition != null) {
-                                    _mapController.move(
-                                      _currentPosition!,
-                                      MapConstants.defaultZoom,
-                                    );
-                                  }
-                                },
-                                backgroundColor: AppColors.surface,
-                                foregroundColor: AppColors.primary,
-                                elevation: 2,
-                                child: const Icon(Icons.my_location),
-                              ),
-                            ),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: Container(
-                              color: MapConstants.osmAttributionBg,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: MapConstants.osmAttributionPaddingH,
-                                vertical: MapConstants.osmAttributionPaddingV,
-                              ),
-                              child: const Text(
-                                '© OpenStreetMap contributors',
-                                style: TextStyle(
-                                  fontSize: MapConstants.osmAttributionFontSize,
-                                  color: Colors.black87,
+                                      )
+                                      .toList(),
+                                ),
+                              Align(
+                                alignment: Alignment.bottomLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.sm),
+                                  child: FloatingActionButton(
+                                    heroTag: 'recenter',
+                                    tooltip: AppStrings.recenterMap,
+                                    onPressed: () {
+                                      if (_currentPosition != null) {
+                                        _mapController.move(
+                                          _currentPosition!,
+                                          MapConstants.defaultZoom,
+                                        );
+                                      }
+                                    },
+                                    backgroundColor: AppColors.surface,
+                                    foregroundColor: AppColors.primary,
+                                    elevation: 2,
+                                    child: const Icon(Icons.my_location),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: Container(
+                                  color: MapConstants.osmAttributionBg,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal:
+                                        MapConstants.osmAttributionPaddingH,
+                                    vertical:
+                                        MapConstants.osmAttributionPaddingV,
+                                  ),
+                                  child: const Text(
+                                    '© OpenStreetMap contributors',
+                                    style: TextStyle(
+                                      fontSize:
+                                          MapConstants.osmAttributionFontSize,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Padding(
