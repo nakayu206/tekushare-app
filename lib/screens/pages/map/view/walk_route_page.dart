@@ -557,7 +557,6 @@ class _SelectedRouteCard extends StatelessWidget {
               ),
             ),
           ),
-          // 地図プレースホルダー
           Builder(
             builder: (context) => Container(
               width: double.infinity,
