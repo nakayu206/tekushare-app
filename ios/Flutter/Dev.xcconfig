@@ -6,4 +6,4 @@
 // 自動的に include されるため、ここでは flavor 固有の値のみ定義する
 
 BUNDLE_ID_SUFFIX = .dev
-BUNDLE_DISPLAY_NAME = TekuShare Dev
+BUNDLE_DISPLAY_NAME = てくしぇあ Dev
