@@ -8,6 +8,7 @@ import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
+import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
@@ -23,6 +24,7 @@ import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
+import 'package:tekushare/screens/providers/walk_timer_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 // ──────────────────────────────────────────
@@ -60,12 +62,19 @@ class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
+  const _FakeRemovePhotoFromSpot();
+  @override
+  Future<void> call(String spotId, String imagePath) async {}
+}
+
 final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
     saveSpot: const _FakeSaveSpot(),
     getSpots: const _FakeGetSpots(),
     updateSpotStatus: const _FakeUpdateSpotStatus(),
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+    removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
   ),
 );
 
@@ -130,6 +139,18 @@ final _timerZeroOverride = settingsViewModelProvider.overrideWith(
 final _timerEnabledOverride = settingsViewModelProvider.overrideWith(
   _TimerEnabledSettingsViewModel.new,
 );
+
+// タイマーが 0 秒かつ未発火の初期状態（ProviderScope 注入用）
+class _FiredTimerNotifier extends WalkTimerNotifier {
+  _FiredTimerNotifier() {
+    state = const WalkTimerState(
+      turnSecondsLeft: 0,
+      turnFired: false,
+      turnAlertShown: false,
+      initialized: true,
+    );
+  }
+}
 
 final _timerDisabledOverride = settingsViewModelProvider.overrideWith(
   _TimerDisabledSettingsViewModel.new,
@@ -261,7 +282,7 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(WalkPage)),
       );
-      expect(container.read(pendingPhotoProvider), imagePath);
+      expect(container.read(pendingPhotoProvider), contains(imagePath));
     });
 
     // GPS 取得済みで撮影すると photoTaken SnackBar が表示される
@@ -301,7 +322,7 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(WalkPage)),
       );
-      expect(container.read(pendingPhotoProvider), isNull);
+      expect(container.read(pendingPhotoProvider), isEmpty);
     });
 
     // 行きたいボタンをタップすると WantToGoPage へ遷移する
@@ -703,8 +724,7 @@ void main() {
     });
 
     // アラートのリセットボタンでダイアログが閉じる
-    testWidgets('closes dialog and resets timer when reset tapped in dialog',
-        (tester) async {
+    testWidgets('closes dialog when reset tapped in dialog', (tester) async {
       setDisplaySize(tester);
 
       await tester.pumpWidget(
@@ -737,6 +757,48 @@ void main() {
       await tester.pump();
 
       expect(find.text(AppStrings.timerFinishedTitle), findsNothing);
+    });
+
+    // リセット後にカウントダウンが初期値に戻る
+    testWidgets('timer resets to initial value when reset tapped in dialog',
+        (tester) async {
+      setDisplaySize(tester);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            locationProvider.overrideWith((ref) => const Stream.empty()),
+            walkTimerProvider.overrideWith((_) => _FiredTimerNotifier()),
+            _timerEnabledOverride, // timerMinutes: 30
+            _notificationOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(Duration.zero);
+      await tester.pump();
+
+      expect(find.text(AppStrings.timerFinishedTitle), findsOneWidget);
+
+      await tester.tap(find.text(AppStrings.timerReset));
+      await tester.pump();
+
+      expect(find.text(AppStrings.timerFinishedTitle), findsNothing);
+      // カウントダウンが timerMinutes=30 の初期値に戻っていること
+      expect(find.textContaining('30:00'), findsOneWidget);
     });
 
     // タイマー無効時はチップが表示されない

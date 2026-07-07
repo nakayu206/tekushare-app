@@ -41,6 +41,7 @@ abstract class AppStrings {
   static const closeButton = '閉じる';
   static const realtimeLocation = 'リアルタイム位置';
   static const addPhoto = '写真を追加';
+  static const removePhoto = '写真を削除';
   static const titleHint = 'タイトルを設定する';
 
   // 共通

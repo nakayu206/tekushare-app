@@ -5,7 +5,7 @@ import 'package:tekushare/domain/entities/spot.dart';
 void main() {
   final createdAt = DateTime(2024, 1, 1);
 
-  Spot makeSpot({String? memo, String? photoPath}) {
+  Spot makeSpot({String? memo, List<String> photoPaths = const []}) {
     return Spot(
       id: 'spot-1',
       title: 'テストスポット',
@@ -13,14 +13,14 @@ void main() {
       longitude: 139.6917,
       status: SpotStatus.wantToGo,
       memo: memo,
-      photoPath: photoPath,
+      photoPaths: photoPaths,
       createdAt: createdAt,
     );
   }
 
   group('SpotModel', () {
     test('fromEntity でエンティティからモデルに変換できる', () {
-      final spot = makeSpot(memo: 'メモ', photoPath: '/photos/test.jpg');
+      final spot = makeSpot(memo: 'メモ', photoPaths: ['/photos/test.jpg']);
       final model = SpotModel.fromEntity(spot);
 
       expect(model.uid, 'spot-1');
@@ -29,7 +29,7 @@ void main() {
       expect(model.longitude, 139.6917);
       expect(model.status, SpotStatus.wantToGo);
       expect(model.memo, 'メモ');
-      expect(model.photoPath, '/photos/test.jpg');
+      expect(model.photoPaths, ['/photos/test.jpg']);
       expect(model.createdAt, createdAt);
     });
 
@@ -45,12 +45,12 @@ void main() {
       expect(spot.createdAt, createdAt);
     });
 
-    test('memo / photoPath が null のまま変換できる', () {
+    test('memo が null / photoPaths が空のまま変換できる', () {
       final model = SpotModel.fromEntity(makeSpot());
       final spot = model.toEntity();
 
       expect(spot.memo, isNull);
-      expect(spot.photoPath, isNull);
+      expect(spot.photoPaths, isEmpty);
     });
 
     test('visited ステータスが正しく変換される', () {

@@ -33,6 +33,8 @@ void main() {
         .thenAnswer((_) => Future<void>.value());
     when(mockPhotoRepo.attachPhoto(any, any))
         .thenAnswer((_) => Future<void>.value());
+    when(mockPhotoRepo.removePhoto(any, any))
+        .thenAnswer((_) => Future<void>.value());
   });
 
   ProviderContainer makeContainer() {

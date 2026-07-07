@@ -135,10 +135,15 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     final imagePath = await ref.read(cameraServiceProvider).takePhoto();
     if (imagePath == null || !context.mounted) return;
 
-    ref.read(pendingPhotoProvider.notifier).state = imagePath;
-    if (_currentPosition != null) {
+    ref.read(pendingPhotoProvider.notifier).update((l) => [...l, imagePath]);
+    // _currentPosition は ref.listen の変化通知で更新されるため、
+    // WalkPage 再生成直後など未更新の場合はプロバイダーのキャッシュを使う
+    final rawPos = ref.read(locationProvider).valueOrNull;
+    final pos = _currentPosition ??
+        (rawPos != null ? LatLng(rawPos.latitude, rawPos.longitude) : null);
+    if (pos != null) {
       setState(() {
-        _photoMarkers.add((point: _currentPosition!, imagePath: imagePath));
+        _photoMarkers.add((point: pos, imagePath: imagePath));
       });
     }
     ScaffoldMessenger.of(context).showSnackBar(
@@ -275,25 +280,56 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                                               MapConstants.photoThumbnailSize,
                                           height:
                                               MapConstants.photoThumbnailSize,
-                                          child: ClipOval(
-                                            child: Image.file(
-                                              File(m.imagePath),
-                                              width: MapConstants
-                                                  .photoThumbnailSize,
-                                              height: MapConstants
-                                                  .photoThumbnailSize,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) =>
-                                                  const ColoredBox(
-                                                color: AppColors.textDisabled,
-                                                child: Icon(
-                                                  Icons.photo,
-                                                  color:
-                                                      AppColors.textOnPrimary,
-                                                  size: AppSize.iconSm,
+                                          child: Stack(
+                                            children: [
+                                              ClipOval(
+                                                child: Image.file(
+                                                  File(m.imagePath),
+                                                  width: MapConstants
+                                                      .photoThumbnailSize,
+                                                  height: MapConstants
+                                                      .photoThumbnailSize,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      const ColoredBox(
+                                                    color:
+                                                        AppColors.textDisabled,
+                                                    child: Icon(
+                                                      Icons.photo,
+                                                      color: AppColors
+                                                          .textOnPrimary,
+                                                      size: AppSize.iconSm,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
+                                              Positioned(
+                                                top: 0,
+                                                right: 0,
+                                                child: GestureDetector(
+                                                  onTap: () => setState(() {
+                                                    _photoMarkers.remove(m);
+                                                  }),
+                                                  child: Container(
+                                                    width: MapConstants
+                                                        .photoDeleteBadgeSize,
+                                                    height: MapConstants
+                                                        .photoDeleteBadgeSize,
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      color: Colors.black54,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.close,
+                                                      size: MapConstants
+                                                          .photoDeleteIconSize,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       )

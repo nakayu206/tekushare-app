@@ -9,6 +9,7 @@ import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
+import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
@@ -56,12 +57,19 @@ class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
+  const _FakeRemovePhotoFromSpot();
+  @override
+  Future<void> call(String spotId, String imagePath) async {}
+}
+
 final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
     saveSpot: const _FakeSaveSpot(),
     getSpots: const _FakeGetSpots(),
     updateSpotStatus: const _FakeUpdateSpotStatus(),
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+    removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
   ),
 );
 

@@ -12,7 +12,17 @@ class PhotoRepositoryImpl implements PhotoRepository {
     await _isar.writeTxn(() async {
       final model = await _isar.spotModels.getByUid(spotId);
       if (model == null) return;
-      model.photoPath = imagePath;
+      model.photoPaths = [...model.photoPaths, imagePath];
+      await _isar.spotModels.put(model);
+    });
+  }
+
+  @override
+  Future<void> removePhoto(String spotId, String imagePath) async {
+    await _isar.writeTxn(() async {
+      final model = await _isar.spotModels.getByUid(spotId);
+      if (model == null) return;
+      model.photoPaths = model.photoPaths.where((p) => p != imagePath).toList();
       await _isar.spotModels.put(model);
     });
   }

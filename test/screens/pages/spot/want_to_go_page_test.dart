@@ -6,17 +6,29 @@ import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
+import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
+import 'package:tekushare/infrastructure/camera_service.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+
+class _FakeCameraService extends CameraService {
+  _FakeCameraService(this._returnPath) : super();
+  final String? _returnPath;
+  @override
+  Future<String?> takePhoto() async => _returnPath;
+  @override
+  Future<String?> pickFromGallery() async => _returnPath;
+}
 
 class _FakeSaveSpot implements SaveSpot {
   const _FakeSaveSpot();
@@ -49,6 +61,12 @@ class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
+  const _FakeRemovePhotoFromSpot();
+  @override
+  Future<void> call(String spotId, String imagePath) async {}
+}
+
 Position _makePosition(double lat, double lng) => Position(
       latitude: lat,
       longitude: lng,
@@ -72,6 +90,7 @@ final _spotOverride = spotProvider.overrideWith(
     getSpots: const _FakeGetSpots(),
     updateSpotStatus: const _FakeUpdateSpotStatus(),
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+    removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
   ),
 );
 
@@ -463,6 +482,56 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(WalkRoutePage), findsOneWidget);
+    });
+
+    // 写真プレースホルダーをタップするとカメラが起動し写真行が表示される
+    testWidgets(
+        'tapping photo placeholder calls camera and shows photo row layout',
+        (tester) async {
+      const fakePath = '/fake/photo.jpg';
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _locationOverride,
+            _spotOverride,
+            cameraServiceProvider
+                .overrideWithValue(_FakeCameraService(fakePath)),
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: Consumer(
+              builder: (_, ref, child) {
+                ref.watch(locationProvider);
+                return child!;
+              },
+              child: const WantToGoPage(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 初期状態はClipRRectなし（プレースホルダー表示）
+      expect(find.byType(ClipRRect), findsNothing);
+
+      await tester.tap(find.text(AppStrings.addPhoto));
+      await tester.pumpAndSettle();
+
+      // カメラ後はClipRRectが表示される（写真行レイアウト）
+      expect(find.byType(ClipRRect), findsOneWidget);
     });
 
     // ボトムナビの設定をタップすると SettingsPage へ遷移する
