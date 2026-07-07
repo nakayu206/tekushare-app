@@ -45,6 +45,8 @@ abstract class AppSize {
   static const double gpsIndicatorHeight = 40.0;
   static const double gpsSpinnerSize = 14.0;
   static const double gpsSpinnerStroke = 2.0;
+  static const double timerChipLabelFontSize = 11.0;
+  static const double timerChipCountFontSize = 13.0;
   static const double appBarHeight = 56.0;
   static const double mapPinSize = 36.0;
   static const double cardElevation = 2.0;

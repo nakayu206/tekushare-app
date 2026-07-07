@@ -14,6 +14,7 @@ abstract class AppColors {
   static const navActive = primary;
   static const navInactive = Color(0xFFB0B0B0);
   static const error = Color(0xFFE53935);
+  static const warning = Color(0xFFF57C00);
   static const shareLinkBg = Color(0xFF3A3A3A);
   static const shareLinkLabel = Color(0x80FFFFFF);
   static const shareLinkButton = Color(0x3DFFFFFF);
