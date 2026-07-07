@@ -638,8 +638,8 @@ void main() {
       expect(find.text(AppStrings.timerInactivity), findsOneWidget);
     });
 
-    // タイマー有効時はリセットチップが表示される
-    testWidgets('shows reset chip when timer is enabled', (tester) async {
+    // タイマー有効時はリセットアイコンが ClockHeader 横に表示される
+    testWidgets('shows reset icon when timer is enabled', (tester) async {
       setDisplaySize(tester);
 
       await tester.pumpWidget(
@@ -665,7 +665,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text(AppStrings.timerReset), findsOneWidget);
+      expect(find.byIcon(Icons.refresh), findsOneWidget);
     });
 
     // タイマー0秒でアラートダイアログが表示される
@@ -733,7 +733,7 @@ void main() {
       await tester.pump(Duration.zero);
       await tester.pump();
 
-      await tester.tap(find.text(AppStrings.timerReset).last);
+      await tester.tap(find.text(AppStrings.timerReset));
       await tester.pump();
 
       expect(find.text(AppStrings.timerFinishedTitle), findsNothing);

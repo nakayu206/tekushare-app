@@ -9,10 +9,13 @@ import 'package:tekushare/screens/providers/clock_provider.dart';
 
 /// 時刻・片道設定を表示する共通ヘッダー
 class ClockHeader extends ConsumerWidget {
-  const ClockHeader({super.key, this.countdownSeconds});
+  const ClockHeader({super.key, this.countdownSeconds, this.onReset});
 
   /// 指定するとリアルタイムカウントダウン（MM:SS）を表示する
   final int? countdownSeconds;
+
+  /// 指定するとカウントダウン横にリセットアイコンを表示する
+  final VoidCallback? onReset;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,14 +56,31 @@ class ClockHeader extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            timeLabel,
-            style: AppTextStyle.bodyMedium.copyWith(
-              color: AppColors.primary,
-              fontSize: sizing.clockLabelFontSize,
-              fontWeight: FontWeight.w500,
-              height: 1.0,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                timeLabel,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.primary,
+                  fontSize: sizing.clockLabelFontSize,
+                  fontWeight: FontWeight.w500,
+                  height: 1.0,
+                ),
+              ),
+              if (onReset != null) ...[
+                const SizedBox(width: AppSpacing.xs),
+                GestureDetector(
+                  onTap: onReset,
+                  child: Icon(
+                    Icons.refresh,
+                    size: sizing.clockLabelFontSize + 2,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),

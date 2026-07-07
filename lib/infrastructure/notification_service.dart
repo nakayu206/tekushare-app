@@ -38,22 +38,22 @@ class NotificationService {
     );
   }
 
-  /// 10分無動作時の安否確認通知を表示する
+  /// 無動作時の安否確認通知を表示する
   Future<void> showInactivityNotification() async {
     await _plugin.show(
       id: _idInactivity,
       title: '大丈夫ですか？',
-      body: '10分間動きがありません。散歩を続けていますか？',
+      body: '動きがありません。散歩を続けていますか？',
       notificationDetails: _notificationDetails(),
     );
   }
 
-  /// 15分折返し通知を表示する
+  /// タイマー通知を表示する
   Future<void> showTurnaroundNotification() async {
     await _plugin.show(
       id: _idTurnaround,
-      title: 'そろそろ折り返しましょう',
-      body: '散歩を始めてから15分が経ちました。',
+      title: 'タイマー終了',
+      body: '設定した時間になりました。',
       notificationDetails: _notificationDetails(),
     );
   }

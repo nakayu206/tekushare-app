@@ -22,6 +22,7 @@ import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
+import 'package:tekushare/screens/providers/walk_timer_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 import 'package:tekushare/screens/widgets/common/primary_button.dart';
@@ -39,65 +40,58 @@ class _WalkPageState extends ConsumerState<WalkPage> {
   final _trackPoints = <LatLng>[];
   final _photoMarkers = <({LatLng point, String imagePath})>[];
   LatLng? _currentPosition;
+  LatLng? _lastMovedPosition;
+  bool _mapControllerAttached = false;
 
   Timer? _tickTimer;
-  int? _turnSecondsLeft;
-  int? _inactSecondsLeft;
-  bool _turnFired = false;
-  bool _inactFired = false;
-  bool _turnAlertShown = false;
 
   @override
   void initState() {
     super.initState();
-    final settings = ref.read(settingsViewModelProvider);
-    if (settings.timerEnabled) {
-      _turnSecondsLeft = settings.timerMinutes * 60;
-    }
-    if (settings.inactivityEnabled) {
-      _inactSecondsLeft = settings.inactivityMinutes * 60;
-    }
+    // プロバイダーへの書き込みはビルド完了後に行う（Riverpod の制約）
+    Future.microtask(() {
+      if (!mounted) return;
+      final settings = ref.read(settingsViewModelProvider);
+      ref.read(walkTimerProvider.notifier).initializeIfNeeded(
+            timerEnabled: settings.timerEnabled,
+            timerMinutes: settings.timerMinutes,
+            inactivityEnabled: settings.inactivityEnabled,
+            inactivityMinutes: settings.inactivityMinutes,
+          );
+    });
     _tickTimer = Timer.periodic(const Duration(seconds: 1), _onTick);
   }
 
   void _onTick(Timer _) {
     if (!mounted) return;
-    setState(() {
-      if (_turnSecondsLeft != null && _turnSecondsLeft! > 0) {
-        _turnSecondsLeft = _turnSecondsLeft! - 1;
-      }
-      if (_inactSecondsLeft != null && _inactSecondsLeft! > 0) {
-        _inactSecondsLeft = _inactSecondsLeft! - 1;
-      }
-    });
+    ref.read(walkTimerProvider.notifier).tick();
     _fireNotificationsIfNeeded();
   }
 
   Future<void> _fireNotificationsIfNeeded() async {
     final svc = ref.read(notificationServiceProvider);
-    if (_turnSecondsLeft == 0 && !_turnFired) {
-      _turnFired = true;
+    final ts = ref.read(walkTimerProvider);
+    if (ts.turnSecondsLeft == 0 && !ts.turnFired) {
+      ref.read(walkTimerProvider.notifier).markTurnFired();
       await svc.showTurnaroundNotification();
       _showTimerFinishedAlert();
     }
-    if (_inactSecondsLeft == 0 && !_inactFired) {
-      _inactFired = true;
+    if (ts.inactSecondsLeft == 0 && !ts.inactFired) {
+      ref.read(walkTimerProvider.notifier).markInactFired();
       await svc.showInactivityNotification();
     }
   }
 
   void _resetTimer() {
     final settings = ref.read(settingsViewModelProvider);
-    setState(() {
-      _turnSecondsLeft = settings.timerMinutes * 60;
-      _turnFired = false;
-      _turnAlertShown = false;
-    });
+    ref.read(walkTimerProvider.notifier).resetTurn(settings.timerMinutes);
   }
 
   void _showTimerFinishedAlert() {
-    if (!mounted || _turnAlertShown) return;
-    _turnAlertShown = true;
+    if (!mounted) return;
+    final ts = ref.read(walkTimerProvider);
+    if (ts.turnAlertShown) return;
+    ref.read(walkTimerProvider.notifier).markTurnAlertShown();
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -158,25 +152,42 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     ref.listen<AsyncValue<Position>>(locationProvider, (_, next) {
       next.whenData((pos) {
         final point = LatLng(pos.latitude, pos.longitude);
-        final isFirstFix = _currentPosition == null;
-        final settings = ref.read(settingsViewModelProvider);
         setState(() {
           _currentPosition = point;
           _trackPoints.add(point);
-          // GPS 移動で不活動タイマーをリセット
-          if (_inactSecondsLeft != null) {
-            _inactSecondsLeft = settings.inactivityMinutes * 60;
-            _inactFired = false;
-          }
         });
-        // 初回はマップ未生成のため move() をスキップ
-        if (!isFirstFix) {
+        // 前回位置から一定距離以上動いた場合のみ不活動タイマーをリセット
+        if (ref.read(walkTimerProvider).inactSecondsLeft != null) {
+          final prev = _lastMovedPosition;
+          final moved = prev == null ||
+              const Distance().as(LengthUnit.Meter, prev, point) >=
+                  MapConstants.inactivityMinMovementMeters;
+          if (moved) {
+            _lastMovedPosition = point;
+            final settings = ref.read(settingsViewModelProvider);
+            ref
+                .read(walkTimerProvider.notifier)
+                .resetInact(settings.inactivityMinutes);
+          }
+        }
+        // MapController が準備済みの場合のみ move()
+        if (_mapControllerAttached) {
           _mapController.move(point, _mapController.camera.zoom);
         }
       });
     });
 
     final locationState = ref.watch(locationProvider);
+    final timerState = ref.watch(walkTimerProvider);
+    final turnSeconds = timerState.turnSecondsLeft;
+    final inactSeconds = timerState.inactSecondsLeft;
+    // widget state がなくても locationProvider の最新値をフォールバックとして使用
+    // → WalkPage 再生成時でもマップが即座に表示される
+    final streamPos = locationState.valueOrNull;
+    final mapCenter = _currentPosition ??
+        (streamPos != null
+            ? LatLng(streamPos.latitude, streamPos.longitude)
+            : null);
     final sizing = AppSizingTheme.of(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -187,10 +198,13 @@ class _WalkPageState extends ConsumerState<WalkPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ClockHeader(countdownSeconds: _turnSecondsLeft),
+              ClockHeader(
+                countdownSeconds: turnSeconds,
+                onReset: turnSeconds != null ? _resetTimer : null,
+              ),
               const SizedBox(height: AppSpacing.lg),
               _GpsStatusIndicator(locationState: locationState),
-              if (_inactSecondsLeft != null || _turnSecondsLeft != null)
+              if (inactSeconds != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.x2l,
@@ -199,17 +213,11 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (_inactSecondsLeft != null) ...[
-                        _WalkTimerChip(
-                          label: AppStrings.timerInactivity,
-                          icon: Icons.directions_walk,
-                          seconds: _inactSecondsLeft!,
-                        ),
-                        if (_turnSecondsLeft != null)
-                          const SizedBox(width: AppSpacing.sm),
-                      ],
-                      if (_turnSecondsLeft != null)
-                        _WalkResetChip(onTap: _resetTimer),
+                      _WalkTimerChip(
+                        label: AppStrings.timerInactivity,
+                        icon: Icons.directions_walk,
+                        seconds: inactSeconds,
+                      ),
                     ],
                   ),
                 ),
@@ -220,12 +228,13 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
-                    child: _currentPosition != null
+                    child: mapCenter != null
                         ? FlutterMap(
                             mapController: _mapController,
                             options: MapOptions(
-                              initialCenter: _currentPosition!,
+                              initialCenter: mapCenter,
                               initialZoom: MapConstants.defaultZoom,
+                              onMapReady: () => _mapControllerAttached = true,
                             ),
                             children: [
                               TileLayer(
@@ -247,7 +256,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                               MarkerLayer(
                                 markers: [
                                   Marker(
-                                    point: _currentPosition!,
+                                    point: mapCenter,
                                     child: const Icon(
                                       Icons.location_on,
                                       color: Colors.red,
@@ -298,12 +307,10 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                                     heroTag: 'recenter',
                                     tooltip: AppStrings.recenterMap,
                                     onPressed: () {
-                                      if (_currentPosition != null) {
-                                        _mapController.move(
-                                          _currentPosition!,
-                                          MapConstants.defaultZoom,
-                                        );
-                                      }
+                                      _mapController.move(
+                                        mapCenter,
+                                        MapConstants.defaultZoom,
+                                      );
                                     },
                                     backgroundColor: AppColors.surface,
                                     foregroundColor: AppColors.primary,
@@ -531,48 +538,6 @@ class _WalkTimerChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// タイマーリセットチップ
-// ──────────────────────────────────────────
-
-class _WalkResetChip extends StatelessWidget {
-  const _WalkResetChip({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-          borderRadius: BorderRadius.circular(AppRadius.full),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.refresh, size: AppSize.iconXs, color: AppColors.primary),
-            SizedBox(width: AppSpacing.xs),
-            Text(
-              AppStrings.timerReset,
-              style: TextStyle(
-                fontSize: AppSize.timerChipLabelFontSize,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
