@@ -7,8 +7,9 @@ import 'package:geolocator/geolocator.dart' show Position;
 import 'package:latlong2/latlong.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
-import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/constants/map_constants.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -62,14 +63,19 @@ class _WalkPageState extends ConsumerState<WalkPage> {
 
   @override
   Widget build(BuildContext context) {
+    // エラー時は _GpsStatusIndicator（ref.watch 側）がフィードバックを担う
     ref.listen<AsyncValue<Position>>(locationProvider, (_, next) {
       next.whenData((pos) {
         final point = LatLng(pos.latitude, pos.longitude);
+        final isFirstFix = _currentPosition == null;
         setState(() {
           _currentPosition = point;
           _trackPoints.add(point);
         });
-        _mapController.move(point, _mapController.camera.zoom);
+        // 初回はマップ未生成のため move() をスキップ
+        if (!isFirstFix) {
+          _mapController.move(point, _mapController.camera.zoom);
+        }
       });
     });
 
@@ -92,7 +98,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                         mapController: _mapController,
                         options: MapOptions(
                           initialCenter: _currentPosition!,
-                          initialZoom: 15,
+                          initialZoom: MapConstants.defaultZoom,
                         ),
                         children: [
                           TileLayer(
@@ -106,7 +112,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                                 Polyline(
                                   points: _trackPoints,
                                   color: AppColors.primary,
-                                  strokeWidth: 3,
+                                  strokeWidth: MapConstants.polylineStrokeWidth,
                                 ),
                               ],
                             ),
@@ -117,10 +123,27 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                                 child: const Icon(
                                   Icons.location_on,
                                   color: Colors.red,
-                                  size: 24,
+                                  size: AppSize.iconMd,
                                 ),
                               ),
                             ],
+                          ),
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: Container(
+                              color: MapConstants.osmAttributionBg,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: MapConstants.osmAttributionPaddingH,
+                                vertical: MapConstants.osmAttributionPaddingV,
+                              ),
+                              child: const Text(
+                                '© OpenStreetMap contributors',
+                                style: TextStyle(
+                                  fontSize: MapConstants.osmAttributionFontSize,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       )
