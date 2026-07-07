@@ -383,9 +383,8 @@ void main() {
       expect(find.byType(EndWalkPage), findsOneWidget);
     });
 
-    // ボトムナビのホームをタップすると前の画面に戻る
-    testWidgets('tapping bottom nav home goes back to previous screen',
-        (tester) async {
+    // ボトムナビのホームをタップしても WalkPage に留まる（散歩中はホームが WalkPage）
+    testWidgets('tapping bottom nav home stays on WalkPage', (tester) async {
       setDisplaySize(tester);
 
       await tester.pumpWidget(
@@ -418,7 +417,7 @@ void main() {
       await tester.tap(find.text(AppStrings.navHome));
       await tester.pumpAndSettle();
 
-      expect(find.byType(WalkPage), findsNothing);
+      expect(find.byType(WalkPage), findsOneWidget);
     });
 
     // ボトムナビのリストをタップすると SpotListPage へ遷移する

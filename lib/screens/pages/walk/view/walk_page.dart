@@ -356,24 +356,21 @@ class _WalkPageState extends ConsumerState<WalkPage> {
           currentIndex: 0,
           onTap: (index) {
             if (index == 0) {
-              Navigator.popUntil(context, (route) => route.isFirst);
+              // 散歩中はこの画面が「ホーム」なので何もしない
             } else if (index == 1) {
-              Navigator.pushAndRemoveUntil(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SpotListPage()),
-                (route) => route.isFirst,
               );
             } else if (index == 2) {
-              Navigator.pushAndRemoveUntil(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const WalkRoutePage()),
-                (route) => route.isFirst,
               );
             } else if (index == 3) {
-              Navigator.pushAndRemoveUntil(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SettingsPage()),
-                (route) => route.isFirst,
               );
             }
           },
