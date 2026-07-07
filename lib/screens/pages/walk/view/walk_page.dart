@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
+import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
@@ -38,8 +40,53 @@ class _WalkPageState extends ConsumerState<WalkPage> {
   final _photoMarkers = <({LatLng point, String imagePath})>[];
   LatLng? _currentPosition;
 
+  Timer? _tickTimer;
+  int? _turnSecondsLeft;
+  int? _inactSecondsLeft;
+  bool _turnFired = false;
+  bool _inactFired = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = ref.read(settingsViewModelProvider);
+    if (settings.timerEnabled) {
+      _turnSecondsLeft = settings.timerMinutes * 60;
+    }
+    if (settings.inactivityEnabled) {
+      _inactSecondsLeft = settings.inactivityMinutes * 60;
+    }
+    _tickTimer = Timer.periodic(const Duration(seconds: 1), _onTick);
+  }
+
+  void _onTick(Timer _) {
+    if (!mounted) return;
+    setState(() {
+      if (_turnSecondsLeft != null && _turnSecondsLeft! > 0) {
+        _turnSecondsLeft = _turnSecondsLeft! - 1;
+      }
+      if (_inactSecondsLeft != null && _inactSecondsLeft! > 0) {
+        _inactSecondsLeft = _inactSecondsLeft! - 1;
+      }
+    });
+    _fireNotificationsIfNeeded();
+  }
+
+  Future<void> _fireNotificationsIfNeeded() async {
+    final svc = ref.read(notificationServiceProvider);
+    if (_turnSecondsLeft == 0 && !_turnFired) {
+      _turnFired = true;
+      await svc.showTurnaroundNotification();
+    }
+    if (_inactSecondsLeft == 0 && !_inactFired) {
+      _inactFired = true;
+      await svc.showInactivityNotification();
+    }
+  }
+
   @override
   void dispose() {
+    _tickTimer?.cancel();
     _mapController.dispose();
     super.dispose();
   }
@@ -76,9 +123,15 @@ class _WalkPageState extends ConsumerState<WalkPage> {
       next.whenData((pos) {
         final point = LatLng(pos.latitude, pos.longitude);
         final isFirstFix = _currentPosition == null;
+        final settings = ref.read(settingsViewModelProvider);
         setState(() {
           _currentPosition = point;
           _trackPoints.add(point);
+          // GPS 移動で不活動タイマーをリセット
+          if (_inactSecondsLeft != null) {
+            _inactSecondsLeft = settings.inactivityMinutes * 60;
+            _inactFired = false;
+          }
         });
         // 初回はマップ未生成のため move() をスキップ
         if (!isFirstFix) {
@@ -101,6 +154,33 @@ class _WalkPageState extends ConsumerState<WalkPage> {
               const ClockHeader(),
               const SizedBox(height: AppSpacing.lg),
               _GpsStatusIndicator(locationState: locationState),
+              if (_turnSecondsLeft != null || _inactSecondsLeft != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.x2l,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_turnSecondsLeft != null) ...[
+                        _WalkTimerChip(
+                          label: AppStrings.timerTurnaround,
+                          icon: Icons.notifications_outlined,
+                          seconds: _turnSecondsLeft!,
+                        ),
+                        if (_inactSecondsLeft != null)
+                          const SizedBox(width: AppSpacing.sm),
+                      ],
+                      if (_inactSecondsLeft != null)
+                        _WalkTimerChip(
+                          label: AppStrings.timerInactivity,
+                          icon: Icons.directions_walk,
+                          seconds: _inactSecondsLeft!,
+                        ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: _currentPosition != null
                     ? FlutterMap(
@@ -251,10 +331,13 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                 child: PrimaryButton(
                   label: AppStrings.endWalk,
                   height: sizing.largeBtnHeight,
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const EndWalkPage()),
-                  ),
+                  onPressed: () {
+                    ref.read(notificationServiceProvider).cancelAll();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const EndWalkPage()),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -336,6 +419,74 @@ class _GpsStatusIndicator extends StatelessWidget {
             style: TextStyle(color: AppColors.error),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// タイマーチップ
+// ──────────────────────────────────────────
+
+class _WalkTimerChip extends StatelessWidget {
+  const _WalkTimerChip({
+    required this.label,
+    required this.icon,
+    required this.seconds,
+  });
+
+  final String label;
+  final IconData icon;
+  final int seconds;
+
+  Color _color() {
+    if (seconds < 60) return AppColors.error;
+    if (seconds < 120) return AppColors.warning;
+    return AppColors.primary;
+  }
+
+  String _formatted() {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _color();
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(AppRadius.full),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: AppSize.iconXs, color: color),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: AppSize.timerChipLabelFontSize,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            _formatted(),
+            style: TextStyle(
+              fontSize: AppSize.timerChipCountFontSize,
+              fontWeight: FontWeight.w600,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -25,6 +25,8 @@ abstract class AppStrings {
   static const saveToWantToGo = '現在地を\n行きたいリストに保存する';
   static const wantToGo = '行きたい！';
   static const recenterMap = '現在地に戻る';
+  static const timerTurnaround = '折り返し';
+  static const timerInactivity = '不活動';
   static const safetyOk = '元気です';
 
   // 行きたい！ページ

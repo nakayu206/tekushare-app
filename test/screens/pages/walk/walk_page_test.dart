@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
 import 'package:tekushare/infrastructure/camera_service.dart';
+import 'package:tekushare/infrastructure/notification_service.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
+import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
@@ -19,7 +23,6 @@ import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
-import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 // ──────────────────────────────────────────
@@ -74,6 +77,51 @@ class _FakeCameraService extends Fake implements CameraService {
   Future<String?> takePhoto() async => _returnPath;
 }
 
+class _FakeNotificationsPlugin extends Fake
+    implements FlutterLocalNotificationsPlugin {
+  @override
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  }) async {}
+
+  @override
+  Future<void> cancelAll() async {}
+}
+
+final _notificationOverride = notificationServiceProvider.overrideWithValue(
+  NotificationService.forTest(_FakeNotificationsPlugin()),
+);
+
+class _TimerEnabledSettingsViewModel extends SettingsViewModel {
+  @override
+  SettingsState build() => const SettingsState(
+        timerEnabled: true,
+        timerMinutes: 30,
+        inactivityEnabled: true,
+        inactivityMinutes: 15,
+      );
+}
+
+class _TimerDisabledSettingsViewModel extends SettingsViewModel {
+  @override
+  SettingsState build() => const SettingsState(
+        timerEnabled: false,
+        inactivityEnabled: false,
+      );
+}
+
+final _timerEnabledOverride = settingsViewModelProvider.overrideWith(
+  _TimerEnabledSettingsViewModel.new,
+);
+
+final _timerDisabledOverride = settingsViewModelProvider.overrideWith(
+  _TimerDisabledSettingsViewModel.new,
+);
+
 Position _makePosition(double lat, double lng) => Position(
       latitude: lat,
       longitude: lng,
@@ -111,6 +159,7 @@ void main() {
         locationProvider.overrideWith(
           (ref) => locationStream ?? const Stream.empty(),
         ),
+        _notificationOverride,
         if (camera != null) cameraServiceProvider.overrideWith((ref) => camera),
       ];
 
@@ -254,6 +303,7 @@ void main() {
         ProviderScope(
           overrides: [
             locationProvider.overrideWith((ref) => locationStream),
+            _notificationOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -299,6 +349,7 @@ void main() {
         ProviderScope(
           overrides: [
             locationProvider.overrideWith((ref) => locationStream),
+            _notificationOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -543,6 +594,68 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ClipOval), findsNothing);
+    });
+
+    // タイマー有効時はチップが表示される
+    testWidgets('shows timer chips when timers are enabled', (tester) async {
+      setDisplaySize(tester);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            locationProvider.overrideWith((ref) => const Stream.empty()),
+            _timerEnabledOverride,
+            _notificationOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text(AppStrings.timerTurnaround), findsOneWidget);
+      expect(find.text(AppStrings.timerInactivity), findsOneWidget);
+    });
+
+    // タイマー無効時はチップが表示されない
+    testWidgets('hides timer chips when timers are disabled', (tester) async {
+      setDisplaySize(tester);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            locationProvider.overrideWith((ref) => const Stream.empty()),
+            _timerDisabledOverride,
+            _notificationOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text(AppStrings.timerTurnaround), findsNothing);
+      expect(find.text(AppStrings.timerInactivity), findsNothing);
     });
   });
 }
