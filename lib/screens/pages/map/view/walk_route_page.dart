@@ -20,12 +20,14 @@ List<WalkLog> _buildSessionLogs(List<WalkSession> sessions) {
   final finished = sessions
       .where((s) => s.status == WalkStatus.finished && s.startedAt != null)
       .toList()
-    ..sort((a, b) => b.startedAt!.compareTo(a.startedAt!));
+    ..sort((a, b) => a.startedAt!.compareTo(b.startedAt!));
 
-  final last7 = finished.length > 7 ? finished.sublist(0, 7) : finished;
+  final last7 =
+      finished.length > 7 ? finished.sublist(finished.length - 7) : finished;
 
   return List.generate(7, (i) {
-    if (i >= last7.length) {
+    final sessionIndex = i - (7 - last7.length);
+    if (sessionIndex < 0) {
       return (
         date: '-',
         startEndTime: '-',
@@ -36,7 +38,7 @@ List<WalkLog> _buildSessionLogs(List<WalkSession> sessions) {
       );
     }
 
-    final session = last7[i];
+    final session = last7[sessionIndex];
     final start = session.startedAt!;
     final end = session.finishedAt;
     final dayLabel = _weekdayNames[start.weekday % 7];
@@ -90,7 +92,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     if (finished.isEmpty) return;
     final vm = ref.read(walkRouteViewModelProvider.notifier);
     vm.setLogs(_buildSessionLogs(sessions));
-    vm.selectDay(1);
+    vm.selectDay(7);
   }
 
   @override
