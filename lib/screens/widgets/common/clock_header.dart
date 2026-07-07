@@ -21,18 +21,16 @@ class ClockHeader extends ConsumerWidget {
     final m = now.minute.toString().padLeft(2, '0');
 
     final settings = ref.watch(settingsViewModelProvider);
-    final oneWayMinutes = settings.timerRoundTrip
-        ? settings.timerMinutes ~/ 2
-        : settings.timerMinutes;
+    final label = settings.timerRoundTrip ? '往復' : '片道';
 
     final String timeLabel;
     if (countdownSeconds != null) {
       final mm = (countdownSeconds! ~/ 60).toString().padLeft(2, '0');
       final ss = (countdownSeconds! % 60).toString().padLeft(2, '0');
-      timeLabel = '片道  $mm:$ss';
+      timeLabel = '$label  $mm:$ss';
     } else {
-      final mm = oneWayMinutes.toString().padLeft(2, '0');
-      timeLabel = '片道  $mm:00';
+      final mm = settings.timerMinutes.toString().padLeft(2, '0');
+      timeLabel = '$label  $mm:00';
     }
 
     // 99px はスクリーン最上端からの距離のため SafeArea 分を差し引く
