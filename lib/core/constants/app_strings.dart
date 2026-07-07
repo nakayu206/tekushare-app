@@ -81,6 +81,7 @@ abstract class AppStrings {
   // 履歴ページ
   static const historyPageTitle = '散歩履歴';
   static const historyEmpty = '散歩の記録がありません';
+  static const historyLoadError = '履歴の読み込みに失敗しました';
 
   // スポット詳細
   static const spotDetailSaveButton = '上書き保存';

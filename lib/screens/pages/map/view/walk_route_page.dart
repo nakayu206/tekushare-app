@@ -102,7 +102,9 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
         final sessions = await ref.read(walkHistoryProvider.future);
         if (!mounted) return;
         _applyHistory(sessions);
-      } on Object catch (_) {}
+      } on Object catch (e) {
+        debugPrint('walkHistoryProvider の読み込みに失敗しました: $e');
+      }
       if (!mounted) return;
       if (widget.showSaveDialogOnLoad) _showSaveConfirmDialog();
     });
