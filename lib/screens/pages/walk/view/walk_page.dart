@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart' show Position;
+import 'package:latlong2/latlong.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
@@ -19,13 +21,27 @@ import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 import 'package:tekushare/screens/widgets/common/primary_button.dart';
 
-/// 散歩モード画面
-class WalkPage extends ConsumerWidget {
+/// 散歩モード画���
+class WalkPage extends ConsumerStatefulWidget {
   const WalkPage({super.key});
+
+  @override
+  ConsumerState<WalkPage> createState() => _WalkPageState();
+}
+
+class _WalkPageState extends ConsumerState<WalkPage> {
+  final _mapController = MapController();
+  final _trackPoints = <LatLng>[];
+  LatLng? _currentPosition;
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
 
   Future<void> _onTakePhotoPressed(
     BuildContext context,
-    WidgetRef ref,
     AsyncValue<Position> locationState,
   ) async {
     if (!locationState.hasValue) {
@@ -45,7 +61,18 @@ class WalkPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<Position>>(locationProvider, (_, next) {
+      next.whenData((pos) {
+        final point = LatLng(pos.latitude, pos.longitude);
+        setState(() {
+          _currentPosition = point;
+          _trackPoints.add(point);
+        });
+        _mapController.move(point, _mapController.camera.zoom);
+      });
+    });
+
     final locationState = ref.watch(locationProvider);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -59,14 +86,53 @@ class WalkPage extends ConsumerWidget {
               const ClockHeader(),
               const SizedBox(height: 16),
               _GpsStatusIndicator(locationState: locationState),
-              const Spacer(flex: 2),
+              Expanded(
+                child: _currentPosition != null
+                    ? FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: _currentPosition!,
+                          initialZoom: 15,
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.example.tekushare',
+                          ),
+                          if (_trackPoints.length >= 2)
+                            PolylineLayer(
+                              polylines: [
+                                Polyline(
+                                  points: _trackPoints,
+                                  color: AppColors.primary,
+                                  strokeWidth: 3,
+                                ),
+                              ],
+                            ),
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: _currentPosition!,
+                                child: const Icon(
+                                  Icons.location_on,
+                                  color: Colors.red,
+                                  size: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
                 child: _WalkActionButton(
                   label: AppStrings.takePhoto,
                   svgAsset: 'assets/SVG/camera.svg',
-                  onPressed: () =>
-                      _onTakePhotoPressed(context, ref, locationState),
+                  onPressed: () => _onTakePhotoPressed(context, locationState),
                 ),
               ),
               const SizedBox(height: 20),
@@ -80,7 +146,7 @@ class WalkPage extends ConsumerWidget {
                   ),
                 ),
               ),
-              const Spacer(flex: 3),
+              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
                 child: PrimaryButton(
@@ -128,7 +194,7 @@ class WalkPage extends ConsumerWidget {
 
 // ──────────────────────────────────────────
 // GPS 状態インジケーター
-// ──────────────────────────────────────────
+// ────────────────────────��─────────────────
 
 class _GpsStatusIndicator extends StatelessWidget {
   const _GpsStatusIndicator({required this.locationState});
@@ -170,9 +236,9 @@ class _GpsStatusIndicator extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────
+// ───────────��──────────────────────────────
 // 散歩アクションボタン（ブラウン）
-// ──────────────────────────────────────────
+// ──���───────────────────────────────────────
 
 class _WalkActionButton extends StatelessWidget {
   const _WalkActionButton({

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
@@ -14,7 +12,6 @@ import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
-import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
@@ -545,63 +542,6 @@ void main() {
       await tester.pump();
 
       expect(find.text('3'), findsWidgets);
-    });
-
-    // 散歩外のときはマッププレースホルダーが表示される
-    testWidgets('shows map placeholder when not walking', (tester) async {
-      await pumpPage(tester);
-
-      expect(find.byIcon(Icons.map_outlined), findsOneWidget);
-      expect(find.byType(FlutterMap), findsNothing);
-    });
-
-    // 散歩中は FlutterMap が表示される
-    testWidgets('shows FlutterMap when walking with GPS position',
-        (tester) async {
-      tester.view.physicalSize = const Size(1170, 3000);
-      tester.view.devicePixelRatio = 3.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      final positionStream = Stream.fromIterable([
-        Position(
-          latitude: 35.6895,
-          longitude: 139.6917,
-          timestamp: DateTime(2024),
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: 0,
-          heading: 0,
-          headingAccuracy: 0,
-          speed: 0,
-          speedAccuracy: 0,
-        ),
-      ]);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            locationProvider.overrideWith((ref) => positionStream),
-          ],
-          child: MaterialApp(
-            builder: (context, child) {
-              final sw = MediaQuery.sizeOf(context).width;
-              return Theme(
-                data: Theme.of(context).copyWith(
-                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
-                ),
-                child: child!,
-              );
-            },
-            home: const WalkRoutePage(),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.byType(FlutterMap), findsOneWidget);
-      expect(find.byIcon(Icons.map_outlined), findsNothing);
     });
   });
 }

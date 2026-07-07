@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
@@ -483,6 +484,28 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SettingsPage), findsOneWidget);
+    });
+
+    // GPS 取得済みのとき FlutterMap が表示される
+    testWidgets('shows FlutterMap when GPS position is available',
+        (tester) async {
+      final position = _makePosition(35.6895, 139.6917);
+
+      await pumpWalkPage(
+        tester,
+        locationStream: Stream.value(position),
+      );
+      await tester.pump();
+
+      expect(find.byType(FlutterMap), findsOneWidget);
+    });
+
+    // GPS 未取得のとき FlutterMap は表示されない
+    testWidgets('does not show FlutterMap when GPS is not yet available',
+        (tester) async {
+      await pumpWalkPage(tester, locationStream: const Stream.empty());
+
+      expect(find.byType(FlutterMap), findsNothing);
     });
   });
 }
