@@ -74,6 +74,10 @@ abstract class AppStrings {
   static const walkSpotCount = '行きたいスポット';
   static const viewDetails = '詳しく見る';
 
+  // 履歴ページ
+  static const historyPageTitle = '散歩履歴';
+  static const historyEmpty = '散歩の記録がありません';
+
   // スポット詳細
   static const spotDetailSaveButton = '上書き保存';
   static const spotDetailDeleteButton = '削除する';
