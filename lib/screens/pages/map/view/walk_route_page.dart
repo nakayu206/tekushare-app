@@ -12,7 +12,6 @@ import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/providers/walk_history_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
-import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
 
 const _weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -836,43 +835,6 @@ class _WalkInfoCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          Builder(
-            builder: (context) {
-              final sizing = AppSizingTheme.of(context);
-              return SizedBox(
-                width: sizing.photoBoxWidth,
-                height: sizing.walkInfoPhotoHeight,
-                child: CustomPaint(
-                  painter: const DashedBorderPainter(),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ExcludeSemantics(
-                        child: SvgPicture.asset(
-                          'assets/SVG/camera.svg',
-                          width: AppSize.iconMd,
-                          height: AppSize.iconMd,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.textAccent,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      const Text(
-                        AppStrings.addPhoto,
-                        style: TextStyle(
-                          color: AppColors.textAccent,
-                          fontSize: AppTextStyle.sm,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 30),
           SizedBox(
             width: double.infinity,
             height: AppSize.buttonHeightLg,
