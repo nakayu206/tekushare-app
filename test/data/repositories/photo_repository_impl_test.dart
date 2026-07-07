@@ -49,7 +49,8 @@ void main() {
       await repo.attachPhoto('spot-1', '/photos/second.jpg');
 
       final result = await spotRepo.getSpots().first;
-      expect(result.first.photoPaths, ['/photos/first.jpg', '/photos/second.jpg']);
+      expect(
+          result.first.photoPaths, ['/photos/first.jpg', '/photos/second.jpg']);
     });
 
     test('attachPhoto で存在しない spotId を指定しても例外にならない', () async {
