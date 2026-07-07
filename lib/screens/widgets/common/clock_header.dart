@@ -32,7 +32,7 @@ class ClockHeader extends ConsumerWidget {
       timeLabel = '片道  $mm:$ss';
     } else {
       final mm = oneWayMinutes.toString().padLeft(2, '0');
-      timeLabel = '片道  00:$mm';
+      timeLabel = '片道  $mm:00';
     }
 
     // 99px はスクリーン最上端からの距離のため SafeArea 分を差し引く

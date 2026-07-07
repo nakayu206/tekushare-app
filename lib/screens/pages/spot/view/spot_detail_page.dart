@@ -184,22 +184,19 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
           if (index == 0) {
             Navigator.pop(context);
           } else if (index == 1) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
-              (route) => route.isFirst,
             );
           } else if (index == 2) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const WalkRoutePage()),
-              (route) => route.isFirst,
             );
           } else if (index == 3) {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
-              (route) => route.isFirst,
             );
           }
         },
