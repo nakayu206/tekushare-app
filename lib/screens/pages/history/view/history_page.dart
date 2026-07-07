@@ -62,7 +62,10 @@ class HistoryPage extends ConsumerWidget {
                 session: finished[index],
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const WalkRoutePage()),
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        WalkRoutePage(session: finished[index]),
+                  ),
                 ),
               ),
             );

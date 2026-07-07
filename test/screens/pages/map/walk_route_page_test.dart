@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
@@ -509,6 +510,80 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(WalkRoutePage), findsOneWidget);
+    });
+
+    // 履歴モード：セッションデータが表示される
+    testWidgets('shows session data in history mode', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final session = WalkSession(
+        id: 'test-id',
+        status: WalkStatus.finished,
+        startedAt: DateTime(2024, 3, 15, 9, 0),
+        finishedAt: DateTime(2024, 3, 15, 9, 30),
+        elapsedSeconds: 1800,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: WalkRoutePage(session: session),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('2024年03月15日（金）'), findsOneWidget);
+      expect(find.text('9:00～9:30'), findsOneWidget);
+      expect(find.text('30:00'), findsOneWidget);
+    });
+
+    // 履歴モード：保存ボタンが表示されない
+    testWidgets('does not show save button in history mode', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final session = WalkSession(
+        id: 'test-id',
+        status: WalkStatus.finished,
+        startedAt: DateTime(2024, 3, 15, 9, 0),
+        finishedAt: DateTime(2024, 3, 15, 9, 30),
+        elapsedSeconds: 1800,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: WalkRoutePage(session: session),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text(AppStrings.saveRouteButton), findsNothing);
     });
 
     // 2ページ目で右フリングで前ページへ（line 213）
