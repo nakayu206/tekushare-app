@@ -169,6 +169,27 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                                   .toList(),
                             ),
                           Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              child: FloatingActionButton.small(
+                                heroTag: 'recenter',
+                                onPressed: () {
+                                  if (_currentPosition != null) {
+                                    _mapController.move(
+                                      _currentPosition!,
+                                      MapConstants.defaultZoom,
+                                    );
+                                  }
+                                },
+                                backgroundColor: AppColors.surface,
+                                foregroundColor: AppColors.primary,
+                                elevation: 2,
+                                child: const Icon(Icons.my_location),
+                              ),
+                            ),
+                          ),
+                          Align(
                             alignment: Alignment.bottomRight,
                             child: Container(
                               color: MapConstants.osmAttributionBg,
