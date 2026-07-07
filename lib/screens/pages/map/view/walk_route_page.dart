@@ -87,6 +87,9 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
 
   void _applyHistory(List<WalkSession> sessions) {
     if (!mounted) return;
+    final finished =
+        sessions.where((s) => s.status == WalkStatus.finished).toList();
+    if (finished.isEmpty) return;
     final vm = ref.read(walkRouteViewModelProvider.notifier);
     vm.setLogs(_buildSessionLogs(sessions));
     vm.selectDay(7);
@@ -95,10 +98,15 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      try {
+        final sessions = await ref.read(walkHistoryProvider.future);
+        if (!mounted) return;
+        _applyHistory(sessions);
+      } on Object catch (_) {}
       if (!mounted) return;
       if (widget.showSaveDialogOnLoad) _showSaveConfirmDialog();
-      ref.read(walkHistoryProvider).whenData(_applyHistory);
     });
   }
 
@@ -185,8 +193,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
                   _CalendarRow(
                     selectedDay: state.selectedDay,
                     onSelect: _selectDay,
-                    dayLabels:
-                        state.logs.map((l) => l.dayLabel).toList(),
+                    dayLabels: state.logs.map((l) => l.dayLabel).toList(),
                   ),
                   GestureDetector(
                     onHorizontalDragEnd: (details) {
