@@ -7,6 +7,7 @@ typedef WalkLog = ({
   String duration,
   String distance,
   int spotCount,
+  String dayLabel,
 });
 
 class WalkRouteState {
@@ -39,6 +40,7 @@ class WalkRouteState {
       duration: '00:15',
       distance: '1.2km',
       spotCount: 1,
+      dayLabel: '日',
     ),
     (
       date: '2026年02月02日(月)',
@@ -46,6 +48,7 @@ class WalkRouteState {
       duration: '00:15',
       distance: '1.2km',
       spotCount: 1,
+      dayLabel: '月',
     ),
     (
       date: '2026年02月03日(火)',
@@ -53,6 +56,7 @@ class WalkRouteState {
       duration: '00:30',
       distance: '2.5km',
       spotCount: 2,
+      dayLabel: '火',
     ),
     (
       date: '2026年02月04日(水)',
@@ -60,6 +64,7 @@ class WalkRouteState {
       duration: '00:15',
       distance: '1.2km',
       spotCount: 1,
+      dayLabel: '水',
     ),
     (
       date: '2026年02月05日(木)',
@@ -67,6 +72,7 @@ class WalkRouteState {
       duration: '00:15',
       distance: '1.2km',
       spotCount: 1,
+      dayLabel: '木',
     ),
     (
       date: '2026年02月06日(金)',
@@ -74,6 +80,7 @@ class WalkRouteState {
       duration: '00:30',
       distance: '2.5km',
       spotCount: 3,
+      dayLabel: '金',
     ),
     (
       date: '2026年02月07日(土)',
@@ -81,6 +88,7 @@ class WalkRouteState {
       duration: '00:15',
       distance: '1.2km',
       spotCount: 1,
+      dayLabel: '土',
     ),
   ];
 
@@ -129,6 +137,10 @@ class WalkRouteViewModel extends Notifier<WalkRouteState> {
 
   void saveRoute(WalkRoute route) {
     state = state.copyWith(routes: [route, ...state.routes]);
+  }
+
+  void setLogs(List<WalkLog> logs) {
+    state = state.copyWith(logs: logs);
   }
 }
 

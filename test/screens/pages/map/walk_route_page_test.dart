@@ -9,11 +9,13 @@ import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
+import 'package:tekushare/screens/providers/walk_history_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 class _FakeSaveSpot implements SaveSpot {
@@ -53,6 +55,10 @@ class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+final _historyOverride = walkHistoryProvider.overrideWith(
+  (_) async => const <WalkSession>[],
+);
+
 final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
     saveSpot: const _FakeSaveSpot(),
@@ -74,6 +80,7 @@ class _NonStandardDateViewModel extends WalkRouteViewModel {
             duration: '1時間',
             distance: '2.0km',
             spotCount: 3,
+            dayLabel: '月',
           ),
         ],
       );
@@ -89,6 +96,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_historyOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -105,6 +113,47 @@ void main() {
       );
       await tester.pump();
     }
+
+    // 今週のセッションがある場合、実データの日付が表示される
+    testWidgets('shows real session data for current week', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final now = DateTime.now();
+      final session = WalkSession(
+        id: 'test-id',
+        status: WalkStatus.finished,
+        startedAt: DateTime(now.year, now.month, now.day, 9, 0),
+        finishedAt: DateTime(now.year, now.month, now.day, 9, 30),
+        elapsedSeconds: 1800,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            walkHistoryProvider.overrideWith((_) async => [session]),
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('9:00~9:30'), findsOneWidget);
+      expect(find.text('30:00'), findsOneWidget);
+    });
 
     // ページタイトルが表示される
     testWidgets('shows page title', (tester) async {
@@ -170,6 +219,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_historyOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -198,6 +248,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_historyOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -229,6 +280,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_historyOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -260,6 +312,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_historyOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -294,6 +347,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_historyOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -328,6 +382,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            _historyOverride,
             walkRouteViewModelProvider
                 .overrideWith(_NonStandardDateViewModel.new),
           ],
@@ -360,6 +415,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_historyOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -401,7 +457,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_spotOverride],
+          overrides: [_historyOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -443,6 +499,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_historyOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
