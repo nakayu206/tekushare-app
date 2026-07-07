@@ -51,10 +51,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     super.initState();
     final settings = ref.read(settingsViewModelProvider);
     if (settings.timerEnabled) {
-      final oneWayMinutes = settings.timerRoundTrip
-          ? settings.timerMinutes ~/ 2
-          : settings.timerMinutes;
-      _turnSecondsLeft = oneWayMinutes * 60;
+      _turnSecondsLeft = settings.timerMinutes * 60;
     }
     if (settings.inactivityEnabled) {
       _inactSecondsLeft = settings.inactivityMinutes * 60;
