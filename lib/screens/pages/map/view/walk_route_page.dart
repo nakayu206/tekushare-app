@@ -6,7 +6,6 @@ import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
-import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -15,14 +14,9 @@ import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
 
 /// 散歩ルートページ
 class WalkRoutePage extends ConsumerStatefulWidget {
-  const WalkRoutePage({
-    super.key,
-    this.showSaveDialogOnLoad = false,
-    this.session,
-  });
+  const WalkRoutePage({super.key, this.showSaveDialogOnLoad = false});
 
   final bool showSaveDialogOnLoad;
-  final WalkSession? session;
 
   @override
   ConsumerState<WalkRoutePage> createState() => _WalkRoutePageState();
@@ -93,33 +87,6 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
 
   @override
   Widget build(BuildContext context) {
-    final session = widget.session;
-    if (session != null) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          title: const Text(AppStrings.walkRoutePageTitle),
-          centerTitle: true,
-          elevation: 0,
-        ),
-        body: SafeArea(
-          top: false,
-          bottom: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              children: [
-                const SizedBox(height: AppSpacing.lg),
-                _WalkInfoCard(log: _sessionToLog(session)),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     final state = ref.watch(walkRouteViewModelProvider);
     final vm = ref.read(walkRouteViewModelProvider.notifier);
 
@@ -713,44 +680,11 @@ class _CalendarRow extends StatelessWidget {
 // 散歩情報カード
 // ──────────────────────────────────────────
 
-WalkLog _sessionToLog(WalkSession session) {
-  const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
-  String fmtDate(DateTime dt) {
-    final w = weekdays[dt.weekday - 1];
-    return '${dt.year}年${dt.month.toString().padLeft(2, '0')}月'
-        '${dt.day.toString().padLeft(2, '0')}日（$w）';
-  }
-
-  String fmtTime(DateTime dt) =>
-      '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-
-  String fmtDuration(int seconds) {
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    final s = seconds % 60;
-    return h > 0
-        ? '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}'
-        : '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-
-  final start = session.startedAt;
-  final end = session.finishedAt;
-  return (
-    date: start != null ? fmtDate(start) : '-',
-    startEndTime: start != null && end != null
-        ? '${fmtTime(start)}～${fmtTime(end)}'
-        : '-',
-    duration: fmtDuration(session.elapsedSeconds),
-    distance: '-',
-    spotCount: 0,
-  );
-}
-
 class _WalkInfoCard extends StatelessWidget {
-  const _WalkInfoCard({super.key, required this.log, this.onSave});
+  const _WalkInfoCard({super.key, required this.log, required this.onSave});
 
   final WalkLog log;
-  final VoidCallback? onSave;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -805,68 +739,66 @@ class _WalkInfoCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          if (onSave != null) ...[
-            const SizedBox(height: AppSpacing.xl),
-            Builder(
-              builder: (context) {
-                final sizing = AppSizingTheme.of(context);
-                return SizedBox(
-                  width: sizing.photoBoxWidth,
-                  height: sizing.walkInfoPhotoHeight,
-                  child: CustomPaint(
-                    painter: const DashedBorderPainter(),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ExcludeSemantics(
-                          child: SvgPicture.asset(
-                            'assets/SVG/camera.svg',
-                            width: AppSize.iconMd,
-                            height: AppSize.iconMd,
-                            colorFilter: const ColorFilter.mode(
-                              AppColors.textAccent,
-                              BlendMode.srcIn,
-                            ),
+          const SizedBox(height: AppSpacing.xl),
+          Builder(
+            builder: (context) {
+              final sizing = AppSizingTheme.of(context);
+              return SizedBox(
+                width: sizing.photoBoxWidth,
+                height: sizing.walkInfoPhotoHeight,
+                child: CustomPaint(
+                  painter: const DashedBorderPainter(),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ExcludeSemantics(
+                        child: SvgPicture.asset(
+                          'assets/SVG/camera.svg',
+                          width: AppSize.iconMd,
+                          height: AppSize.iconMd,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.textAccent,
+                            BlendMode.srcIn,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-                        const Text(
-                          AppStrings.addPhoto,
-                          style: TextStyle(
-                            color: AppColors.textAccent,
-                            fontSize: AppTextStyle.sm,
-                          ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      const Text(
+                        AppStrings.addPhoto,
+                        style: TextStyle(
+                          color: AppColors.textAccent,
+                          fontSize: AppTextStyle.sm,
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              height: AppSize.buttonHeightLg,
-              child: ElevatedButton(
-                onPressed: onSave,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.full),
+                      ),
+                    ],
                   ),
                 ),
-                child: const Text(
-                  AppStrings.saveRouteButton,
-                  style: TextStyle(
-                    fontSize: AppTextStyle.xl,
-                    fontWeight: AppTextStyle.medium,
-                  ),
+              );
+            },
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            width: double.infinity,
+            height: AppSize.buttonHeightLg,
+            child: ElevatedButton(
+              onPressed: onSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+              ),
+              child: const Text(
+                AppStrings.saveRouteButton,
+                style: TextStyle(
+                  fontSize: AppTextStyle.xl,
+                  fontWeight: AppTextStyle.medium,
                 ),
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
