@@ -1,7 +1,10 @@
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
-  static const _distanceFilterMeters = 5;
+  static const _distanceFilterMeters = 3;
+
+  // これより精度が低い（誤差が大きい）GPSポイントは捨てる
+  static const _maxAccuracyMeters = 20.0;
 
   /// パーミッション確認・リクエストを行い、現在地の Stream を返す。
   /// パーミッションが拒否された場合は例外をスローする。
@@ -9,11 +12,12 @@ class LocationService {
     await _ensurePermission();
 
     const settings = LocationSettings(
-      accuracy: LocationAccuracy.high,
+      accuracy: LocationAccuracy.bestForNavigation,
       distanceFilter: _distanceFilterMeters,
     );
 
-    yield* Geolocator.getPositionStream(locationSettings: settings);
+    yield* Geolocator.getPositionStream(locationSettings: settings)
+        .where((pos) => pos.accuracy <= _maxAccuracyMeters);
   }
 
   /// 現在地を一度だけ取得する。
@@ -21,7 +25,7 @@ class LocationService {
     await _ensurePermission();
     return Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
+        accuracy: LocationAccuracy.bestForNavigation,
       ),
     );
   }
