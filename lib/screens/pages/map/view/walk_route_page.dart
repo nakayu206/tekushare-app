@@ -298,7 +298,10 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
                         ref
                             .read(savedRouteRepositoryProvider)
                             .delete(route.id)
-                            .then((_) => ref.invalidate(savedRoutesProvider));
+                            .then((_) => ref.invalidate(savedRoutesProvider))
+                            .catchError(
+                              (_) => ref.invalidate(savedRoutesProvider),
+                            );
                       }
                     },
                   ),
@@ -541,6 +544,18 @@ class _RouteListCardState extends State<_RouteListCard> {
                           onTap: hasItem
                               ? () => widget.onSelect(globalIndex)
                               : null,
+                          onDelete: hasItem
+                              ? () {
+                                  widget.onDelete(globalIndex);
+                                  final newCount = widget.routes.length - 1;
+                                  final maxPage = newCount == 0
+                                      ? 0
+                                      : ((newCount / _pageSize).ceil() - 1);
+                                  if (_currentPage > maxPage) {
+                                    setState(() => _currentPage = maxPage);
+                                  }
+                                }
+                              : null,
                         ),
                         if (i < _pageSize - 1)
                           const SizedBox(height: AppSpacing.sm),
@@ -555,37 +570,7 @@ class _RouteListCardState extends State<_RouteListCard> {
                         child: itemContent,
                       );
                     }
-                    return Dismissible(
-                      key: ValueKey(
-                        pageRoutes[i].id != 0
-                            ? 'r-${pageRoutes[i].id}'
-                            : 'i-$globalIndex',
-                      ),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: AppSpacing.x2l),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade400,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.white,
-                        ),
-                      ),
-                      onDismissed: (_) {
-                        widget.onDelete(globalIndex);
-                        final newCount = widget.routes.length - 1;
-                        final maxPage = newCount == 0
-                            ? 0
-                            : ((newCount / _pageSize).ceil() - 1);
-                        if (_currentPage > maxPage) {
-                          setState(() => _currentPage = maxPage);
-                        }
-                      },
-                      child: itemContent,
-                    );
+                    return itemContent;
                   }),
                 ),
               ),
@@ -634,11 +619,13 @@ class _RouteItem extends StatelessWidget {
     required this.route,
     required this.isSelected,
     this.onTap,
+    this.onDelete,
   });
 
   final SavedRouteItem route;
   final bool isSelected;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -694,7 +681,7 @@ class _RouteItem extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Transform.translate(
-                    offset: const Offset(8, -8),
+                    offset: const Offset(2, -8),
                     child: Transform.rotate(
                       angle: -0.9,
                       child: SvgPicture.asset(
@@ -711,7 +698,7 @@ class _RouteItem extends StatelessWidget {
                     ),
                   ),
                   Transform.translate(
-                    offset: const Offset(-8, 8),
+                    offset: const Offset(-14, 8),
                     child: Transform.rotate(
                       angle: 0.9,
                       child: Transform.scale(
@@ -733,6 +720,29 @@ class _RouteItem extends StatelessWidget {
                 ],
               ),
             ),
+            if (onDelete != null)
+              Builder(
+                builder: (ctx) => GestureDetector(
+                  onTap: () => showDialog<void>(
+                    context: ctx,
+                    builder: (_) => _RouteDeleteConfirmDialog(
+                      routeName: route.name,
+                      onConfirm: () {
+                        Navigator.pop(ctx);
+                        onDelete!();
+                      },
+                      onCancel: () => Navigator.pop(ctx),
+                    ),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: AppSpacing.sm),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: AppColors.textDisabled,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -801,10 +811,12 @@ class _SelectedRouteCard extends ConsumerWidget {
                   height: height,
                   color: AppColors.chipUnselected,
                   child: const Center(
-                    child: Icon(
-                      Icons.map_outlined,
-                      size: 48,
-                      color: AppColors.textDisabled,
+                    child: ExcludeSemantics(
+                      child: Icon(
+                        Icons.map_outlined,
+                        size: 48,
+                        color: AppColors.textDisabled,
+                      ),
                     ),
                   ),
                 );
@@ -1237,6 +1249,102 @@ class _SaveConfirmDialog extends StatelessWidget {
                         ),
                       ),
                       child: const Text(AppStrings.cancelButton),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// ルート削除確認ダイアログ
+// ──────────────────────────────────────────
+
+class _RouteDeleteConfirmDialog extends StatelessWidget {
+  const _RouteDeleteConfirmDialog({
+    required this.routeName,
+    required this.onConfirm,
+    required this.onCancel,
+  });
+
+  final String routeName;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.x2l,
+          AppSpacing.x3l,
+          AppSpacing.x2l,
+          AppSpacing.x2l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              routeName,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: AppTextStyle.semiBold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text(
+              AppStrings.routeDeleteConfirmMessage,
+              style: TextStyle(fontSize: AppTextStyle.md),
+            ),
+            const SizedBox(height: AppSpacing.x2l),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: AppSpacing.x5l,
+                    child: OutlinedButton(
+                      onPressed: onCancel,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        side: const BorderSide(color: AppColors.primary),
+                        foregroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                      ),
+                      child: const Text(AppStrings.cancelButton),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: SizedBox(
+                    height: AppSpacing.x5l,
+                    child: ElevatedButton(
+                      onPressed: onConfirm,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        backgroundColor: Colors.red.shade400,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                      ),
+                      child: const Text(AppStrings.routeDeleteButton),
                     ),
                   ),
                 ),

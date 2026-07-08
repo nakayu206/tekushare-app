@@ -157,11 +157,16 @@ class WalkRouteViewModel extends Notifier<WalkRouteState> {
 
   void removeRoute(int index) {
     final updated = [...state.routes]..removeAt(index);
-    final newSelected = updated.isEmpty
-        ? 0
-        : state.selectedRouteIndex >= updated.length
-            ? updated.length - 1
-            : state.selectedRouteIndex;
+    final int newSelected;
+    if (updated.isEmpty) {
+      newSelected = 0;
+    } else if (index < state.selectedRouteIndex) {
+      newSelected = state.selectedRouteIndex - 1;
+    } else if (state.selectedRouteIndex >= updated.length) {
+      newSelected = updated.length - 1;
+    } else {
+      newSelected = state.selectedRouteIndex;
+    }
     state = state.copyWith(routes: updated, selectedRouteIndex: newSelected);
   }
 
