@@ -1,24 +1,27 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tekushare/core/constants/app_strings.dart';
 
 class WantToGoState {
-  const WantToGoState({
-    this.selectedCategory = AppStrings.categoryPark,
-  });
+  const WantToGoState({this.selectedCategory});
 
-  final String selectedCategory;
+  final String? selectedCategory;
 
-  WantToGoState copyWith({String? selectedCategory}) => WantToGoState(
-        selectedCategory: selectedCategory ?? this.selectedCategory,
+  WantToGoState copyWith({Object? selectedCategory = _sentinel}) =>
+      WantToGoState(
+        selectedCategory: selectedCategory == _sentinel
+            ? this.selectedCategory
+            : selectedCategory as String?,
       );
 }
+
+const _sentinel = Object();
 
 class WantToGoViewModel extends Notifier<WantToGoState> {
   @override
   WantToGoState build() => const WantToGoState();
 
   void selectCategory(String category) {
-    state = state.copyWith(selectedCategory: category);
+    final next = state.selectedCategory == category ? null : category;
+    state = state.copyWith(selectedCategory: next);
   }
 }
 

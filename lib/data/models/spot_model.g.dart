@@ -17,44 +17,49 @@ const SpotModelSchema = CollectionSchema(
   name: r'SpotModel',
   id: -2749345920550038888,
   properties: {
-    r'createdAt': PropertySchema(
+    r'category': PropertySchema(
       id: 0,
+      name: r'category',
+      type: IsarType.string,
+    ),
+    r'createdAt': PropertySchema(
+      id: 1,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'latitude': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'latitude',
       type: IsarType.double,
     ),
     r'longitude': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'longitude',
       type: IsarType.double,
     ),
     r'memo': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'memo',
       type: IsarType.string,
     ),
     r'photoPaths': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'photoPaths',
       type: IsarType.stringList,
     ),
     r'status': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'status',
       type: IsarType.string,
       enumMap: _SpotModelstatusEnumValueMap,
     ),
     r'title': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'title',
       type: IsarType.string,
     ),
     r'uid': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'uid',
       type: IsarType.string,
     )
@@ -94,6 +99,12 @@ int _spotModelEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
+    final value = object.category;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.memo;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -118,14 +129,15 @@ void _spotModelSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.createdAt);
-  writer.writeDouble(offsets[1], object.latitude);
-  writer.writeDouble(offsets[2], object.longitude);
-  writer.writeString(offsets[3], object.memo);
-  writer.writeStringList(offsets[4], object.photoPaths);
-  writer.writeString(offsets[5], object.status.name);
-  writer.writeString(offsets[6], object.title);
-  writer.writeString(offsets[7], object.uid);
+  writer.writeString(offsets[0], object.category);
+  writer.writeDateTime(offsets[1], object.createdAt);
+  writer.writeDouble(offsets[2], object.latitude);
+  writer.writeDouble(offsets[3], object.longitude);
+  writer.writeString(offsets[4], object.memo);
+  writer.writeStringList(offsets[5], object.photoPaths);
+  writer.writeString(offsets[6], object.status.name);
+  writer.writeString(offsets[7], object.title);
+  writer.writeString(offsets[8], object.uid);
 }
 
 SpotModel _spotModelDeserialize(
@@ -135,17 +147,18 @@ SpotModel _spotModelDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = SpotModel();
-  object.createdAt = reader.readDateTime(offsets[0]);
+  object.category = reader.readStringOrNull(offsets[0]);
+  object.createdAt = reader.readDateTime(offsets[1]);
   object.id = id;
-  object.latitude = reader.readDouble(offsets[1]);
-  object.longitude = reader.readDouble(offsets[2]);
-  object.memo = reader.readStringOrNull(offsets[3]);
-  object.photoPaths = reader.readStringList(offsets[4]) ?? [];
+  object.latitude = reader.readDouble(offsets[2]);
+  object.longitude = reader.readDouble(offsets[3]);
+  object.memo = reader.readStringOrNull(offsets[4]);
+  object.photoPaths = reader.readStringList(offsets[5]) ?? [];
   object.status =
-      _SpotModelstatusValueEnumMap[reader.readStringOrNull(offsets[5])] ??
+      _SpotModelstatusValueEnumMap[reader.readStringOrNull(offsets[6])] ??
           SpotStatus.wantToGo;
-  object.title = reader.readString(offsets[6]);
-  object.uid = reader.readString(offsets[7]);
+  object.title = reader.readString(offsets[7]);
+  object.uid = reader.readString(offsets[8]);
   return object;
 }
 
@@ -157,21 +170,23 @@ P _spotModelDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 2:
       return (reader.readDouble(offset)) as P;
     case 3:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 4:
-      return (reader.readStringList(offset) ?? []) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 6:
       return (_SpotModelstatusValueEnumMap[reader.readStringOrNull(offset)] ??
           SpotStatus.wantToGo) as P;
-    case 6:
-      return (reader.readString(offset)) as P;
     case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -376,6 +391,154 @@ extension SpotModelQueryWhere
 
 extension SpotModelQueryFilter
     on QueryBuilder<SpotModel, SpotModel, QFilterCondition> {
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'category',
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      categoryIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'category',
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'category',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'category',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> categoryIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition>
+      categoryIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'category',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<SpotModel, SpotModel, QAfterFilterCondition> createdAtEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -1377,6 +1540,18 @@ extension SpotModelQueryLinks
     on QueryBuilder<SpotModel, SpotModel, QFilterCondition> {}
 
 extension SpotModelQuerySortBy on QueryBuilder<SpotModel, SpotModel, QSortBy> {
+  QueryBuilder<SpotModel, SpotModel, QAfterSortBy> sortByCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterSortBy> sortByCategoryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.desc);
+    });
+  }
+
   QueryBuilder<SpotModel, SpotModel, QAfterSortBy> sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -1464,6 +1639,18 @@ extension SpotModelQuerySortBy on QueryBuilder<SpotModel, SpotModel, QSortBy> {
 
 extension SpotModelQuerySortThenBy
     on QueryBuilder<SpotModel, SpotModel, QSortThenBy> {
+  QueryBuilder<SpotModel, SpotModel, QAfterSortBy> thenByCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SpotModel, SpotModel, QAfterSortBy> thenByCategoryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.desc);
+    });
+  }
+
   QueryBuilder<SpotModel, SpotModel, QAfterSortBy> thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -1563,6 +1750,13 @@ extension SpotModelQuerySortThenBy
 
 extension SpotModelQueryWhereDistinct
     on QueryBuilder<SpotModel, SpotModel, QDistinct> {
+  QueryBuilder<SpotModel, SpotModel, QDistinct> distinctByCategory(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'category', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SpotModel, SpotModel, QDistinct> distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
@@ -1621,6 +1815,12 @@ extension SpotModelQueryProperty
   QueryBuilder<SpotModel, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<SpotModel, String?, QQueryOperations> categoryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'category');
     });
   }
 

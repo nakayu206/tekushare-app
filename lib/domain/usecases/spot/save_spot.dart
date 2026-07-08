@@ -11,6 +11,7 @@ class SaveSpot {
     required double latitude,
     required double longitude,
     String? memo,
+    String? category,
     SpotStatus status = SpotStatus.wantToGo,
   }) async {
     final now = DateTime.now();
@@ -23,6 +24,7 @@ class SaveSpot {
       status: status,
       createdAt: now,
       memo: memo,
+      category: category,
     );
     await _repository.saveSpot(spot);
     return id;

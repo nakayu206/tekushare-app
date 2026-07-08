@@ -43,6 +43,7 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
     required double latitude,
     required double longitude,
     String? memo,
+    String? category,
     SpotStatus status = SpotStatus.wantToGo,
   }) {
     return _saveSpot.call(
@@ -50,6 +51,7 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
       latitude: latitude,
       longitude: longitude,
       memo: memo,
+      category: category,
       status: status,
     );
   }
@@ -102,13 +104,23 @@ final pendingPhotoProvider = StateProvider<List<String>>((ref) => []);
 final selectedSpotStatusProvider =
     StateProvider<SpotStatus?>((ref) => SpotStatus.wantToGo);
 
-/// selectedSpotStatusProvider と連動してフィルタリングしたスポット一覧（新着順）
+/// 現在選択中のカテゴリフィルタ（null = 全件）
+final selectedCategoryProvider = StateProvider<String?>((ref) => null);
+
+/// ステータス・カテゴリでフィルタリングしたスポット一覧（新着順）
 final filteredSpotsProvider = Provider<List<Spot>>((ref) {
   final spots = ref.watch(spotProvider);
-  final filter = ref.watch(selectedSpotStatusProvider);
-  final filtered = filter == null
+  final statusFilter = ref.watch(selectedSpotStatusProvider);
+  final categoryFilter = ref.watch(selectedCategoryProvider);
+
+  var filtered = statusFilter == null
       ? [...spots]
-      : spots.where((s) => s.status == filter).toList();
+      : spots.where((s) => s.status == statusFilter).toList();
+
+  if (categoryFilter != null) {
+    filtered = filtered.where((s) => s.category == categoryFilter).toList();
+  }
+
   filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
   return filtered;
 });

@@ -53,6 +53,13 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     _titleController.text =
         widget.spot.title == AppStrings.noTitle ? '' : widget.spot.title;
     _photoPaths = List.of(widget.spot.photoPaths);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(spotDetailViewModelProvider.notifier)
+            .initCategory(widget.spot.category);
+      }
+    });
   }
 
   @override
@@ -83,6 +90,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     final title = _titleController.text.isEmpty
         ? AppStrings.noTitle
         : _titleController.text;
+    final category = ref.read(spotDetailViewModelProvider).selectedCategory;
     showDialog<void>(
       context: context,
       builder: (_) => _SaveConfirmDialog(
@@ -90,7 +98,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         onConfirm: () async {
           Navigator.pop(context);
           await ref.read(spotProvider.notifier).updateSpot(
-                widget.spot.copyWith(title: title),
+                widget.spot.copyWith(title: title, category: category),
               );
           if (!mounted) return;
           _showResultDialog(AppStrings.saved);
@@ -122,6 +130,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     final title = _titleController.text.isEmpty
         ? AppStrings.noTitle
         : _titleController.text;
+    final category = ref.read(spotDetailViewModelProvider).selectedCategory;
     showDialog<void>(
       context: context,
       builder: (_) => _MoveToWentConfirmDialog(
@@ -132,6 +141,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                 widget.spot.copyWith(
                   title: title,
                   status: SpotStatus.visited,
+                  category: category,
                 ),
               );
           if (!mounted) return;

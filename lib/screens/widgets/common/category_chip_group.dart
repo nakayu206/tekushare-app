@@ -15,7 +15,7 @@ class CategoryChipGroup extends StatelessWidget {
             'CategoryChipGroup requires exactly 6 categories');
 
   final List<String> categories;
-  final String selectedCategory;
+  final String? selectedCategory;
   final ValueChanged<String> onSelected;
 
   Widget _chip(String cat, double height) {

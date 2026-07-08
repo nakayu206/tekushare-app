@@ -17,6 +17,7 @@ class SpotModel {
   late SpotStatus status;
 
   String? memo;
+  String? category;
   List<String> photoPaths = [];
   late DateTime createdAt;
 
@@ -28,6 +29,7 @@ class SpotModel {
       longitude: longitude,
       status: status,
       memo: memo,
+      category: category,
       photoPaths: photoPaths,
       createdAt: createdAt,
     );
@@ -41,6 +43,7 @@ class SpotModel {
       ..longitude = spot.longitude
       ..status = spot.status
       ..memo = spot.memo
+      ..category = spot.category
       ..photoPaths = spot.photoPaths
       ..createdAt = spot.createdAt;
   }

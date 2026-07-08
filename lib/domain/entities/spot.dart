@@ -9,6 +9,7 @@ class Spot {
     required this.status,
     required this.createdAt,
     this.memo,
+    this.category,
     this.photoPaths = const [],
   });
 
@@ -18,6 +19,7 @@ class Spot {
   final double longitude;
   final SpotStatus status;
   final String? memo;
+  final String? category;
   final List<String> photoPaths;
   final DateTime createdAt;
 
@@ -30,6 +32,7 @@ class Spot {
     double? longitude,
     SpotStatus? status,
     Object? memo = _sentinel,
+    Object? category = _sentinel,
     List<String>? photoPaths,
     DateTime? createdAt,
   }) {
@@ -40,6 +43,7 @@ class Spot {
       longitude: longitude ?? this.longitude,
       status: status ?? this.status,
       memo: memo == _sentinel ? this.memo : memo as String?,
+      category: category == _sentinel ? this.category : category as String?,
       photoPaths: photoPaths ?? this.photoPaths,
       createdAt: createdAt ?? this.createdAt,
     );

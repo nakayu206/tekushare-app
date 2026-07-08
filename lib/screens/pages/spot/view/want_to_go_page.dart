@@ -76,6 +76,7 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
       );
       return;
     }
+    final category = ref.read(wantToGoViewModelProvider).selectedCategory;
     showDialog<void>(
       context: context,
       builder: (_) => _ConfirmDialog(
@@ -86,6 +87,7 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
                 title: title,
                 latitude: location.latitude,
                 longitude: location.longitude,
+                category: category,
               );
           final photos = ref.read(pendingPhotoProvider);
           for (final photo in photos) {

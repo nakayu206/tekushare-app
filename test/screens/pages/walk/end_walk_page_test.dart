@@ -31,6 +31,7 @@ class _FakeSaveSpot implements SaveSpot {
     required double latitude,
     required double longitude,
     String? memo,
+    String? category,
     SpotStatus status = SpotStatus.wantToGo,
   }) async =>
       'fake-id';

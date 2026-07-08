@@ -40,6 +40,7 @@ class _FakeSaveSpot implements SaveSpot {
     required double latitude,
     required double longitude,
     String? memo,
+    String? category,
     SpotStatus status = SpotStatus.wantToGo,
   }) async =>
       'fake-spot-id';
@@ -189,16 +190,13 @@ void main() {
         (tester) async {
       await pumpPage(tester);
 
-      // 初期は公園が選択色
+      // 初期は未選択（listSelected 色のチップなし）
       expect(
-        find.ancestor(
-          of: find.text(AppStrings.categoryPark),
-          matching: find.byWidgetPredicate((w) =>
-              w is Container &&
-              w.decoration is BoxDecoration &&
-              (w.decoration as BoxDecoration).color == AppColors.listSelected),
-        ),
-        findsOneWidget,
+        find.byWidgetPredicate((w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        findsNothing,
       );
 
       await tester.tap(find.text(AppStrings.categoryCafe));
