@@ -84,10 +84,13 @@ final pendingPhotoProvider = StateProvider<List<String>>((ref) => []);
 final selectedSpotStatusProvider =
     StateProvider<SpotStatus?>((ref) => SpotStatus.wantToGo);
 
-/// selectedSpotStatusProvider と連動してフィルタリングしたスポット一覧
+/// selectedSpotStatusProvider と連動してフィルタリングしたスポット一覧（新着順）
 final filteredSpotsProvider = Provider<List<Spot>>((ref) {
   final spots = ref.watch(spotProvider);
   final filter = ref.watch(selectedSpotStatusProvider);
-  if (filter == null) return spots;
-  return spots.where((s) => s.status == filter).toList();
+  final filtered = filter == null
+      ? [...spots]
+      : spots.where((s) => s.status == filter).toList();
+  filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  return filtered;
 });

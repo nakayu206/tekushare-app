@@ -21,6 +21,7 @@ import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
+import 'package:tekushare/screens/widgets/common/photo_viewer_dialog.dart';
 
 /// 行きたい！ページ
 class WantToGoPage extends ConsumerStatefulWidget {
@@ -58,6 +59,10 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
     ref
         .read(pendingPhotoProvider.notifier)
         .update((l) => l.where((e) => e != path).toList());
+  }
+
+  void _onPhotoExpand(String path) {
+    showPhotoViewer(context, path, () => _onPhotoDelete(path));
   }
 
   void _onSavePressed() {
@@ -139,7 +144,11 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
               SizedBox(height: sizing.sectionSpacing),
               _TitleInput(controller: _titleController),
               SizedBox(height: sizing.sectionSpacing),
-              _PhotoBox(onTap: _onPhotoTap, onDelete: _onPhotoDelete),
+              _PhotoBox(
+                onTap: _onPhotoTap,
+                onDelete: _onPhotoDelete,
+                onExpand: _onPhotoExpand,
+              ),
               SizedBox(height: sizing.sectionSpacing),
               _SaveButton(onPressed: _onSavePressed),
               SizedBox(height: sizing.sectionSpacing),
@@ -311,10 +320,15 @@ class _TitleInput extends StatelessWidget {
 // ──────────────────────────────────────────
 
 class _PhotoBox extends ConsumerWidget {
-  const _PhotoBox({required this.onTap, required this.onDelete});
+  const _PhotoBox({
+    required this.onTap,
+    required this.onDelete,
+    required this.onExpand,
+  });
 
   final VoidCallback onTap;
   final void Function(String) onDelete;
+  final void Function(String) onExpand;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -332,15 +346,18 @@ class _PhotoBox extends ConsumerWidget {
         for (final path in photos)
           Stack(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: SizedBox(
-                  width: tileW,
-                  height: tileH,
-                  child: Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholder(),
+              GestureDetector(
+                onTap: () => onExpand(path),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: SizedBox(
+                    width: tileW,
+                    height: tileH,
+                    child: Image.file(
+                      File(path),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _placeholder(),
+                    ),
                   ),
                 ),
               ),

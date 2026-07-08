@@ -22,6 +22,7 @@ import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
+import 'package:tekushare/screens/widgets/common/photo_viewer_dialog.dart';
 
 /// 行きたい！／行った！共通詳細ページ
 class SpotDetailPage extends ConsumerStatefulWidget {
@@ -70,6 +71,10 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     await ref.read(spotProvider.notifier).removePhoto(widget.spot.id, path);
     if (!mounted) return;
     setState(() => _photoPaths = _photoPaths.where((p) => p != path).toList());
+  }
+
+  void _onPhotoExpand(String path) {
+    showPhotoViewer(context, path, () => _onPhotoDelete(path));
   }
 
   void _onSavePressed() {
@@ -183,6 +188,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                 photoPaths: _photoPaths,
                 onTap: _onPhotoTap,
                 onDelete: _onPhotoDelete,
+                onExpand: _onPhotoExpand,
               ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               if (widget.spot.status == SpotStatus.wantToGo)
@@ -357,11 +363,13 @@ class _PhotoBox extends StatelessWidget {
     required this.photoPaths,
     required this.onTap,
     required this.onDelete,
+    required this.onExpand,
   });
 
   final List<String> photoPaths;
   final VoidCallback onTap;
   final void Function(String) onDelete;
+  final void Function(String) onExpand;
 
   @override
   Widget build(BuildContext context) {
@@ -377,15 +385,18 @@ class _PhotoBox extends StatelessWidget {
         for (final path in photoPaths)
           Stack(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: SizedBox(
-                  width: tileW,
-                  height: tileH,
-                  child: Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholder(sizing),
+              GestureDetector(
+                onTap: () => onExpand(path),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: SizedBox(
+                    width: tileW,
+                    height: tileH,
+                    child: Image.file(
+                      File(path),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _placeholder(sizing),
+                    ),
                   ),
                 ),
               ),
