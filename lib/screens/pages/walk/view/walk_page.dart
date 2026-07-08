@@ -262,10 +262,14 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                                 markers: [
                                   Marker(
                                     point: mapCenter,
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      color: Colors.red,
-                                      size: AppSize.iconMd,
+                                    width: AppSize.iconLg,
+                                    height: AppSize.iconLg,
+                                    child: SvgPicture.asset(
+                                      'assets/SVG/foot2.svg',
+                                      colorFilter: const ColorFilter.mode(
+                                        AppColors.primary,
+                                        BlendMode.srcIn,
+                                      ),
                                     ),
                                   ),
                                 ],
