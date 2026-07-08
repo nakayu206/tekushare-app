@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:latlong2/latlong.dart';
+import 'package:tekushare/domain/entities/lat_lng.dart' as domain;
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -436,9 +437,14 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                   height: sizing.largeBtnHeight,
                   onPressed: () {
                     ref.read(notificationServiceProvider).cancelAll();
+                    final domainPoints = _trackPoints
+                        .map((p) => domain.LatLng(p.latitude, p.longitude))
+                        .toList();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const EndWalkPage()),
+                      MaterialPageRoute(
+                        builder: (_) => EndWalkPage(trackPoints: domainPoints),
+                      ),
                     );
                   },
                 ),

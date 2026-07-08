@@ -5,7 +5,9 @@ import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/saved_route.dart';
 import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/saved_route_repository.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
@@ -67,6 +69,19 @@ class _FakeSavedRouteRepository implements SavedRouteRepository {
 
   @override
   Future<List<SavedRoute>> getAll() async => routes;
+}
+
+class _FakeRouteRepository implements RouteRepository {
+  const _FakeRouteRepository();
+
+  @override
+  Future<void> saveRoute(WalkRoute route) async {}
+
+  @override
+  Future<WalkRoute?> getRouteBySessionId(String sessionId) async => null;
+
+  @override
+  Future<List<WalkRoute>> getAllRoutes() async => [];
 }
 
 final _testSavedRoutes = [
@@ -132,6 +147,10 @@ final _historyOverride = walkHistoryProvider.overrideWith(
   (_) async => const <WalkSession>[],
 );
 
+final _walkRoutesOverride = routeRepositoryProvider.overrideWith(
+  (_) => const _FakeRouteRepository(),
+);
+
 final _savedRouteRepoOverride = savedRouteRepositoryProvider.overrideWith(
   (_) => const _FakeSavedRouteRepository(),
 );
@@ -179,7 +198,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoWithDataOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoWithDataOverride,
+            _walkRoutesOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -218,6 +241,7 @@ void main() {
           overrides: [
             walkHistoryProvider.overrideWith((_) async => [session]),
             _savedRouteRepoOverride,
+            _walkRoutesOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -303,7 +327,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoOverride,
+            _walkRoutesOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -332,7 +360,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoOverride,
+            _walkRoutesOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -364,7 +396,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoOverride,
+            _walkRoutesOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -396,7 +432,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoOverride,
+            _walkRoutesOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -431,7 +471,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoOverride,
+            _walkRoutesOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -468,6 +512,7 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoOverride,
+            _walkRoutesOverride,
             walkRouteViewModelProvider
                 .overrideWith(_NonStandardDateViewModel.new),
           ],
@@ -500,7 +545,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoOverride,
+            _walkRoutesOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -542,7 +591,12 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoOverride, _spotOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoOverride,
+            _walkRoutesOverride,
+            _spotOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -584,7 +638,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _savedRouteRepoOverride],
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoOverride,
+            _walkRoutesOverride
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
