@@ -192,7 +192,7 @@ class _LocationArea extends ConsumerWidget {
         height: height,
         decoration: BoxDecoration(
           color: AppColors.chipUnselected,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: const Center(
           child: Text(
@@ -208,7 +208,7 @@ class _LocationArea extends ConsumerWidget {
 
     final center = LatLng(position.latitude, position.longitude);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: SizedBox(
         width: double.infinity,
         height: height,
@@ -264,15 +264,15 @@ class _TitleInput extends StatelessWidget {
         hintStyle: const TextStyle(
             color: AppColors.textDisabled, fontSize: AppTextStyle.x2l),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         contentPadding:

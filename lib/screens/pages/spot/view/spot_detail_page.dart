@@ -237,7 +237,7 @@ class _LocationArea extends StatelessWidget {
     final height = AppSizingTheme.of(context).locationAreaHeight;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: SizedBox(
         width: double.infinity,
         height: height,
@@ -295,15 +295,15 @@ class _TitleInput extends StatelessWidget {
           fontSize: AppTextStyle.x2l,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         contentPadding:
