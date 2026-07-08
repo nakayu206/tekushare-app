@@ -524,14 +524,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 初期状態はClipRRectなし（プレースホルダー表示）
-      expect(find.byType(ClipRRect), findsNothing);
+      // 初期状態はマップのClipRRectのみ（写真なし）
+      expect(find.byType(ClipRRect), findsOneWidget);
 
       await tester.tap(find.text(AppStrings.addPhoto));
       await tester.pumpAndSettle();
 
-      // カメラ後はClipRRectが表示される（写真行レイアウト）
-      expect(find.byType(ClipRRect), findsOneWidget);
+      // カメラ後は写真カードのClipRRectが追加される（マップ+写真）
+      expect(find.byType(ClipRRect), findsNWidgets(2));
     });
 
     // ボトムナビの設定をタップすると SettingsPage へ遷移する

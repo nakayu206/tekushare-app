@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/map_constants.dart';
@@ -162,7 +164,10 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _LocationArea(),
+              _LocationArea(
+                latitude: widget.spot.latitude,
+                longitude: widget.spot.longitude,
+              ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               CategoryChipGroup(
                 categories: _categories,
@@ -221,24 +226,49 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
 // ──────────────────────────────────────────
 
 class _LocationArea extends StatelessWidget {
-  const _LocationArea();
+  const _LocationArea({required this.latitude, required this.longitude});
+
+  final double latitude;
+  final double longitude;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: AppSizingTheme.of(context).locationAreaHeight,
-      decoration: BoxDecoration(
-        color: AppColors.chipUnselected,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Center(
-        child: Text(
-          AppStrings.realtimeLocation,
-          style: TextStyle(
-            color: AppColors.textDisabled,
-            fontSize: AppTextStyle.md2,
+    final point = LatLng(latitude, longitude);
+    final height = AppSizingTheme.of(context).locationAreaHeight;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: point,
+            initialZoom: MapConstants.defaultZoom,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
           ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.tekushare',
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: point,
+                  width: AppSize.iconLg,
+                  height: AppSize.iconLg,
+                  child: const Icon(
+                    Icons.location_on,
+                    color: AppColors.primary,
+                    size: AppSize.iconLg,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
