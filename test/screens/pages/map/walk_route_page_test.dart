@@ -43,6 +43,13 @@ class _FakeGetSpots implements GetSpots {
   Stream<List<Spot>> call({SpotStatus? filter}) => Stream.value(const []);
 }
 
+class _FakeGetSpotsWithData implements GetSpots {
+  const _FakeGetSpotsWithData(this.spots);
+  final List<Spot> spots;
+  @override
+  Stream<List<Spot>> call({SpotStatus? filter}) => Stream.value(spots);
+}
+
 class _FakeUpdateSpotStatus implements UpdateSpotStatus {
   const _FakeUpdateSpotStatus();
   @override
@@ -220,7 +227,8 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoWithDataOverride,
-            _walkRoutesOverride
+            _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -261,6 +269,7 @@ void main() {
             walkHistoryProvider.overrideWith((_) async => [session]),
             _savedRouteRepoOverride,
             _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -305,6 +314,7 @@ void main() {
             walkHistoryProvider.overrideWith((_) async => [session]),
             _savedRouteRepoOverride,
             _walkRoutesWithDataOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -393,7 +403,8 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoOverride,
-            _walkRoutesOverride
+            _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -426,7 +437,8 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoOverride,
-            _walkRoutesOverride
+            _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -462,7 +474,8 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoOverride,
-            _walkRoutesOverride
+            _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -498,7 +511,8 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoOverride,
-            _walkRoutesOverride
+            _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -537,7 +551,8 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoOverride,
-            _walkRoutesOverride
+            _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -576,6 +591,7 @@ void main() {
             _historyOverride,
             _savedRouteRepoOverride,
             _walkRoutesOverride,
+            _spotOverride,
             walkRouteViewModelProvider
                 .overrideWith(_NonStandardDateViewModel.new),
           ],
@@ -611,7 +627,8 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoOverride,
-            _walkRoutesOverride
+            _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -704,7 +721,8 @@ void main() {
           overrides: [
             _historyOverride,
             _savedRouteRepoOverride,
-            _walkRoutesOverride
+            _walkRoutesOverride,
+            _spotOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -803,6 +821,88 @@ void main() {
       await tester.pump();
 
       expect(find.byType(WalkRoutePage), findsOneWidget);
+    });
+
+    // 散歩セッション中に登録したスポットの件数が反映される
+    testWidgets('shows spot count for spots registered during walk session',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final session = WalkSession(
+        id: 'spot-test-session',
+        status: WalkStatus.finished,
+        startedAt: DateTime(2026, 1, 15, 9, 0),
+        finishedAt: DateTime(2026, 1, 15, 9, 30),
+        elapsedSeconds: 1800,
+      );
+
+      // セッション内(9:15)と外(8:50, 10:00)にスポットを配置
+      final spotsInSession = [
+        Spot(
+          id: 'spot-inside',
+          title: '散歩中スポット',
+          latitude: 35.0,
+          longitude: 139.0,
+          status: SpotStatus.wantToGo,
+          createdAt: DateTime(2026, 1, 15, 9, 15),
+        ),
+        Spot(
+          id: 'spot-before',
+          title: 'セッション前スポット',
+          latitude: 35.001,
+          longitude: 139.001,
+          status: SpotStatus.wantToGo,
+          createdAt: DateTime(2026, 1, 15, 8, 50),
+        ),
+        Spot(
+          id: 'spot-after',
+          title: 'セッション後スポット',
+          latitude: 35.002,
+          longitude: 139.002,
+          status: SpotStatus.wantToGo,
+          createdAt: DateTime(2026, 1, 15, 10, 0),
+        ),
+      ];
+
+      final spotsOverride = spotProvider.overrideWith(
+        (ref) => SpotNotifier(
+          saveSpot: const _FakeSaveSpot(),
+          getSpots: _FakeGetSpotsWithData(spotsInSession),
+          updateSpotStatus: const _FakeUpdateSpotStatus(),
+          attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
+          removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            walkHistoryProvider.overrideWith((_) async => [session]),
+            _savedRouteRepoOverride,
+            _walkRoutesOverride,
+            spotsOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // セッション内のスポット1件だけが件数に反映される
+      expect(find.text('行きたいスポット：1件'), findsOneWidget);
     });
 
     // カレンダーの日付をタップしてもページが表示されている

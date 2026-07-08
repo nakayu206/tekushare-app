@@ -8,6 +8,7 @@ import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/utils/distance_calculator.dart';
 import 'package:tekushare/domain/entities/saved_route.dart';
+import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
@@ -15,15 +16,36 @@ import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/saved_routes_provider.dart';
+import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/providers/walk_history_provider.dart';
 import 'package:tekushare/screens/providers/walk_routes_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 const _weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
+Map<String, int> _buildSpotCountMap(
+  List<WalkSession> sessions,
+  List<Spot> spots,
+) {
+  final result = <String, int>{};
+  for (final s in sessions) {
+    if (s.status != WalkStatus.finished || s.startedAt == null) continue;
+    final end = s.finishedAt ?? DateTime.now();
+    result[s.id] = spots
+        .where(
+          (sp) =>
+              !sp.createdAt.isBefore(s.startedAt!) &&
+              !sp.createdAt.isAfter(end),
+        )
+        .length;
+  }
+  return result;
+}
+
 List<WalkLog> _buildSessionLogs(
   List<WalkSession> sessions,
   Map<String, double> distanceBySessionId,
+  Map<String, int> spotCountBySessionId,
 ) {
   final finished = sessions
       .where((s) => s.status == WalkStatus.finished && s.startedAt != null)
@@ -68,7 +90,7 @@ List<WalkLog> _buildSessionLogs(
       distance: formatDistanceKm(
         distanceBySessionId[session.id] ?? 0,
       ),
-      spotCount: 0,
+      spotCount: spotCountBySessionId[session.id] ?? 0,
       dayLabel: dayLabel,
     );
   });
@@ -92,6 +114,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   final _nameController = TextEditingController();
   int _cardSlideDirection = 1;
   Map<String, double> _distanceBySessionId = {};
+  Map<String, int> _spotCountBySessionId = {};
 
   void _selectDay(int day) {
     final current = ref.read(walkRouteViewModelProvider).selectedDay;
@@ -105,16 +128,25 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
         sessions.where((s) => s.status == WalkStatus.finished).toList();
     if (finished.isEmpty) return;
     final vm = ref.read(walkRouteViewModelProvider.notifier);
-    vm.setLogs(_buildSessionLogs(sessions, _distanceBySessionId));
+    vm.setLogs(
+      _buildSessionLogs(sessions, _distanceBySessionId, _spotCountBySessionId),
+    );
     vm.selectDay(finished.length.clamp(1, 7));
   }
 
   void _applyWalkRoutes(List<WalkRoute> routes) {
     if (!mounted) return;
     _distanceBySessionId = _buildDistanceMap(routes);
-    // 距離が確定したのでログを再描画する
     final sessions = ref.read(walkHistoryProvider).valueOrNull;
     if (sessions != null) _applyHistory(sessions);
+  }
+
+  void _applySpots(List<Spot> spots) {
+    if (!mounted) return;
+    final sessions = ref.read(walkHistoryProvider).valueOrNull;
+    if (sessions == null) return;
+    _spotCountBySessionId = _buildSpotCountMap(sessions, spots);
+    _applyHistory(sessions);
   }
 
   @override
@@ -129,8 +161,11 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
           ref.read(walkRoutesProvider.future),
         ]);
         if (!mounted) return;
+        final sessions = results[0] as List<WalkSession>;
+        final spots = ref.read(spotProvider);
+        _spotCountBySessionId = _buildSpotCountMap(sessions, spots);
         _applyWalkRoutes(results[2] as List<WalkRoute>);
-        _applyHistory(results[0] as List<WalkSession>);
+        _applyHistory(sessions);
         _applySavedRoutes(results[1] as List<SavedRoute>);
       } on Object catch (e) {
         debugPrint('データの読み込みに失敗しました: $e');
@@ -221,6 +256,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     ref.listen(walkRoutesProvider, (_, next) {
       next.whenData(_applyWalkRoutes);
     });
+    ref.listen(spotProvider, (_, spots) => _applySpots(spots));
 
     final state = ref.watch(walkRouteViewModelProvider);
     final vm = ref.read(walkRouteViewModelProvider.notifier);
