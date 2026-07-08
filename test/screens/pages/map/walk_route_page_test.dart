@@ -3,17 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/domain/entities/saved_route.dart';
 import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/domain/repositories/saved_route_repository.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
-import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/providers/walk_history_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
@@ -55,8 +58,87 @@ class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+class _FakeSavedRouteRepository implements SavedRouteRepository {
+  const _FakeSavedRouteRepository({this.routes = const []});
+  final List<SavedRoute> routes;
+
+  @override
+  Future<void> save(SavedRoute route) async {}
+
+  @override
+  Future<List<SavedRoute>> getAll() async => routes;
+}
+
+final _testSavedRoutes = [
+  SavedRoute(
+    id: 1,
+    name: '公園まわりコース（朝用）',
+    date: '2/7',
+    distance: '1.2km',
+    time: '約15分',
+    createdAt: DateTime(2026, 2, 7),
+  ),
+  SavedRoute(
+    id: 2,
+    name: '川沿いコース（休日用）',
+    date: '2/6',
+    distance: '2.5km',
+    time: '約30分',
+    createdAt: DateTime(2026, 2, 6),
+  ),
+  SavedRoute(
+    id: 3,
+    name: '商店街コース',
+    date: '2/5',
+    distance: '1.2km',
+    time: '約15分',
+    createdAt: DateTime(2026, 2, 5),
+  ),
+  SavedRoute(
+    id: 4,
+    name: '公園まわりコース（朝用）',
+    date: '2/4',
+    distance: '1.2km',
+    time: '約15分',
+    createdAt: DateTime(2026, 2, 4),
+  ),
+  SavedRoute(
+    id: 5,
+    name: '川沿いコース（休日用）',
+    date: '2/3',
+    distance: '2.5km',
+    time: '約30分',
+    createdAt: DateTime(2026, 2, 3),
+  ),
+  SavedRoute(
+    id: 6,
+    name: '商店街コース',
+    date: '2/2',
+    distance: '1.2km',
+    time: '約15分',
+    createdAt: DateTime(2026, 2, 2),
+  ),
+  SavedRoute(
+    id: 7,
+    name: '公園まわりコース（朝用）',
+    date: '2/1',
+    distance: '1.2km',
+    time: '約15分',
+    createdAt: DateTime(2026, 2, 1),
+  ),
+];
+
 final _historyOverride = walkHistoryProvider.overrideWith(
   (_) async => const <WalkSession>[],
+);
+
+final _savedRouteRepoOverride = savedRouteRepositoryProvider.overrideWith(
+  (_) => const _FakeSavedRouteRepository(),
+);
+
+final _savedRouteRepoWithDataOverride =
+    savedRouteRepositoryProvider.overrideWith(
+  (_) => _FakeSavedRouteRepository(routes: _testSavedRoutes),
 );
 
 final _spotOverride = spotProvider.overrideWith(
@@ -88,6 +170,7 @@ class _NonStandardDateViewModel extends WalkRouteViewModel {
 
 void main() {
   group('WalkRoutePage', () {
+    // pumpPage はルートデータあり（テスト用7件）
     Future<void> pumpPage(WidgetTester tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
@@ -96,7 +179,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride],
+          overrides: [_historyOverride, _savedRouteRepoWithDataOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -111,7 +194,7 @@ void main() {
           ),
         ),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
     }
 
     // 今週のセッションがある場合、実データの日付が表示される
@@ -134,6 +217,7 @@ void main() {
         ProviderScope(
           overrides: [
             walkHistoryProvider.overrideWith((_) async => [session]),
+            _savedRouteRepoOverride,
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -219,7 +303,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride],
+          overrides: [_historyOverride, _savedRouteRepoOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -248,7 +332,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride],
+          overrides: [_historyOverride, _savedRouteRepoOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -280,7 +364,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride],
+          overrides: [_historyOverride, _savedRouteRepoOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -312,7 +396,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride],
+          overrides: [_historyOverride, _savedRouteRepoOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -337,7 +421,7 @@ void main() {
       expect(find.text(AppStrings.saved), findsNothing);
     });
 
-    // ルート名を入力して保存すると保存完了が表示される（line 54: non-empty name branch）
+    // ルート名を入力して保存すると保存完了が表示される
     testWidgets('saving with entered name shows saved confirmation',
         (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
@@ -347,7 +431,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride],
+          overrides: [_historyOverride, _savedRouteRepoOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -371,7 +455,7 @@ void main() {
       expect(find.text(AppStrings.saved), findsOneWidget);
     });
 
-    // 日付形式が不正の場合 _shortDate はそのまま返す（line 799 regex fallback）
+    // 日付形式が不正の場合 _shortDate はそのまま返す
     testWidgets('_shortDate falls back to raw date when regex fails',
         (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
@@ -383,6 +467,7 @@ void main() {
         ProviderScope(
           overrides: [
             _historyOverride,
+            _savedRouteRepoOverride,
             walkRouteViewModelProvider
                 .overrideWith(_NonStandardDateViewModel.new),
           ],
@@ -415,7 +500,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride],
+          overrides: [_historyOverride, _savedRouteRepoOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -457,7 +542,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride, _spotOverride],
+          overrides: [_historyOverride, _savedRouteRepoOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -499,7 +584,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_historyOverride],
+          overrides: [_historyOverride, _savedRouteRepoOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -531,7 +616,7 @@ void main() {
       expect(find.byType(SettingsPage), findsOneWidget);
     });
 
-    // 次のページボタンをタップするとページが切り替わる（lines 196-213, 324）
+    // 次のページボタンをタップするとページが切り替わる
     testWidgets('tapping next page button shows next page', (tester) async {
       await pumpPage(tester);
 
@@ -541,7 +626,7 @@ void main() {
       expect(find.byIcon(Icons.chevron_right), findsOneWidget);
     });
 
-    // 前のページボタンをタップするとページが戻る（line 308）
+    // 前のページボタンをタップするとページが戻る
     testWidgets('tapping previous page button shows previous page',
         (tester) async {
       await pumpPage(tester);
@@ -554,7 +639,7 @@ void main() {
       expect(find.byIcon(Icons.chevron_left), findsOneWidget);
     });
 
-    // 左フリングで次のページへ（onHorizontalDragEnd line 211）
+    // 左フリングで次のページへ
     testWidgets('flinging left navigates to next page', (tester) async {
       await pumpPage(tester);
 
@@ -568,7 +653,7 @@ void main() {
       expect(find.byType(WalkRoutePage), findsOneWidget);
     });
 
-    // 2ページ目で右フリングで前ページへ（line 213）
+    // 2ページ目で右フリングで前ページへ
     testWidgets('flinging right on page 2 navigates to previous page',
         (tester) async {
       await pumpPage(tester);
@@ -585,7 +670,7 @@ void main() {
       expect(find.byType(WalkRoutePage), findsOneWidget);
     });
 
-    // ページ2のルートをタップしてもページが表示されている（line 290 + selectRoute via pagination）
+    // ページ2のルートをタップしてもページが表示されている
     testWidgets('tapping route on second page keeps page visible',
         (tester) async {
       await pumpPage(tester);
@@ -599,7 +684,7 @@ void main() {
       expect(find.byType(WalkRoutePage), findsOneWidget);
     });
 
-    // カレンダーの日付をタップしてもページが表示されている（line 569）
+    // カレンダーの日付をタップしてもページが表示されている
     testWidgets('tapping a calendar day keeps page visible', (tester) async {
       await pumpPage(tester);
 

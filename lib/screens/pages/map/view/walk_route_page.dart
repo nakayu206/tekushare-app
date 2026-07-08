@@ -6,10 +6,13 @@ import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/domain/entities/saved_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/saved_routes_provider.dart';
 import 'package:tekushare/screens/providers/walk_history_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
@@ -99,11 +102,15 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       try {
-        final sessions = await ref.read(walkHistoryProvider.future);
+        final results = await Future.wait([
+          ref.read(walkHistoryProvider.future),
+          ref.read(savedRoutesProvider.future),
+        ]);
         if (!mounted) return;
-        _applyHistory(sessions);
+        _applyHistory(results[0] as List<WalkSession>);
+        _applySavedRoutes(results[1] as List<SavedRoute>);
       } on Object catch (e) {
-        debugPrint('walkHistoryProvider の読み込みに失敗しました: $e');
+        debugPrint('データの読み込みに失敗しました: $e');
       }
       if (!mounted) return;
       if (widget.showSaveDialogOnLoad) _showSaveConfirmDialog();
@@ -125,15 +132,28 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
         nameController: _nameController,
         log: state.selectedLog,
         onSave: () {
+          final log = state.selectedLog;
           final name = _nameController.text.isEmpty
               ? state.defaultRouteName
               : _nameController.text;
-          vm.saveRoute((
-            date: state.selectedRoute.date,
+          final item = (
+            date: log.date,
             name: name,
-            distance: state.selectedRoute.distance,
-            time: state.selectedRoute.time,
-          ));
+            distance: log.distance,
+            time: log.duration,
+          );
+          vm.saveRoute(item);
+          final savedRoute = SavedRoute(
+            id: 0,
+            name: name,
+            date: log.date,
+            distance: log.distance,
+            time: log.duration,
+            createdAt: DateTime.now(),
+          );
+          ref.read(savedRouteRepositoryProvider).save(savedRoute).then((_) {
+            ref.invalidate(savedRoutesProvider);
+          });
           _nameController.clear();
           Navigator.pop(context);
           if (!mounted) return;
@@ -153,10 +173,27 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     );
   }
 
+  void _applySavedRoutes(List<SavedRoute> routes) {
+    if (!mounted) return;
+    if (routes.isEmpty) return;
+    final items = routes
+        .map((r) => (
+              date: r.date,
+              name: r.name,
+              distance: r.distance,
+              time: r.time,
+            ))
+        .toList();
+    ref.read(walkRouteViewModelProvider.notifier).setRoutes(items);
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(walkHistoryProvider, (_, next) {
       next.whenData(_applyHistory);
+    });
+    ref.listen(savedRoutesProvider, (_, next) {
+      next.whenData(_applySavedRoutes);
     });
 
     final state = ref.watch(walkRouteViewModelProvider);
@@ -182,7 +219,8 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: AppSpacing.lg),
-                  _SelectedRouteCard(route: state.selectedRoute),
+                  if (state.selectedRoute != null)
+                    _SelectedRouteCard(route: state.selectedRoute!),
                   const SizedBox(height: AppSpacing.lg),
                   _RouteListCard(
                     routes: state.routes,
@@ -311,7 +349,7 @@ class _RouteListCard extends StatefulWidget {
     required this.onSelect,
   });
 
-  final List<WalkRoute> routes;
+  final List<SavedRouteItem> routes;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
 
@@ -479,7 +517,7 @@ class _RouteItem extends StatelessWidget {
     this.onTap,
   });
 
-  final WalkRoute route;
+  final SavedRouteItem route;
   final bool isSelected;
   final VoidCallback? onTap;
 
@@ -590,7 +628,7 @@ class _RouteItem extends StatelessWidget {
 class _SelectedRouteCard extends StatelessWidget {
   const _SelectedRouteCard({required this.route});
 
-  final WalkRoute route;
+  final SavedRouteItem route;
 
   @override
   Widget build(BuildContext context) {
