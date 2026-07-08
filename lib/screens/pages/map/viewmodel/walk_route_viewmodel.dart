@@ -1,12 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 typedef SavedRouteItem = ({
+  int id,
   String date,
   String name,
   String distance,
-  String time
+  String time,
+  String? walkSessionId,
 });
 typedef WalkLog = ({
+  String sessionId,
   String date,
   String startEndTime,
   String duration,
@@ -30,6 +33,7 @@ class WalkRouteState {
 
   static const _defaultLogs = <WalkLog>[
     (
+      sessionId: '',
       date: '2026年02月01日(日)',
       startEndTime: '6:30~6:45',
       duration: '00:15',
@@ -38,6 +42,7 @@ class WalkRouteState {
       dayLabel: '日',
     ),
     (
+      sessionId: '',
       date: '2026年02月02日(月)',
       startEndTime: '7:05~7:20',
       duration: '00:15',
@@ -46,6 +51,7 @@ class WalkRouteState {
       dayLabel: '月',
     ),
     (
+      sessionId: '',
       date: '2026年02月03日(火)',
       startEndTime: '8:00~8:30',
       duration: '00:30',
@@ -54,6 +60,7 @@ class WalkRouteState {
       dayLabel: '火',
     ),
     (
+      sessionId: '',
       date: '2026年02月04日(水)',
       startEndTime: '7:00~7:15',
       duration: '00:15',
@@ -62,6 +69,7 @@ class WalkRouteState {
       dayLabel: '水',
     ),
     (
+      sessionId: '',
       date: '2026年02月05日(木)',
       startEndTime: '7:30~7:45',
       duration: '00:15',
@@ -70,6 +78,7 @@ class WalkRouteState {
       dayLabel: '木',
     ),
     (
+      sessionId: '',
       date: '2026年02月06日(金)',
       startEndTime: '8:10~8:40',
       duration: '00:30',
@@ -78,6 +87,7 @@ class WalkRouteState {
       dayLabel: '金',
     ),
     (
+      sessionId: '',
       date: '2026年02月07日(土)',
       startEndTime: '9:00~9:15',
       duration: '00:15',
@@ -143,6 +153,21 @@ class WalkRouteViewModel extends Notifier<WalkRouteState> {
   void setRoutes(List<SavedRouteItem> routes) {
     final index = routes.isEmpty ? 0 : routes.length - 1;
     state = state.copyWith(routes: routes, selectedRouteIndex: index);
+  }
+
+  void removeRoute(int index) {
+    final updated = [...state.routes]..removeAt(index);
+    final int newSelected;
+    if (updated.isEmpty) {
+      newSelected = 0;
+    } else if (index < state.selectedRouteIndex) {
+      newSelected = state.selectedRouteIndex - 1;
+    } else if (state.selectedRouteIndex >= updated.length) {
+      newSelected = updated.length - 1;
+    } else {
+      newSelected = state.selectedRouteIndex;
+    }
+    state = state.copyWith(routes: updated, selectedRouteIndex: newSelected);
   }
 
   void setLogs(List<WalkLog> logs) {

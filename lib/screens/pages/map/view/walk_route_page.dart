@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:latlong2/latlong.dart' as latlong2;
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/utils/distance_calculator.dart';
 import 'package:tekushare/domain/entities/saved_route.dart';
@@ -58,6 +61,7 @@ List<WalkLog> _buildSessionLogs(
   return List.generate(7, (i) {
     if (i >= last7.length) {
       return (
+        sessionId: '',
         date: '-',
         startEndTime: '-',
         duration: '-',
@@ -76,6 +80,7 @@ List<WalkLog> _buildSessionLogs(
     final s = session.elapsedSeconds % 60;
 
     return (
+      sessionId: session.id,
       date: '${start.year}年${start.month.toString().padLeft(2, '0')}月'
           '${start.day.toString().padLeft(2, '0')}日($dayLabel)',
       startEndTime: end != null
@@ -115,6 +120,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   int _cardSlideDirection = 1;
   Map<String, double> _distanceBySessionId = {};
   Map<String, int> _spotCountBySessionId = {};
+  bool _isSaveDialogShowing = false;
 
   void _selectDay(int day) {
     final current = ref.read(walkRouteViewModelProvider).selectedDay;
@@ -126,11 +132,11 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     if (!mounted) return;
     final finished =
         sessions.where((s) => s.status == WalkStatus.finished).toList();
-    if (finished.isEmpty) return;
     final vm = ref.read(walkRouteViewModelProvider.notifier);
     vm.setLogs(
       _buildSessionLogs(sessions, _distanceBySessionId, _spotCountBySessionId),
     );
+    if (finished.isEmpty) return;
     vm.selectDay(finished.length.clamp(1, 7));
   }
 
@@ -182,7 +188,8 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   }
 
   void _showSaveConfirmDialog() {
-    final vm = ref.read(walkRouteViewModelProvider.notifier);
+    if (_isSaveDialogShowing) return;
+    _isSaveDialogShowing = true;
     final state = ref.read(walkRouteViewModelProvider);
     showDialog<void>(
       context: context,
@@ -194,13 +201,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
           final name = _nameController.text.isEmpty
               ? state.defaultRouteName
               : _nameController.text;
-          final item = (
-            date: log.date,
-            name: name,
-            distance: log.distance,
-            time: log.duration,
-          );
-          vm.saveRoute(item);
+          final sessionId = log.sessionId.isEmpty ? null : log.sessionId;
           final savedRoute = SavedRoute(
             id: 0,
             name: name,
@@ -208,6 +209,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
             distance: log.distance,
             time: log.duration,
             createdAt: DateTime.now(),
+            walkSessionId: sessionId,
           );
           ref.read(savedRouteRepositoryProvider).save(savedRoute).then((_) {
             ref.invalidate(savedRoutesProvider);
@@ -219,7 +221,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
         },
         onCancel: () => Navigator.pop(context),
       ),
-    );
+    ).whenComplete(() => _isSaveDialogShowing = false);
   }
 
   void _showSavedDialog() {
@@ -233,13 +235,14 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
 
   void _applySavedRoutes(List<SavedRoute> routes) {
     if (!mounted) return;
-    if (routes.isEmpty) return;
     final items = routes
         .map((r) => (
+              id: r.id,
               date: r.date,
               name: r.name,
               distance: r.distance,
               time: r.time,
+              walkSessionId: r.walkSessionId,
             ))
         .toList();
     ref.read(walkRouteViewModelProvider.notifier).setRoutes(items);
@@ -288,6 +291,19 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
                     routes: state.routes,
                     selectedIndex: state.selectedRouteIndex,
                     onSelect: vm.selectRoute,
+                    onDelete: (int globalIndex) {
+                      final route = state.routes[globalIndex];
+                      vm.removeRoute(globalIndex);
+                      if (route.id != 0) {
+                        ref
+                            .read(savedRouteRepositoryProvider)
+                            .delete(route.id)
+                            .then((_) => ref.invalidate(savedRoutesProvider))
+                            .catchError(
+                              (_) => ref.invalidate(savedRoutesProvider),
+                            );
+                      }
+                    },
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   _CalendarRow(
@@ -409,11 +425,13 @@ class _RouteListCard extends StatefulWidget {
     required this.routes,
     required this.selectedIndex,
     required this.onSelect,
+    required this.onDelete,
   });
 
   final List<SavedRouteItem> routes;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
+  final ValueChanged<int> onDelete;
 
   @override
   State<_RouteListCard> createState() => _RouteListCardState();
@@ -422,9 +440,10 @@ class _RouteListCard extends StatefulWidget {
 class _RouteListCardState extends State<_RouteListCard> {
   static const _pageSize = 3;
   int _currentPage = 0;
-  int _slideDirection = 1; // 1: 左スワイプ(次), -1: 右スワイプ(前)
+  int _slideDirection = 1;
 
-  int get _pageCount => (widget.routes.length / _pageSize).ceil();
+  int get _pageCount =>
+      widget.routes.isEmpty ? 1 : (widget.routes.length / _pageSize).ceil();
 
   void _goToPage(int page) {
     _slideDirection = page > _currentPage ? 1 : -1;
@@ -507,28 +526,51 @@ class _RouteListCardState extends State<_RouteListCard> {
                   key: ValueKey(_currentPage),
                   children: List.generate(_pageSize, (i) {
                     final hasItem = i < pageRoutes.length;
-                    return Visibility(
-                      visible: hasItem,
-                      maintainSize: true,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      child: Column(
-                        children: [
-                          _RouteItem(
-                            route: hasItem
-                                ? pageRoutes[i]
-                                : (date: '', name: '', distance: '', time: ''),
-                            isSelected:
-                                hasItem && (offset + i) == widget.selectedIndex,
-                            onTap: hasItem
-                                ? () => widget.onSelect(offset + i)
-                                : null,
-                          ),
-                          if (i < _pageSize - 1)
-                            const SizedBox(height: AppSpacing.sm),
-                        ],
-                      ),
+                    final globalIndex = offset + i;
+                    const dummyItem = (
+                      id: 0,
+                      date: '',
+                      name: '',
+                      distance: '',
+                      time: '',
+                      walkSessionId: null,
                     );
+                    final itemContent = Column(
+                      children: [
+                        _RouteItem(
+                          route: hasItem ? pageRoutes[i] : dummyItem,
+                          isSelected:
+                              hasItem && globalIndex == widget.selectedIndex,
+                          onTap: hasItem
+                              ? () => widget.onSelect(globalIndex)
+                              : null,
+                          onDelete: hasItem
+                              ? () {
+                                  widget.onDelete(globalIndex);
+                                  final newCount = widget.routes.length - 1;
+                                  final maxPage = newCount == 0
+                                      ? 0
+                                      : ((newCount / _pageSize).ceil() - 1);
+                                  if (_currentPage > maxPage) {
+                                    setState(() => _currentPage = maxPage);
+                                  }
+                                }
+                              : null,
+                        ),
+                        if (i < _pageSize - 1)
+                          const SizedBox(height: AppSpacing.sm),
+                      ],
+                    );
+                    if (!hasItem) {
+                      return Visibility(
+                        visible: false,
+                        maintainSize: true,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        child: itemContent,
+                      );
+                    }
+                    return itemContent;
                   }),
                 ),
               ),
@@ -577,11 +619,13 @@ class _RouteItem extends StatelessWidget {
     required this.route,
     required this.isSelected,
     this.onTap,
+    this.onDelete,
   });
 
   final SavedRouteItem route;
   final bool isSelected;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -637,7 +681,7 @@ class _RouteItem extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Transform.translate(
-                    offset: const Offset(8, -8),
+                    offset: const Offset(2, -8),
                     child: Transform.rotate(
                       angle: -0.9,
                       child: SvgPicture.asset(
@@ -654,7 +698,7 @@ class _RouteItem extends StatelessWidget {
                     ),
                   ),
                   Transform.translate(
-                    offset: const Offset(-8, 8),
+                    offset: const Offset(-14, 8),
                     child: Transform.rotate(
                       angle: 0.9,
                       child: Transform.scale(
@@ -676,6 +720,29 @@ class _RouteItem extends StatelessWidget {
                 ],
               ),
             ),
+            if (onDelete != null)
+              Builder(
+                builder: (ctx) => GestureDetector(
+                  onTap: () => showDialog<void>(
+                    context: ctx,
+                    builder: (_) => _RouteDeleteConfirmDialog(
+                      routeName: route.name,
+                      onConfirm: () {
+                        Navigator.pop(ctx);
+                        onDelete!();
+                      },
+                      onCancel: () => Navigator.pop(ctx),
+                    ),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: AppSpacing.sm),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: AppColors.textDisabled,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -687,13 +754,20 @@ class _RouteItem extends StatelessWidget {
 // 選択中ルートカード
 // ──────────────────────────────────────────
 
-class _SelectedRouteCard extends StatelessWidget {
+class _SelectedRouteCard extends ConsumerWidget {
   const _SelectedRouteCard({required this.route});
 
   final SavedRouteItem route;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final walkRoutes = ref.watch(walkRoutesProvider).valueOrNull ?? [];
+    final walkRoute = route.walkSessionId == null
+        ? null
+        : walkRoutes
+            .where((r) => r.walkSessionId == route.walkSessionId)
+            .firstOrNull;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -729,18 +803,68 @@ class _SelectedRouteCard extends StatelessWidget {
             ),
           ),
           Builder(
-            builder: (context) => Container(
-              width: double.infinity,
-              height: AppSizingTheme.of(context).mapPlaceholderHeight,
-              color: AppColors.chipUnselected,
-              child: const Center(
-                child: Icon(
-                  Icons.map_outlined,
-                  size: 48,
-                  color: AppColors.textDisabled,
+            builder: (context) {
+              final height = AppSizingTheme.of(context).mapPlaceholderHeight;
+              if (walkRoute == null || walkRoute.points.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  height: height,
+                  color: AppColors.chipUnselected,
+                  child: const Center(
+                    child: ExcludeSemantics(
+                      child: Icon(
+                        Icons.map_outlined,
+                        size: 48,
+                        color: AppColors.textDisabled,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              final points = walkRoute.points
+                  .map((p) => latlong2.LatLng(p.latitude, p.longitude))
+                  .toList();
+              final mapOptions = points.length >= 2
+                  ? MapOptions(
+                      initialCameraFit: CameraFit.coordinates(
+                        coordinates: points,
+                        padding: const EdgeInsets.all(AppSpacing.x2l),
+                      ),
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    )
+                  : MapOptions(
+                      initialCenter: points.first,
+                      initialZoom: MapConstants.defaultZoom,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    );
+              return SizedBox(
+                width: double.infinity,
+                height: height,
+                child: FlutterMap(
+                  options: mapOptions,
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.tekushare',
+                    ),
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: points,
+                          strokeWidth: MapConstants.polylineStrokeWidth,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-            ),
+              );
+            },
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -941,7 +1065,7 @@ class _WalkInfoCard extends StatelessWidget {
             width: double.infinity,
             height: AppSize.buttonHeightLg,
             child: ElevatedButton(
-              onPressed: onSave,
+              onPressed: log.sessionId.isEmpty ? null : onSave,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -1125,6 +1249,102 @@ class _SaveConfirmDialog extends StatelessWidget {
                         ),
                       ),
                       child: const Text(AppStrings.cancelButton),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// ルート削除確認ダイアログ
+// ──────────────────────────────────────────
+
+class _RouteDeleteConfirmDialog extends StatelessWidget {
+  const _RouteDeleteConfirmDialog({
+    required this.routeName,
+    required this.onConfirm,
+    required this.onCancel,
+  });
+
+  final String routeName;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.x2l,
+          AppSpacing.x3l,
+          AppSpacing.x2l,
+          AppSpacing.x2l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              routeName,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: AppTextStyle.semiBold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text(
+              AppStrings.routeDeleteConfirmMessage,
+              style: TextStyle(fontSize: AppTextStyle.md),
+            ),
+            const SizedBox(height: AppSpacing.x2l),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: AppSpacing.x5l,
+                    child: OutlinedButton(
+                      onPressed: onCancel,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        side: const BorderSide(color: AppColors.primary),
+                        foregroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                      ),
+                      child: const Text(AppStrings.cancelButton),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: SizedBox(
+                    height: AppSpacing.x5l,
+                    child: ElevatedButton(
+                      onPressed: onConfirm,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        backgroundColor: Colors.red.shade400,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                      ),
+                      child: const Text(AppStrings.routeDeleteButton),
                     ),
                   ),
                 ),

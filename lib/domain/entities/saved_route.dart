@@ -6,6 +6,7 @@ class SavedRoute {
     required this.distance,
     required this.time,
     required this.createdAt,
+    this.walkSessionId,
   });
 
   final int id;
@@ -14,4 +15,5 @@ class SavedRoute {
   final String distance;
   final String time;
   final DateTime createdAt;
+  final String? walkSessionId;
 }

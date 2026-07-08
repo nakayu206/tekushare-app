@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -84,14 +85,23 @@ class _FakeDeleteSpot implements DeleteSpot {
 }
 
 class _FakeSavedRouteRepository implements SavedRouteRepository {
-  const _FakeSavedRouteRepository({this.routes = const []});
-  final List<SavedRoute> routes;
+  _FakeSavedRouteRepository({List<SavedRoute> routes = const []})
+      : _routes = routes.toList();
+
+  final List<SavedRoute> _routes;
+  final List<int> deletedIds = [];
 
   @override
   Future<void> save(SavedRoute route) async {}
 
   @override
-  Future<List<SavedRoute>> getAll() async => routes;
+  Future<List<SavedRoute>> getAll() async =>
+      _routes.where((r) => !deletedIds.contains(r.id)).toList();
+
+  @override
+  Future<void> delete(int id) async {
+    deletedIds.add(id);
+  }
 }
 
 class _FakeRouteRepository implements RouteRepository {
@@ -193,7 +203,7 @@ final _walkRoutesWithDataOverride = routeRepositoryProvider.overrideWith(
 );
 
 final _savedRouteRepoOverride = savedRouteRepositoryProvider.overrideWith(
-  (_) => const _FakeSavedRouteRepository(),
+  (_) => _FakeSavedRouteRepository(),
 );
 
 final _savedRouteRepoWithDataOverride =
@@ -219,6 +229,7 @@ class _NonStandardDateViewModel extends WalkRouteViewModel {
         selectedDay: 1,
         logs: [
           (
+            sessionId: '',
             date: 'invalid-format',
             startEndTime: '10:00〜11:00',
             duration: '1時間',
@@ -228,6 +239,11 @@ class _NonStandardDateViewModel extends WalkRouteViewModel {
           ),
         ],
       );
+
+  @override
+  void setLogs(List<WalkLog> logs) {
+    // テスト用固定ログを維持するため外部からの更新を無視する
+  }
 }
 
 void main() {
@@ -795,35 +811,71 @@ void main() {
       expect(find.byIcon(Icons.chevron_left), findsOneWidget);
     });
 
-    // 左フリングで次のページへ
-    testWidgets('flinging left navigates to next page', (tester) async {
-      await pumpPage(tester);
-
-      await tester.fling(
-        find.byType(GestureDetector).first,
-        const Offset(-300, 0),
-        600,
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byType(WalkRoutePage), findsOneWidget);
-    });
-
-    // 2ページ目で右フリングで前ページへ
-    testWidgets('flinging right on page 2 navigates to previous page',
+    // ゴミ箱アイコンをタップすると削除確認ダイアログが表示される
+    testWidgets('tapping delete icon shows delete confirmation dialog',
         (tester) async {
       await pumpPage(tester);
 
-      await tester.tap(find.byIcon(Icons.chevron_right));
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
       await tester.pumpAndSettle();
-      await tester.fling(
-        find.byType(GestureDetector).first,
-        const Offset(300, 0),
-        600,
+
+      expect(find.text(AppStrings.routeDeleteConfirmMessage), findsOneWidget);
+    });
+
+    // 削除確認ダイアログのキャンセルでダイアログが閉じる
+    testWidgets('canceling delete dialog closes dialog', (tester) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.cancelButton).last);
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.routeDeleteConfirmMessage), findsNothing);
+    });
+
+    // ゴミ箱アイコン→消去ボタンでルートが削除されリポジトリの delete が呼ばれる
+    testWidgets('confirming delete removes route and calls repository delete',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeRepo = _FakeSavedRouteRepository(routes: _testSavedRoutes);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _historyOverride,
+            savedRouteRepositoryProvider.overrideWith((_) => fakeRepo),
+            _walkRoutesOverride,
+            _spotOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
       );
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.routeDeleteButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.routeDeleteConfirmMessage), findsNothing);
       expect(find.byType(WalkRoutePage), findsOneWidget);
+      expect(fakeRepo.deletedIds, contains(_testSavedRoutes.first.id));
     });
 
     // ページ2のルートをタップしてもページが表示されている
@@ -922,6 +974,221 @@ void main() {
 
       // セッション内のスポット1件だけが件数に反映される
       expect(find.text('行きたいスポット：1件'), findsOneWidget);
+    });
+
+    // walkSessionId なし保存ルートはマップのプレースホルダーを表示する
+    testWidgets('shows map placeholder for route without walkSessionId',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoWithDataOverride,
+            _walkRoutesOverride,
+            _spotOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // walkSessionId が null の場合、マップアイコン（プレースホルダー）が表示される
+      expect(find.byIcon(Icons.map_outlined), findsOneWidget);
+    });
+
+    // walkSessionId 付きの保存ルートが FlutterMap を表示する
+    testWidgets('shows FlutterMap for route with walkSessionId',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const sessionId = 'test-id';
+      final savedRouteWithSession = [
+        SavedRoute(
+          id: 1,
+          name: 'GPSコース',
+          date: '2/7',
+          distance: '1.0km',
+          time: '00:15',
+          createdAt: DateTime(2026, 2, 7),
+          walkSessionId: sessionId,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _historyOverride,
+            savedRouteRepositoryProvider.overrideWith(
+              (_) => _FakeSavedRouteRepository(routes: savedRouteWithSession),
+            ),
+            _walkRoutesWithDataOverride,
+            _spotOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // FlutterMap がレンダリングされ、プレースホルダーは非表示
+      expect(find.byType(FlutterMap), findsOneWidget);
+      expect(find.byIcon(Icons.map_outlined), findsNothing);
+    });
+
+    // ゴミ箱アイコンをタップすると削除確認ダイアログが表示される
+    testWidgets('tapping delete icon shows delete confirmation dialog',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeRepo = _FakeSavedRouteRepository(routes: _testSavedRoutes);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _historyOverride,
+            savedRouteRepositoryProvider.overrideWith((_) => fakeRepo),
+            _walkRoutesOverride,
+            _spotOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.routeDeleteConfirmMessage), findsOneWidget);
+    });
+
+    // キャンセルボタンでダイアログが閉じる
+    testWidgets('canceling delete dialog closes dialog', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeRepo = _FakeSavedRouteRepository(routes: _testSavedRoutes);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _historyOverride,
+            savedRouteRepositoryProvider.overrideWith((_) => fakeRepo),
+            _walkRoutesOverride,
+            _spotOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(AppStrings.cancelButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.routeDeleteConfirmMessage), findsNothing);
+    });
+
+    // ゴミ箱アイコン→消去ボタンでルートが削除されリポジトリの delete が呼ばれる
+    testWidgets('confirming delete removes route and calls repository delete',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeRepo = _FakeSavedRouteRepository(routes: _testSavedRoutes);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _historyOverride,
+            savedRouteRepositoryProvider.overrideWith((_) => fakeRepo),
+            _walkRoutesOverride,
+            _spotOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(AppStrings.routeDeleteButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.routeDeleteConfirmMessage), findsNothing);
+      expect(find.byType(WalkRoutePage), findsOneWidget);
+      expect(fakeRepo.deletedIds, contains(_testSavedRoutes.first.id));
     });
 
     // カレンダーの日付をタップしてもページが表示されている

@@ -21,4 +21,11 @@ class SavedRouteRepositoryImpl implements SavedRouteRepository {
         await _isar.savedRouteModels.where().sortByCreatedAt().findAll();
     return models.map((m) => m.toEntity()).toList();
   }
+
+  @override
+  Future<void> delete(int id) async {
+    await _isar.writeTxn(() async {
+      await _isar.savedRouteModels.delete(id);
+    });
+  }
 }

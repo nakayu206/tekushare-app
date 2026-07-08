@@ -33,6 +33,7 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
   late AnimationController _controller;
   late List<Animation<double>> _footprintFades;
   late Animation<double> _cardFade;
+  bool _isProcessing = false;
 
   // 画面幅・高さに対する比率で指定（端末サイズ非依存）
   // 左右交互に配置して歩いている感じを表現
@@ -77,6 +78,8 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
   }
 
   Future<void> _onConfirm() async {
+    if (_isProcessing) return;
+    _isProcessing = true;
     final session = ref.read(walkSessionProvider);
     final route = WalkRoute(
       id: session.id,

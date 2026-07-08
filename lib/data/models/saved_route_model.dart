@@ -12,6 +12,7 @@ class SavedRouteModel {
   late String distance;
   late String time;
   late DateTime createdAt;
+  String? walkSessionId;
 
   SavedRoute toEntity() => SavedRoute(
         id: id,
@@ -20,6 +21,7 @@ class SavedRouteModel {
         distance: distance,
         time: time,
         createdAt: createdAt,
+        walkSessionId: walkSessionId,
       );
 
   static SavedRouteModel fromEntity(SavedRoute route) {
@@ -28,7 +30,8 @@ class SavedRouteModel {
       ..date = route.date
       ..distance = route.distance
       ..time = route.time
-      ..createdAt = route.createdAt;
+      ..createdAt = route.createdAt
+      ..walkSessionId = route.walkSessionId;
     if (route.id != 0) model.id = route.id;
     return model;
   }

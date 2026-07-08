@@ -72,6 +72,8 @@ abstract class AppStrings {
   static const routeNameHint = '名前を設定する';
   static const saveRouteConfirmMessage = 'この散歩ルートを保存しますか？';
   static const saveRouteButton = 'このルートを保存する';
+  static const routeDeleteConfirmMessage = '本当に消去しますか？';
+  static const routeDeleteButton = '消去';
   static const walkStartEndTime = '開始終了時間';
   static const walkDuration = '散歩時間';
   static const walkDistanceLabel = '距離';
