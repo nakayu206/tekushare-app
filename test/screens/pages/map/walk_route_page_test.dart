@@ -5,6 +5,7 @@ import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/saved_route.dart';
 import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/entities/lat_lng.dart' as domain;
 import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/domain/repositories/route_repository.dart';
@@ -72,7 +73,8 @@ class _FakeSavedRouteRepository implements SavedRouteRepository {
 }
 
 class _FakeRouteRepository implements RouteRepository {
-  const _FakeRouteRepository();
+  const _FakeRouteRepository({this.routes = const []});
+  final List<WalkRoute> routes;
 
   @override
   Future<void> saveRoute(WalkRoute route) async {}
@@ -81,8 +83,21 @@ class _FakeRouteRepository implements RouteRepository {
   Future<WalkRoute?> getRouteBySessionId(String sessionId) async => null;
 
   @override
-  Future<List<WalkRoute>> getAllRoutes() async => [];
+  Future<List<WalkRoute>> getAllRoutes() async => routes;
 }
+
+// 約1kmのGPSルート（35.000→35.009 ≈ 1.0km）
+final _testWalkRoutes = [
+  WalkRoute(
+    id: 'test-id',
+    walkSessionId: 'test-id',
+    points: const [
+      domain.LatLng(35.000, 139.000),
+      domain.LatLng(35.009, 139.000),
+    ],
+    createdAt: DateTime(2026, 1, 1),
+  ),
+];
 
 final _testSavedRoutes = [
   SavedRoute(
@@ -149,6 +164,10 @@ final _historyOverride = walkHistoryProvider.overrideWith(
 
 final _walkRoutesOverride = routeRepositoryProvider.overrideWith(
   (_) => const _FakeRouteRepository(),
+);
+
+final _walkRoutesWithDataOverride = routeRepositoryProvider.overrideWith(
+  (_) => _FakeRouteRepository(routes: _testWalkRoutes),
 );
 
 final _savedRouteRepoOverride = savedRouteRepositoryProvider.overrideWith(
@@ -261,6 +280,50 @@ void main() {
 
       expect(find.text('9:00~9:30'), findsOneWidget);
       expect(find.text('30:00'), findsOneWidget);
+    });
+
+    // WalkRouteのGPSポイントがあってもページが正常にレンダリングされる
+    testWidgets('renders without error when walk routes have gps points',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final now = DateTime.now();
+      final session = WalkSession(
+        id: 'test-id',
+        status: WalkStatus.finished,
+        startedAt: DateTime(now.year, now.month, now.day, 9, 0),
+        finishedAt: DateTime(now.year, now.month, now.day, 9, 30),
+        elapsedSeconds: 1800,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            walkHistoryProvider.overrideWith((_) async => [session]),
+            _savedRouteRepoOverride,
+            _walkRoutesWithDataOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // セッションの時刻が表示されること（ルートデータあり時もクラッシュしない）
+      expect(find.text('9:00~9:30'), findsOneWidget);
     });
 
     // ページタイトルが表示される

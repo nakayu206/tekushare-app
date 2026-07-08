@@ -3,7 +3,7 @@ import 'package:tekushare/domain/entities/lat_lng.dart';
 
 double calcDistanceKm(List<LatLng> points) {
   if (points.length < 2) return 0;
-  const d = ll.Distance();
+  const d = ll.Distance(roundResult: false);
   var total = 0.0;
   for (var i = 0; i < points.length - 1; i++) {
     total += d.as(
