@@ -820,19 +820,28 @@ class _SelectedRouteCard extends ConsumerWidget {
               final points = walkRoute.points
                   .map((p) => latlong2.LatLng(p.latitude, p.longitude))
                   .toList();
+              final mapOptions = points.length >= 2
+                  ? MapOptions(
+                      initialCameraFit: CameraFit.coordinates(
+                        coordinates: points,
+                        padding: const EdgeInsets.all(AppSpacing.x2l),
+                      ),
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    )
+                  : MapOptions(
+                      initialCenter: points.first,
+                      initialZoom: MapConstants.defaultZoom,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    );
               return SizedBox(
                 width: double.infinity,
                 height: height,
                 child: FlutterMap(
-                  options: MapOptions(
-                    initialCameraFit: CameraFit.coordinates(
-                      coordinates: points,
-                      padding: const EdgeInsets.all(AppSpacing.x2l),
-                    ),
-                    interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.none,
-                    ),
-                  ),
+                  options: mapOptions,
                   children: [
                     TileLayer(
                       urlTemplate:
