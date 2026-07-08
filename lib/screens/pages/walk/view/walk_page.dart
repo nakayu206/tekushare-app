@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,6 +42,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
   final _photoMarkers = <({LatLng point, String imagePath})>[];
   LatLng? _currentPosition;
   LatLng? _lastMovedPosition;
+  double? _currentHeading;
   bool _mapControllerAttached = false;
 
   Timer? _tickTimer;
@@ -160,6 +162,8 @@ class _WalkPageState extends ConsumerState<WalkPage> {
         setState(() {
           _currentPosition = point;
           _trackPoints.add(point);
+          // heading < 0 は「取得不可」を示すので最後の有効値を維持する
+          if (pos.heading >= 0) _currentHeading = pos.heading;
         });
         // 前回位置から一定距離以上動いた場合のみ不活動タイマーをリセット
         if (ref.read(walkTimerProvider).inactSecondsLeft != null) {
@@ -262,10 +266,19 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                                 markers: [
                                   Marker(
                                     point: mapCenter,
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      color: Colors.red,
-                                      size: AppSize.iconMd,
+                                    width: AppSize.iconLg,
+                                    height: AppSize.iconLg,
+                                    child: Transform.rotate(
+                                      angle: (_currentHeading ?? 0) *
+                                          math.pi /
+                                          180,
+                                      child: SvgPicture.asset(
+                                        'assets/SVG/foot2.svg',
+                                        colorFilter: const ColorFilter.mode(
+                                          AppColors.primary,
+                                          BlendMode.srcIn,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],

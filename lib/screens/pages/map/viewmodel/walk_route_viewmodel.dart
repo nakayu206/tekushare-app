@@ -1,6 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-typedef WalkRoute = ({String date, String name, String distance, String time});
+typedef SavedRouteItem = ({
+  String date,
+  String name,
+  String distance,
+  String time
+});
 typedef WalkLog = ({
   String date,
   String startEndTime,
@@ -14,24 +19,14 @@ class WalkRouteState {
   const WalkRouteState({
     this.selectedRouteIndex = 0,
     this.selectedDay = 7,
-    this.routes = _defaultRoutes,
+    this.routes = const [],
     this.logs = _defaultLogs,
   });
 
   final int selectedRouteIndex;
   final int selectedDay;
-  final List<WalkRoute> routes;
+  final List<SavedRouteItem> routes;
   final List<WalkLog> logs;
-
-  static const _defaultRoutes = <WalkRoute>[
-    (date: '2/7', name: '公園まわりコース（朝用）', distance: '1.2km', time: '約15分'),
-    (date: '2/6', name: '川沿いコース（休日用）', distance: '2.5km', time: '約30分'),
-    (date: '2/5', name: '商店街コース', distance: '1.2km', time: '約15分'),
-    (date: '2/4', name: '公園まわりコース（朝用）', distance: '1.2km', time: '約15分'),
-    (date: '2/3', name: '川沿いコース（休日用）', distance: '2.5km', time: '約30分'),
-    (date: '2/2', name: '商店街コース', distance: '1.2km', time: '約15分'),
-    (date: '2/1', name: '公園まわりコース（朝用）', distance: '1.2km', time: '約15分'),
-  ];
 
   static const _defaultLogs = <WalkLog>[
     (
@@ -92,7 +87,9 @@ class WalkRouteState {
     ),
   ];
 
-  WalkRoute get selectedRoute => routes[selectedRouteIndex];
+  SavedRouteItem? get selectedRoute =>
+      routes.isEmpty ? null : routes[selectedRouteIndex];
+
   WalkLog get selectedLog => logs[selectedDay - 1];
 
   String get defaultRouteName {
@@ -112,7 +109,7 @@ class WalkRouteState {
   WalkRouteState copyWith({
     int? selectedRouteIndex,
     int? selectedDay,
-    List<WalkRoute>? routes,
+    List<SavedRouteItem>? routes,
     List<WalkLog>? logs,
   }) =>
       WalkRouteState(
@@ -135,12 +132,17 @@ class WalkRouteViewModel extends Notifier<WalkRouteState> {
     state = state.copyWith(selectedDay: day);
   }
 
-  void saveRoute(WalkRoute route) {
+  void saveRoute(SavedRouteItem route) {
     final updated = [...state.routes, route];
     state = state.copyWith(
       routes: updated,
       selectedRouteIndex: updated.length - 1,
     );
+  }
+
+  void setRoutes(List<SavedRouteItem> routes) {
+    final index = routes.isEmpty ? 0 : routes.length - 1;
+    state = state.copyWith(routes: routes, selectedRouteIndex: index);
   }
 
   void setLogs(List<WalkLog> logs) {
