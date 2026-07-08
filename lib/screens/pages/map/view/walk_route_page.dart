@@ -6,11 +6,62 @@ import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/providers/walk_history_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
-import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
+
+const _weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+
+List<WalkLog> _buildSessionLogs(List<WalkSession> sessions) {
+  final finished = sessions
+      .where((s) => s.status == WalkStatus.finished && s.startedAt != null)
+      .toList()
+    ..sort((a, b) => a.startedAt!.compareTo(b.startedAt!));
+
+  final last7 =
+      finished.length > 7 ? finished.sublist(finished.length - 7) : finished;
+
+  return List.generate(7, (i) {
+    if (i >= last7.length) {
+      return (
+        date: '-',
+        startEndTime: '-',
+        duration: '-',
+        distance: '-',
+        spotCount: 0,
+        dayLabel: '-',
+      );
+    }
+
+    final session = last7[i];
+    final start = session.startedAt!;
+    final end = session.finishedAt;
+    final dayLabel = _weekdayNames[start.weekday % 7];
+    final h = session.elapsedSeconds ~/ 3600;
+    final m = (session.elapsedSeconds % 3600) ~/ 60;
+    final s = session.elapsedSeconds % 60;
+
+    return (
+      date: '${start.year}年${start.month.toString().padLeft(2, '0')}月'
+          '${start.day.toString().padLeft(2, '0')}日($dayLabel)',
+      startEndTime: end != null
+          ? '${start.hour}:${start.minute.toString().padLeft(2, '0')}'
+              '~${end.hour}:${end.minute.toString().padLeft(2, '0')}'
+          : '${start.hour}:${start.minute.toString().padLeft(2, '0')}',
+      duration: h > 0
+          ? '${h.toString().padLeft(2, '0')}:'
+              '${m.toString().padLeft(2, '0')}:'
+              '${s.toString().padLeft(2, '0')}'
+          : '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}',
+      distance: '-',
+      spotCount: 0,
+      dayLabel: dayLabel,
+    );
+  });
+}
 
 /// 散歩ルートページ
 class WalkRoutePage extends ConsumerStatefulWidget {
@@ -32,14 +83,31 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     ref.read(walkRouteViewModelProvider.notifier).selectDay(day);
   }
 
+  void _applyHistory(List<WalkSession> sessions) {
+    if (!mounted) return;
+    final finished =
+        sessions.where((s) => s.status == WalkStatus.finished).toList();
+    if (finished.isEmpty) return;
+    final vm = ref.read(walkRouteViewModelProvider.notifier);
+    vm.setLogs(_buildSessionLogs(sessions));
+    vm.selectDay(finished.length.clamp(1, 7));
+  }
+
   @override
   void initState() {
     super.initState();
-    if (widget.showSaveDialogOnLoad) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _showSaveConfirmDialog();
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      try {
+        final sessions = await ref.read(walkHistoryProvider.future);
+        if (!mounted) return;
+        _applyHistory(sessions);
+      } on Object catch (e) {
+        debugPrint('walkHistoryProvider の読み込みに失敗しました: $e');
+      }
+      if (!mounted) return;
+      if (widget.showSaveDialogOnLoad) _showSaveConfirmDialog();
+    });
   }
 
   @override
@@ -87,6 +155,10 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(walkHistoryProvider, (_, next) {
+      next.whenData(_applyHistory);
+    });
+
     final state = ref.watch(walkRouteViewModelProvider);
     final vm = ref.read(walkRouteViewModelProvider.notifier);
 
@@ -121,6 +193,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
                   _CalendarRow(
                     selectedDay: state.selectedDay,
                     onSelect: _selectDay,
+                    dayLabels: state.logs.map((l) => l.dayLabel).toList(),
                   ),
                   GestureDetector(
                     onHorizontalDragEnd: (details) {
@@ -623,12 +696,15 @@ class _RouteTag extends StatelessWidget {
 // ──────────────────────────────────────────
 
 class _CalendarRow extends StatelessWidget {
-  const _CalendarRow({required this.selectedDay, required this.onSelect});
+  const _CalendarRow({
+    required this.selectedDay,
+    required this.onSelect,
+    required this.dayLabels,
+  });
 
   final int selectedDay;
   final ValueChanged<int> onSelect;
-
-  static const _dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+  final List<String> dayLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -642,19 +718,40 @@ class _CalendarRow extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                _dayNames[i],
+                i < dayLabels.length ? dayLabels[i] : '-',
                 style: const TextStyle(
                   fontSize: AppTextStyle.xs,
                   color: AppColors.textDisabled,
                 ),
               ),
-              Text(
-                '$day',
-                style: TextStyle(
-                  fontSize: isSelected ? AppTextStyle.xl : AppTextStyle.md2,
-                  fontWeight:
-                      isSelected ? AppTextStyle.semiBold : AppTextStyle.regular,
-                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$day',
+                      style: TextStyle(
+                        fontSize:
+                            isSelected ? AppTextStyle.xl : AppTextStyle.md2,
+                        fontWeight: isSelected
+                            ? AppTextStyle.semiBold
+                            : AppTextStyle.regular,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '回',
+                      style: TextStyle(
+                        fontSize:
+                            isSelected ? AppTextStyle.xs : AppTextStyle.xs,
+                        fontWeight: AppTextStyle.regular,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -740,43 +837,6 @@ class _WalkInfoCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          Builder(
-            builder: (context) {
-              final sizing = AppSizingTheme.of(context);
-              return SizedBox(
-                width: sizing.photoBoxWidth,
-                height: sizing.walkInfoPhotoHeight,
-                child: CustomPaint(
-                  painter: const DashedBorderPainter(),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ExcludeSemantics(
-                        child: SvgPicture.asset(
-                          'assets/SVG/camera.svg',
-                          width: AppSize.iconMd,
-                          height: AppSize.iconMd,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.textAccent,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      const Text(
-                        AppStrings.addPhoto,
-                        style: TextStyle(
-                          color: AppColors.textAccent,
-                          fontSize: AppTextStyle.sm,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 30),
           SizedBox(
             width: double.infinity,
             height: AppSize.buttonHeightLg,

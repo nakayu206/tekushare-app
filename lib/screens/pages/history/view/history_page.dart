@@ -32,7 +32,7 @@ class HistoryPage extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, __) => const Center(
             child: Text(
-              AppStrings.gpsUnavailableError,
+              AppStrings.historyLoadError,
               style: TextStyle(color: AppColors.error),
             ),
           ),
