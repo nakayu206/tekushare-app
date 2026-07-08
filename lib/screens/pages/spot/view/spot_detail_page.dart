@@ -1,8 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/map_constants.dart';
@@ -19,6 +22,7 @@ import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
+import 'package:tekushare/screens/widgets/common/photo_viewer_dialog.dart';
 
 /// 行きたい！／行った！共通詳細ページ
 class SpotDetailPage extends ConsumerStatefulWidget {
@@ -46,7 +50,16 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   @override
   void initState() {
     super.initState();
+    _titleController.text =
+        widget.spot.title == AppStrings.noTitle ? '' : widget.spot.title;
     _photoPaths = List.of(widget.spot.photoPaths);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(spotDetailViewModelProvider.notifier)
+            .initCategory(widget.spot.category);
+      }
+    });
   }
 
   @override
@@ -69,15 +82,24 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     setState(() => _photoPaths = _photoPaths.where((p) => p != path).toList());
   }
 
+  void _onPhotoExpand(String path) {
+    showPhotoViewer(context, path, () => _onPhotoDelete(path));
+  }
+
   void _onSavePressed() {
+    final title = _titleController.text.isEmpty
+        ? AppStrings.noTitle
+        : _titleController.text;
+    final category = ref.read(spotDetailViewModelProvider).selectedCategory;
     showDialog<void>(
       context: context,
       builder: (_) => _SaveConfirmDialog(
-        title: _titleController.text.isEmpty
-            ? AppStrings.noTitle
-            : _titleController.text,
-        onConfirm: () {
+        title: title,
+        onConfirm: () async {
           Navigator.pop(context);
+          await ref.read(spotProvider.notifier).updateSpot(
+                widget.spot.copyWith(title: title, category: category),
+              );
           if (!mounted) return;
           _showResultDialog(AppStrings.saved);
         },
@@ -93,8 +115,9 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         title: _titleController.text.isEmpty
             ? AppStrings.noTitle
             : _titleController.text,
-        onConfirm: () {
+        onConfirm: () async {
           Navigator.pop(context);
+          await ref.read(spotProvider.notifier).deleteSpot(widget.spot.id);
           if (!mounted) return;
           _showResultDialog(AppStrings.spotDetailDeleted);
         },
@@ -104,17 +127,23 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   }
 
   void _onMoveToWentPressed() {
+    final title = _titleController.text.isEmpty
+        ? AppStrings.noTitle
+        : _titleController.text;
+    final category = ref.read(spotDetailViewModelProvider).selectedCategory;
     showDialog<void>(
       context: context,
       builder: (_) => _MoveToWentConfirmDialog(
-        title: _titleController.text.isEmpty
-            ? AppStrings.noTitle
-            : _titleController.text,
+        title: title,
         onConfirm: () async {
           Navigator.pop(context);
-          await ref
-              .read(spotProvider.notifier)
-              .updateStatus(widget.spot.id, SpotStatus.visited);
+          await ref.read(spotProvider.notifier).updateSpot(
+                widget.spot.copyWith(
+                  title: title,
+                  status: SpotStatus.visited,
+                  category: category,
+                ),
+              );
           if (!mounted) return;
           _showResultDialog(AppStrings.spotDetailMoveToWentDone);
         },
@@ -162,7 +191,11 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _LocationArea(),
+              _LocationArea(
+                latitude: widget.spot.latitude,
+                longitude: widget.spot.longitude,
+                photoPaths: widget.spot.photoPaths,
+              ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               CategoryChipGroup(
                 categories: _categories,
@@ -176,11 +209,14 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                 photoPaths: _photoPaths,
                 onTap: _onPhotoTap,
                 onDelete: _onPhotoDelete,
+                onExpand: _onPhotoExpand,
               ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
-              if (widget.spot.status == SpotStatus.wantToGo)
-                _MoveToWentButton(onPressed: _onMoveToWentPressed)
-              else
+              if (widget.spot.status == SpotStatus.wantToGo) ...[
+                _MoveToWentButton(onPressed: _onMoveToWentPressed),
+                const SizedBox(height: 12),
+                _DeleteButton(onPressed: _onDeletePressed),
+              ] else
                 _DeleteButton(onPressed: _onDeletePressed),
               const SizedBox(height: 16),
               _SaveButton(onPressed: _onSavePressed),
@@ -221,24 +257,86 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
 // ──────────────────────────────────────────
 
 class _LocationArea extends StatelessWidget {
-  const _LocationArea();
+  const _LocationArea({
+    required this.latitude,
+    required this.longitude,
+    required this.photoPaths,
+  });
+
+  final double latitude;
+  final double longitude;
+  final List<String> photoPaths;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: AppSizingTheme.of(context).locationAreaHeight,
-      decoration: BoxDecoration(
-        color: AppColors.chipUnselected,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Center(
-        child: Text(
-          AppStrings.realtimeLocation,
-          style: TextStyle(
-            color: AppColors.textDisabled,
-            fontSize: AppTextStyle.md2,
+    final point = LatLng(latitude, longitude);
+    final height = AppSizingTheme.of(context).locationAreaHeight;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: point,
+            initialZoom: MapConstants.defaultZoom,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
+            onTap: (_, __) async {
+              final uri = Uri.parse(
+                'https://www.google.com/maps/dir/?api=1'
+                '&destination=$latitude,$longitude',
+              );
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
           ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.tekushare',
+            ),
+            MarkerLayer(
+              markers: [
+                if (photoPaths.isEmpty)
+                  Marker(
+                    point: point,
+                    width: AppSize.iconLg,
+                    height: AppSize.iconLg,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: AppSize.iconLg,
+                    ),
+                  ),
+                for (final path in photoPaths)
+                  Marker(
+                    point: point,
+                    width: MapConstants.photoThumbnailSize,
+                    height: MapConstants.photoThumbnailSize,
+                    child: ClipOval(
+                      child: Image.file(
+                        File(path),
+                        width: MapConstants.photoThumbnailSize,
+                        height: MapConstants.photoThumbnailSize,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const ColoredBox(
+                          color: AppColors.textDisabled,
+                          child: Icon(
+                            Icons.photo,
+                            color: Colors.white,
+                            size: AppSize.iconSm,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -265,15 +363,15 @@ class _TitleInput extends StatelessWidget {
           fontSize: AppTextStyle.x2l,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         contentPadding:
@@ -288,11 +386,13 @@ class _PhotoBox extends StatelessWidget {
     required this.photoPaths,
     required this.onTap,
     required this.onDelete,
+    required this.onExpand,
   });
 
   final List<String> photoPaths;
   final VoidCallback onTap;
   final void Function(String) onDelete;
+  final void Function(String) onExpand;
 
   @override
   Widget build(BuildContext context) {
@@ -308,15 +408,18 @@ class _PhotoBox extends StatelessWidget {
         for (final path in photoPaths)
           Stack(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: SizedBox(
-                  width: tileW,
-                  height: tileH,
-                  child: Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholder(sizing),
+              GestureDetector(
+                onTap: () => onExpand(path),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: SizedBox(
+                    width: tileW,
+                    height: tileH,
+                    child: Image.file(
+                      File(path),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _placeholder(sizing),
+                    ),
                   ),
                 ),
               ),
@@ -737,7 +840,7 @@ class _MoveToWentConfirmDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(AppStrings.spotDetailMoveToWentButton),
+                    child: const Text(AppStrings.listWentTab),
                   ),
                 ),
               ],

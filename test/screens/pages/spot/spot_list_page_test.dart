@@ -6,6 +6,8 @@ import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
+import 'package:tekushare/domain/usecases/spot/delete_spot.dart';
+import 'package:tekushare/domain/usecases/spot/update_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
@@ -25,6 +27,7 @@ class _FakeSaveSpot implements SaveSpot {
     required double latitude,
     required double longitude,
     String? memo,
+    String? category,
     SpotStatus status = SpotStatus.wantToGo,
   }) async =>
       'fake-id';
@@ -53,6 +56,18 @@ class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
   const _FakeRemovePhotoFromSpot();
   @override
   Future<void> call(String spotId, String imagePath) async {}
+}
+
+class _FakeUpdateSpot implements UpdateSpot {
+  const _FakeUpdateSpot();
+  @override
+  Future<void> call(Spot spot) async {}
+}
+
+class _FakeDeleteSpot implements DeleteSpot {
+  const _FakeDeleteSpot();
+  @override
+  Future<void> call(String id) async {}
 }
 
 final _fakeSpots = [
@@ -86,9 +101,11 @@ final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
     saveSpot: const _FakeSaveSpot(),
     getSpots: _FakeGetSpots(_fakeSpots),
+    updateSpot: const _FakeUpdateSpot(),
     updateSpotStatus: const _FakeUpdateSpotStatus(),
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
     removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
+    deleteSpot: const _FakeDeleteSpot(),
   ),
 );
 
@@ -182,15 +199,13 @@ void main() {
         (tester) async {
       await pumpPage(tester);
 
+      // 初期は未選択（listSelected 色のチップなし）
       expect(
-        find.ancestor(
-          of: find.text(AppStrings.categoryPark),
-          matching: find.byWidgetPredicate((w) =>
-              w is Container &&
-              w.decoration is BoxDecoration &&
-              (w.decoration as BoxDecoration).color == AppColors.listSelected),
-        ),
-        findsOneWidget,
+        find.byWidgetPredicate((w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        findsNothing,
       );
 
       await tester.tap(find.text(AppStrings.categoryCafe));
@@ -238,9 +253,11 @@ void main() {
         (ref) => SpotNotifier(
           saveSpot: const _FakeSaveSpot(),
           getSpots: const _FakeGetSpots([]),
+          updateSpot: const _FakeUpdateSpot(),
           updateSpotStatus: const _FakeUpdateSpotStatus(),
           attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
           removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
+          deleteSpot: const _FakeDeleteSpot(),
         ),
       );
 

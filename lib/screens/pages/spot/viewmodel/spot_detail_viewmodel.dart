@@ -1,15 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tekushare/core/constants/app_strings.dart';
+
+const _sentinel = Object();
 
 class SpotDetailState {
-  const SpotDetailState({
-    this.selectedCategory = AppStrings.categoryPark,
-  });
+  const SpotDetailState({this.selectedCategory});
 
-  final String selectedCategory;
+  final String? selectedCategory;
 
-  SpotDetailState copyWith({String? selectedCategory}) => SpotDetailState(
-        selectedCategory: selectedCategory ?? this.selectedCategory,
+  SpotDetailState copyWith({Object? selectedCategory = _sentinel}) =>
+      SpotDetailState(
+        selectedCategory: selectedCategory == _sentinel
+            ? this.selectedCategory
+            : selectedCategory as String?,
       );
 }
 
@@ -17,8 +19,13 @@ class SpotDetailViewModel extends Notifier<SpotDetailState> {
   @override
   SpotDetailState build() => const SpotDetailState();
 
+  void initCategory(String? category) {
+    state = SpotDetailState(selectedCategory: category);
+  }
+
   void selectCategory(String category) {
-    state = state.copyWith(selectedCategory: category);
+    final next = state.selectedCategory == category ? null : category;
+    state = state.copyWith(selectedCategory: next);
   }
 }
 

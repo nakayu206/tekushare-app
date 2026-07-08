@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/map_constants.dart';
@@ -19,6 +21,7 @@ import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
+import 'package:tekushare/screens/widgets/common/photo_viewer_dialog.dart';
 
 /// 行きたい！ページ
 class WantToGoPage extends ConsumerStatefulWidget {
@@ -58,6 +61,10 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
         .update((l) => l.where((e) => e != path).toList());
   }
 
+  void _onPhotoExpand(String path) {
+    showPhotoViewer(context, path, () => _onPhotoDelete(path));
+  }
+
   void _onSavePressed() {
     final title = _titleController.text.isEmpty
         ? AppStrings.noTitle
@@ -69,6 +76,7 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
       );
       return;
     }
+    final category = ref.read(wantToGoViewModelProvider).selectedCategory;
     showDialog<void>(
       context: context,
       builder: (_) => _ConfirmDialog(
@@ -79,6 +87,7 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
                 title: title,
                 latitude: location.latitude,
                 longitude: location.longitude,
+                category: category,
               );
           final photos = ref.read(pendingPhotoProvider);
           for (final photo in photos) {
@@ -137,7 +146,11 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
               SizedBox(height: sizing.sectionSpacing),
               _TitleInput(controller: _titleController),
               SizedBox(height: sizing.sectionSpacing),
-              _PhotoBox(onTap: _onPhotoTap, onDelete: _onPhotoDelete),
+              _PhotoBox(
+                onTap: _onPhotoTap,
+                onDelete: _onPhotoDelete,
+                onExpand: _onPhotoExpand,
+              ),
               SizedBox(height: sizing.sectionSpacing),
               _SaveButton(onPressed: _onSavePressed),
               SizedBox(height: sizing.sectionSpacing),
@@ -176,25 +189,92 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
 // リアルタイム位置エリア
 // ──────────────────────────────────────────
 
-class _LocationArea extends StatelessWidget {
+class _LocationArea extends ConsumerWidget {
   const _LocationArea();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: AppSizingTheme.of(context).locationAreaHeight,
-      decoration: BoxDecoration(
-        color: AppColors.chipUnselected,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Center(
-        child: Text(
-          AppStrings.realtimeLocation,
-          style: TextStyle(
-            color: AppColors.textDisabled,
-            fontSize: AppTextStyle.md2,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final position = ref.watch(locationProvider).valueOrNull;
+    final height = AppSizingTheme.of(context).locationAreaHeight;
+
+    if (position == null) {
+      return Container(
+        width: double.infinity,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.chipUnselected,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: const Center(
+          child: Text(
+            AppStrings.realtimeLocation,
+            style: TextStyle(
+              color: AppColors.textDisabled,
+              fontSize: AppTextStyle.md2,
+            ),
           ),
+        ),
+      );
+    }
+
+    final photos = ref.watch(pendingPhotoProvider);
+    final center = LatLng(position.latitude, position.longitude);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: center,
+            initialZoom: MapConstants.defaultZoom,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.tekushare',
+            ),
+            MarkerLayer(
+              markers: [
+                if (photos.isEmpty)
+                  Marker(
+                    point: center,
+                    width: AppSize.iconLg,
+                    height: AppSize.iconLg,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: AppSize.iconLg,
+                    ),
+                  ),
+                for (final path in photos)
+                  Marker(
+                    point: center,
+                    width: MapConstants.photoThumbnailSize,
+                    height: MapConstants.photoThumbnailSize,
+                    child: ClipOval(
+                      child: Image.file(
+                        File(path),
+                        width: MapConstants.photoThumbnailSize,
+                        height: MapConstants.photoThumbnailSize,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const ColoredBox(
+                          color: AppColors.textDisabled,
+                          child: Icon(
+                            Icons.photo,
+                            color: Colors.white,
+                            size: AppSize.iconSm,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -219,15 +299,15 @@ class _TitleInput extends StatelessWidget {
         hintStyle: const TextStyle(
             color: AppColors.textDisabled, fontSize: AppTextStyle.x2l),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         contentPadding:
@@ -242,10 +322,15 @@ class _TitleInput extends StatelessWidget {
 // ──────────────────────────────────────────
 
 class _PhotoBox extends ConsumerWidget {
-  const _PhotoBox({required this.onTap, required this.onDelete});
+  const _PhotoBox({
+    required this.onTap,
+    required this.onDelete,
+    required this.onExpand,
+  });
 
   final VoidCallback onTap;
   final void Function(String) onDelete;
+  final void Function(String) onExpand;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -263,15 +348,18 @@ class _PhotoBox extends ConsumerWidget {
         for (final path in photos)
           Stack(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: SizedBox(
-                  width: tileW,
-                  height: tileH,
-                  child: Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholder(),
+              GestureDetector(
+                onTap: () => onExpand(path),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: SizedBox(
+                    width: tileW,
+                    height: tileH,
+                    child: Image.file(
+                      File(path),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _placeholder(),
+                    ),
                   ),
                 ),
               ),

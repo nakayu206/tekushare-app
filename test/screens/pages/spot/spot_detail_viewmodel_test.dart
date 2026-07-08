@@ -19,9 +19,9 @@ void main() {
     SpotDetailViewModel vm() =>
         container.read(spotDetailViewModelProvider.notifier);
 
-    // 初期カテゴリは公園
-    test('initial selectedCategory is park', () {
-      expect(state().selectedCategory, AppStrings.categoryPark);
+    // 初期カテゴリは未選択（null）
+    test('initial selectedCategory is null', () {
+      expect(state().selectedCategory, isNull);
     });
 
     // selectCategory でカテゴリが更新される

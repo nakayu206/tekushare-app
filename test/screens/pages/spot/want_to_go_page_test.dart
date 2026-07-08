@@ -7,6 +7,8 @@ import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
+import 'package:tekushare/domain/usecases/spot/delete_spot.dart';
+import 'package:tekushare/domain/usecases/spot/update_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
@@ -38,6 +40,7 @@ class _FakeSaveSpot implements SaveSpot {
     required double latitude,
     required double longitude,
     String? memo,
+    String? category,
     SpotStatus status = SpotStatus.wantToGo,
   }) async =>
       'fake-spot-id';
@@ -67,6 +70,18 @@ class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+class _FakeUpdateSpot implements UpdateSpot {
+  const _FakeUpdateSpot();
+  @override
+  Future<void> call(Spot spot) async {}
+}
+
+class _FakeDeleteSpot implements DeleteSpot {
+  const _FakeDeleteSpot();
+  @override
+  Future<void> call(String id) async {}
+}
+
 Position _makePosition(double lat, double lng) => Position(
       latitude: lat,
       longitude: lng,
@@ -88,9 +103,11 @@ final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
     saveSpot: const _FakeSaveSpot(),
     getSpots: const _FakeGetSpots(),
+    updateSpot: const _FakeUpdateSpot(),
     updateSpotStatus: const _FakeUpdateSpotStatus(),
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
     removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
+    deleteSpot: const _FakeDeleteSpot(),
   ),
 );
 
@@ -173,16 +190,13 @@ void main() {
         (tester) async {
       await pumpPage(tester);
 
-      // 初期は公園が選択色
+      // 初期は未選択（listSelected 色のチップなし）
       expect(
-        find.ancestor(
-          of: find.text(AppStrings.categoryPark),
-          matching: find.byWidgetPredicate((w) =>
-              w is Container &&
-              w.decoration is BoxDecoration &&
-              (w.decoration as BoxDecoration).color == AppColors.listSelected),
-        ),
-        findsOneWidget,
+        find.byWidgetPredicate((w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration as BoxDecoration).color == AppColors.listSelected),
+        findsNothing,
       );
 
       await tester.tap(find.text(AppStrings.categoryCafe));
@@ -524,14 +538,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 初期状態はClipRRectなし（プレースホルダー表示）
-      expect(find.byType(ClipRRect), findsNothing);
+      // 初期状態はマップのClipRRectのみ（写真なし）
+      expect(find.byType(ClipRRect), findsOneWidget);
 
       await tester.tap(find.text(AppStrings.addPhoto));
       await tester.pumpAndSettle();
 
-      // カメラ後はClipRRectが表示される（写真行レイアウト）
-      expect(find.byType(ClipRRect), findsOneWidget);
+      // カメラ後は写真カードのClipRRectが追加される（マップ+写真）
+      expect(find.byType(ClipRRect), findsNWidgets(2));
     });
 
     // ボトムナビの設定をタップすると SettingsPage へ遷移する

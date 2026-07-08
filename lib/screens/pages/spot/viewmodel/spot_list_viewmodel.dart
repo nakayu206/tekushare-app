@@ -1,24 +1,27 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
+
+const _sentinel = Object();
 
 class SpotListState {
   const SpotListState({
     this.isWantToGoTab = true,
-    this.selectedCategory = AppStrings.categoryPark,
+    this.selectedCategory,
   });
 
   final bool isWantToGoTab;
-  final String selectedCategory;
+  final String? selectedCategory;
 
   SpotListState copyWith({
     bool? isWantToGoTab,
-    String? selectedCategory,
+    Object? selectedCategory = _sentinel,
   }) =>
       SpotListState(
         isWantToGoTab: isWantToGoTab ?? this.isWantToGoTab,
-        selectedCategory: selectedCategory ?? this.selectedCategory,
+        selectedCategory: selectedCategory == _sentinel
+            ? this.selectedCategory
+            : selectedCategory as String?,
       );
 }
 
@@ -27,13 +30,16 @@ class SpotListViewModel extends Notifier<SpotListState> {
   SpotListState build() => const SpotListState();
 
   void selectTab(bool isWantToGo) {
-    state = state.copyWith(isWantToGoTab: isWantToGo);
+    state = state.copyWith(isWantToGoTab: isWantToGo, selectedCategory: null);
     ref.read(selectedSpotStatusProvider.notifier).state =
         isWantToGo ? SpotStatus.wantToGo : SpotStatus.visited;
+    ref.read(selectedCategoryProvider.notifier).state = null;
   }
 
   void selectCategory(String category) {
-    state = state.copyWith(selectedCategory: category);
+    final next = state.selectedCategory == category ? null : category;
+    state = state.copyWith(selectedCategory: next);
+    ref.read(selectedCategoryProvider.notifier).state = next;
   }
 }
 

@@ -6,6 +6,8 @@ import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
+import 'package:tekushare/domain/usecases/spot/delete_spot.dart';
+import 'package:tekushare/domain/usecases/spot/update_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
@@ -23,6 +25,7 @@ class _FakeSaveSpot implements SaveSpot {
     required double latitude,
     required double longitude,
     String? memo,
+    String? category,
     SpotStatus status = SpotStatus.wantToGo,
   }) async =>
       'fake-id';
@@ -52,13 +55,27 @@ class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+class _FakeUpdateSpot implements UpdateSpot {
+  const _FakeUpdateSpot();
+  @override
+  Future<void> call(Spot spot) async {}
+}
+
+class _FakeDeleteSpot implements DeleteSpot {
+  const _FakeDeleteSpot();
+  @override
+  Future<void> call(String id) async {}
+}
+
 final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
     saveSpot: const _FakeSaveSpot(),
     getSpots: const _FakeGetSpots(),
+    updateSpot: const _FakeUpdateSpot(),
     updateSpotStatus: const _FakeUpdateSpotStatus(),
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
     removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
+    deleteSpot: const _FakeDeleteSpot(),
   ),
 );
 
