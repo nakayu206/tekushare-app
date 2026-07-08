@@ -187,7 +187,6 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   }
 
   void _showSaveConfirmDialog() {
-    final vm = ref.read(walkRouteViewModelProvider.notifier);
     final state = ref.read(walkRouteViewModelProvider);
     showDialog<void>(
       context: context,
@@ -200,15 +199,6 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
               ? state.defaultRouteName
               : _nameController.text;
           final sessionId = log.sessionId.isEmpty ? null : log.sessionId;
-          final item = (
-            id: 0,
-            date: log.date,
-            name: name,
-            distance: log.distance,
-            time: log.duration,
-            walkSessionId: sessionId,
-          );
-          vm.saveRoute(item);
           final savedRoute = SavedRoute(
             id: 0,
             name: name,
