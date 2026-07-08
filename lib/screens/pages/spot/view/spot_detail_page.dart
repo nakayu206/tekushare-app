@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart';
@@ -167,6 +168,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               _LocationArea(
                 latitude: widget.spot.latitude,
                 longitude: widget.spot.longitude,
+                photoPaths: widget.spot.photoPaths,
               ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               CategoryChipGroup(
@@ -226,10 +228,15 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
 // ──────────────────────────────────────────
 
 class _LocationArea extends StatelessWidget {
-  const _LocationArea({required this.latitude, required this.longitude});
+  const _LocationArea({
+    required this.latitude,
+    required this.longitude,
+    required this.photoPaths,
+  });
 
   final double latitude;
   final double longitude;
+  final List<String> photoPaths;
 
   @override
   Widget build(BuildContext context) {
@@ -248,6 +255,15 @@ class _LocationArea extends StatelessWidget {
             interactionOptions: const InteractionOptions(
               flags: InteractiveFlag.none,
             ),
+            onTap: (_, __) async {
+              final uri = Uri.parse(
+                'https://www.google.com/maps/dir/?api=1'
+                '&destination=$latitude,$longitude',
+              );
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
           ),
           children: [
             TileLayer(
@@ -256,16 +272,39 @@ class _LocationArea extends StatelessWidget {
             ),
             MarkerLayer(
               markers: [
-                Marker(
-                  point: point,
-                  width: AppSize.iconLg,
-                  height: AppSize.iconLg,
-                  child: const Icon(
-                    Icons.location_on,
-                    color: AppColors.primary,
-                    size: AppSize.iconLg,
+                if (photoPaths.isEmpty)
+                  Marker(
+                    point: point,
+                    width: AppSize.iconLg,
+                    height: AppSize.iconLg,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: AppSize.iconLg,
+                    ),
                   ),
-                ),
+                for (final path in photoPaths)
+                  Marker(
+                    point: point,
+                    width: MapConstants.photoThumbnailSize,
+                    height: MapConstants.photoThumbnailSize,
+                    child: ClipOval(
+                      child: Image.file(
+                        File(path),
+                        width: MapConstants.photoThumbnailSize,
+                        height: MapConstants.photoThumbnailSize,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const ColoredBox(
+                          color: AppColors.textDisabled,
+                          child: Icon(
+                            Icons.photo,
+                            color: Colors.white,
+                            size: AppSize.iconSm,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ],

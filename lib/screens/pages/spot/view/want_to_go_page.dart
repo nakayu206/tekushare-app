@@ -206,6 +206,7 @@ class _LocationArea extends ConsumerWidget {
       );
     }
 
+    final photos = ref.watch(pendingPhotoProvider);
     final center = LatLng(position.latitude, position.longitude);
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.md),
@@ -227,16 +228,39 @@ class _LocationArea extends ConsumerWidget {
             ),
             MarkerLayer(
               markers: [
-                Marker(
-                  point: center,
-                  width: AppSize.iconLg,
-                  height: AppSize.iconLg,
-                  child: const Icon(
-                    Icons.location_on,
-                    color: AppColors.primary,
-                    size: AppSize.iconLg,
+                if (photos.isEmpty)
+                  Marker(
+                    point: center,
+                    width: AppSize.iconLg,
+                    height: AppSize.iconLg,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: AppSize.iconLg,
+                    ),
                   ),
-                ),
+                for (final path in photos)
+                  Marker(
+                    point: center,
+                    width: MapConstants.photoThumbnailSize,
+                    height: MapConstants.photoThumbnailSize,
+                    child: ClipOval(
+                      child: Image.file(
+                        File(path),
+                        width: MapConstants.photoThumbnailSize,
+                        height: MapConstants.photoThumbnailSize,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const ColoredBox(
+                          color: AppColors.textDisabled,
+                          child: Icon(
+                            Icons.photo,
+                            color: Colors.white,
+                            size: AppSize.iconSm,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ],
