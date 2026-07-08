@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 abstract class MapConstants {
   static const double defaultZoom = 17.0;
-  static const double polylineStrokeWidth = 3.0;
+  static const double polylineStrokeWidth = 6.0;
   static const double photoThumbnailSize = 40.0;
   static const double photoDeleteBadgeSize = 16.0;
   static const double photoDeleteIconSize = 10.0;
