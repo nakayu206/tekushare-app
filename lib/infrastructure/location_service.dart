@@ -3,8 +3,12 @@ import 'package:geolocator/geolocator.dart';
 class LocationService {
   static const _distanceFilterMeters = 3;
 
-  // これより精度が低い（誤差が大きい）GPSポイントは捨てる
+  // 通常精度しきい値：これ以下の誤差のみ採用
   static const _maxAccuracyMeters = 20.0;
+
+  // フォールバックしきい値：一定時間良好なポイントが来なければ緩和
+  static const _fallbackAccuracyMeters = 50.0;
+  static const _fallbackTimeout = Duration(seconds: 10);
 
   /// パーミッション確認・リクエストを行い、現在地の Stream を返す。
   /// パーミッションが拒否された場合は例外をスローする。
@@ -16,8 +20,20 @@ class LocationService {
       distanceFilter: _distanceFilterMeters,
     );
 
-    yield* Geolocator.getPositionStream(locationSettings: settings)
-        .where((pos) => pos.accuracy <= _maxAccuracyMeters);
+    DateTime? lastEmitted;
+    await for (final pos
+        in Geolocator.getPositionStream(locationSettings: settings)) {
+      final now = DateTime.now();
+      final prev = lastEmitted;
+      final sinceLastEmit =
+          prev == null ? _fallbackTimeout : now.difference(prev);
+      if (pos.accuracy <= _maxAccuracyMeters ||
+          sinceLastEmit >= _fallbackTimeout &&
+              pos.accuracy <= _fallbackAccuracyMeters) {
+        lastEmitted = now;
+        yield pos;
+      }
+    }
   }
 
   /// 現在地を一度だけ取得する。

@@ -23,12 +23,13 @@ class SavedRouteModel {
       );
 
   static SavedRouteModel fromEntity(SavedRoute route) {
-    return SavedRouteModel()
-      ..id = route.id
+    final model = SavedRouteModel()
       ..name = route.name
       ..date = route.date
       ..distance = route.distance
       ..time = route.time
       ..createdAt = route.createdAt;
+    if (route.id != 0) model.id = route.id;
+    return model;
   }
 }
