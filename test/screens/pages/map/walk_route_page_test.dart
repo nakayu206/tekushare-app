@@ -232,6 +232,11 @@ class _NonStandardDateViewModel extends WalkRouteViewModel {
           ),
         ],
       );
+
+  @override
+  void setLogs(List<WalkLog> logs) {
+    // テスト用固定ログを維持するため外部からの更新を無視する
+  }
 }
 
 void main() {

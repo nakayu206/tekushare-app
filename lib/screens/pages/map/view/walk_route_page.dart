@@ -120,6 +120,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   int _cardSlideDirection = 1;
   Map<String, double> _distanceBySessionId = {};
   Map<String, int> _spotCountBySessionId = {};
+  bool _isSaveDialogShowing = false;
 
   void _selectDay(int day) {
     final current = ref.read(walkRouteViewModelProvider).selectedDay;
@@ -131,11 +132,11 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     if (!mounted) return;
     final finished =
         sessions.where((s) => s.status == WalkStatus.finished).toList();
-    if (finished.isEmpty) return;
     final vm = ref.read(walkRouteViewModelProvider.notifier);
     vm.setLogs(
       _buildSessionLogs(sessions, _distanceBySessionId, _spotCountBySessionId),
     );
+    if (finished.isEmpty) return;
     vm.selectDay(finished.length.clamp(1, 7));
   }
 
@@ -187,6 +188,8 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
   }
 
   void _showSaveConfirmDialog() {
+    if (_isSaveDialogShowing) return;
+    _isSaveDialogShowing = true;
     final state = ref.read(walkRouteViewModelProvider);
     showDialog<void>(
       context: context,
@@ -218,7 +221,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
         },
         onCancel: () => Navigator.pop(context),
       ),
-    );
+    ).whenComplete(() => _isSaveDialogShowing = false);
   }
 
   void _showSavedDialog() {
@@ -232,7 +235,6 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
 
   void _applySavedRoutes(List<SavedRoute> routes) {
     if (!mounted) return;
-    if (routes.isEmpty) return;
     final items = routes
         .map((r) => (
               id: r.id,
@@ -1051,7 +1053,7 @@ class _WalkInfoCard extends StatelessWidget {
             width: double.infinity,
             height: AppSize.buttonHeightLg,
             child: ElevatedButton(
-              onPressed: onSave,
+              onPressed: log.sessionId.isEmpty ? null : onSave,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
