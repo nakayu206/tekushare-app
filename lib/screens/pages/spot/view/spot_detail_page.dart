@@ -50,6 +50,8 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   @override
   void initState() {
     super.initState();
+    _titleController.text =
+        widget.spot.title == AppStrings.noTitle ? '' : widget.spot.title;
     _photoPaths = List.of(widget.spot.photoPaths);
   }
 
@@ -78,14 +80,18 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   }
 
   void _onSavePressed() {
+    final title = _titleController.text.isEmpty
+        ? AppStrings.noTitle
+        : _titleController.text;
     showDialog<void>(
       context: context,
       builder: (_) => _SaveConfirmDialog(
-        title: _titleController.text.isEmpty
-            ? AppStrings.noTitle
-            : _titleController.text,
-        onConfirm: () {
+        title: title,
+        onConfirm: () async {
           Navigator.pop(context);
+          await ref.read(spotProvider.notifier).updateSpot(
+                widget.spot.copyWith(title: title),
+              );
           if (!mounted) return;
           _showResultDialog(AppStrings.saved);
         },
@@ -113,17 +119,21 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   }
 
   void _onMoveToWentPressed() {
+    final title = _titleController.text.isEmpty
+        ? AppStrings.noTitle
+        : _titleController.text;
     showDialog<void>(
       context: context,
       builder: (_) => _MoveToWentConfirmDialog(
-        title: _titleController.text.isEmpty
-            ? AppStrings.noTitle
-            : _titleController.text,
+        title: title,
         onConfirm: () async {
           Navigator.pop(context);
-          await ref
-              .read(spotProvider.notifier)
-              .updateStatus(widget.spot.id, SpotStatus.visited);
+          await ref.read(spotProvider.notifier).updateSpot(
+                widget.spot.copyWith(
+                  title: title,
+                  status: SpotStatus.visited,
+                ),
+              );
           if (!mounted) return;
           _showResultDialog(AppStrings.spotDetailMoveToWentDone);
         },
@@ -820,7 +830,7 @@ class _MoveToWentConfirmDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(AppStrings.spotDetailMoveToWentButton),
+                    child: const Text(AppStrings.listWentTab),
                   ),
                 ),
               ],

@@ -7,6 +7,7 @@ import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/delete_spot.dart';
+import 'package:tekushare/domain/usecases/spot/update_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 
@@ -14,11 +15,13 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
   SpotNotifier({
     required SaveSpot saveSpot,
     required GetSpots getSpots,
+    required UpdateSpot updateSpot,
     required UpdateSpotStatus updateSpotStatus,
     required DeleteSpot deleteSpot,
     required AttachPhotoToSpot attachPhotoToSpot,
     required RemovePhotoFromSpot removePhotoFromSpot,
   })  : _saveSpot = saveSpot,
+        _updateSpot = updateSpot,
         _updateSpotStatus = updateSpotStatus,
         _deleteSpot = deleteSpot,
         _attachPhotoToSpot = attachPhotoToSpot,
@@ -28,6 +31,7 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
   }
 
   final SaveSpot _saveSpot;
+  final UpdateSpot _updateSpot;
   final UpdateSpotStatus _updateSpotStatus;
   final DeleteSpot _deleteSpot;
   final AttachPhotoToSpot _attachPhotoToSpot;
@@ -48,6 +52,10 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
       memo: memo,
       status: status,
     );
+  }
+
+  Future<void> updateSpot(Spot spot) {
+    return _updateSpot.call(spot);
   }
 
   Future<void> updateStatus(String spotId, SpotStatus status) {
@@ -79,6 +87,7 @@ final spotProvider = StateNotifierProvider<SpotNotifier, List<Spot>>((ref) {
   return SpotNotifier(
     saveSpot: SaveSpot(spotRepo),
     getSpots: GetSpots(spotRepo),
+    updateSpot: UpdateSpot(spotRepo),
     updateSpotStatus: UpdateSpotStatus(spotRepo),
     deleteSpot: DeleteSpot(spotRepo),
     attachPhotoToSpot: AttachPhotoToSpot(photoRepo),
