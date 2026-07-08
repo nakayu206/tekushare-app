@@ -81,7 +81,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _showDeleteAccountConfirmDialog() {
-    final vm = ref.read(settingsViewModelProvider.notifier);
     showDialog<void>(
       context: context,
       builder: (_) => _ConfirmActionDialog(
@@ -89,8 +88,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         confirmLabel: AppStrings.settingsDeleteAccountConfirmButton,
         isDestructive: true,
         onConfirm: () {
-          vm.deleteAccount();
-          Navigator.pop(context);
+          ref.read(walkSessionProvider.notifier).resetWalk();
+          ref.read(authServiceProvider).deleteUser();
+          Navigator.popUntil(context, (route) => route.isFirst);
         },
         onCancel: () => Navigator.pop(context),
       ),
