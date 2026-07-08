@@ -6,6 +6,7 @@ import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
+import 'package:tekushare/domain/usecases/spot/delete_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 
@@ -14,10 +15,12 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
     required SaveSpot saveSpot,
     required GetSpots getSpots,
     required UpdateSpotStatus updateSpotStatus,
+    required DeleteSpot deleteSpot,
     required AttachPhotoToSpot attachPhotoToSpot,
     required RemovePhotoFromSpot removePhotoFromSpot,
   })  : _saveSpot = saveSpot,
         _updateSpotStatus = updateSpotStatus,
+        _deleteSpot = deleteSpot,
         _attachPhotoToSpot = attachPhotoToSpot,
         _removePhotoFromSpot = removePhotoFromSpot,
         super([]) {
@@ -26,6 +29,7 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
 
   final SaveSpot _saveSpot;
   final UpdateSpotStatus _updateSpotStatus;
+  final DeleteSpot _deleteSpot;
   final AttachPhotoToSpot _attachPhotoToSpot;
   final RemovePhotoFromSpot _removePhotoFromSpot;
   late final StreamSubscription<List<Spot>> _subscription;
@@ -58,6 +62,10 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
     return _removePhotoFromSpot.call(spotId, imagePath);
   }
 
+  Future<void> deleteSpot(String spotId) {
+    return _deleteSpot.call(spotId);
+  }
+
   @override
   void dispose() {
     _subscription.cancel();
@@ -72,6 +80,7 @@ final spotProvider = StateNotifierProvider<SpotNotifier, List<Spot>>((ref) {
     saveSpot: SaveSpot(spotRepo),
     getSpots: GetSpots(spotRepo),
     updateSpotStatus: UpdateSpotStatus(spotRepo),
+    deleteSpot: DeleteSpot(spotRepo),
     attachPhotoToSpot: AttachPhotoToSpot(photoRepo),
     removePhotoFromSpot: RemovePhotoFromSpot(photoRepo),
   );

@@ -9,6 +9,7 @@ import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
+import 'package:tekushare/domain/usecases/spot/delete_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
@@ -68,6 +69,12 @@ class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
   Future<void> call(String spotId, String imagePath) async {}
 }
 
+class _FakeDeleteSpot implements DeleteSpot {
+  const _FakeDeleteSpot();
+  @override
+  Future<void> call(String id) async {}
+}
+
 final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
     saveSpot: const _FakeSaveSpot(),
@@ -75,6 +82,7 @@ final _spotOverride = spotProvider.overrideWith(
     updateSpotStatus: const _FakeUpdateSpotStatus(),
     attachPhotoToSpot: const _FakeAttachPhotoToSpot(),
     removePhotoFromSpot: const _FakeRemovePhotoFromSpot(),
+    deleteSpot: const _FakeDeleteSpot(),
   ),
 );
 

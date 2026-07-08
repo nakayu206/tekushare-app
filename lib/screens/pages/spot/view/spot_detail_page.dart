@@ -101,8 +101,9 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         title: _titleController.text.isEmpty
             ? AppStrings.noTitle
             : _titleController.text,
-        onConfirm: () {
+        onConfirm: () async {
           Navigator.pop(context);
+          await ref.read(spotProvider.notifier).deleteSpot(widget.spot.id);
           if (!mounted) return;
           _showResultDialog(AppStrings.spotDetailDeleted);
         },
@@ -191,9 +192,11 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                 onExpand: _onPhotoExpand,
               ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
-              if (widget.spot.status == SpotStatus.wantToGo)
-                _MoveToWentButton(onPressed: _onMoveToWentPressed)
-              else
+              if (widget.spot.status == SpotStatus.wantToGo) ...[
+                _MoveToWentButton(onPressed: _onMoveToWentPressed),
+                const SizedBox(height: 12),
+                _DeleteButton(onPressed: _onDeletePressed),
+              ] else
                 _DeleteButton(onPressed: _onDeletePressed),
               const SizedBox(height: 16),
               _SaveButton(onPressed: _onSavePressed),
