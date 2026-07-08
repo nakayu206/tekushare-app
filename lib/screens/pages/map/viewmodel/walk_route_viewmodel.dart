@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 typedef SavedRouteItem = ({
+  int id,
   String date,
   String name,
   String distance,
@@ -152,6 +153,16 @@ class WalkRouteViewModel extends Notifier<WalkRouteState> {
   void setRoutes(List<SavedRouteItem> routes) {
     final index = routes.isEmpty ? 0 : routes.length - 1;
     state = state.copyWith(routes: routes, selectedRouteIndex: index);
+  }
+
+  void removeRoute(int index) {
+    final updated = [...state.routes]..removeAt(index);
+    final newSelected = updated.isEmpty
+        ? 0
+        : state.selectedRouteIndex >= updated.length
+            ? updated.length - 1
+            : state.selectedRouteIndex;
+    state = state.copyWith(routes: updated, selectedRouteIndex: newSelected);
   }
 
   void setLogs(List<WalkLog> logs) {

@@ -92,6 +92,9 @@ class _FakeSavedRouteRepository implements SavedRouteRepository {
 
   @override
   Future<List<SavedRoute>> getAll() async => routes;
+
+  @override
+  Future<void> delete(int id) async {}
 }
 
 class _FakeRouteRepository implements RouteRepository {
@@ -796,34 +799,18 @@ void main() {
       expect(find.byIcon(Icons.chevron_left), findsOneWidget);
     });
 
-    // 左フリングで次のページへ
-    testWidgets('flinging left navigates to next page', (tester) async {
+    // ルートを左スワイプで削除できる
+    testWidgets('dismissing a route removes it from the list', (tester) async {
       await pumpPage(tester);
 
-      await tester.fling(
-        find.byType(GestureDetector).first,
-        const Offset(-300, 0),
-        600,
+      // 1件目（公園まわりコース）を左スワイプで削除
+      await tester.drag(
+        find.text('公園まわりコース（朝用）').first,
+        const Offset(-400, 0),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(WalkRoutePage), findsOneWidget);
-    });
-
-    // 2ページ目で右フリングで前ページへ
-    testWidgets('flinging right on page 2 navigates to previous page',
-        (tester) async {
-      await pumpPage(tester);
-
-      await tester.tap(find.byIcon(Icons.chevron_right));
-      await tester.pumpAndSettle();
-      await tester.fling(
-        find.byType(GestureDetector).first,
-        const Offset(300, 0),
-        600,
-      );
-      await tester.pumpAndSettle();
-
+      // ページはそのまま表示されている
       expect(find.byType(WalkRoutePage), findsOneWidget);
     });
 
@@ -962,7 +949,8 @@ void main() {
     });
 
     // walkSessionId 付きの保存ルートが FlutterMap を表示する
-    testWidgets('shows FlutterMap for route with walkSessionId', (tester) async {
+    testWidgets('shows FlutterMap for route with walkSessionId',
+        (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);

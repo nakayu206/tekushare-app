@@ -201,6 +201,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
               : _nameController.text;
           final sessionId = log.sessionId.isEmpty ? null : log.sessionId;
           final item = (
+            id: 0,
             date: log.date,
             name: name,
             distance: log.distance,
@@ -244,6 +245,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
     if (routes.isEmpty) return;
     final items = routes
         .map((r) => (
+              id: r.id,
               date: r.date,
               name: r.name,
               distance: r.distance,
@@ -297,6 +299,16 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
                     routes: state.routes,
                     selectedIndex: state.selectedRouteIndex,
                     onSelect: vm.selectRoute,
+                    onDelete: (int globalIndex) {
+                      final route = state.routes[globalIndex];
+                      vm.removeRoute(globalIndex);
+                      if (route.id != 0) {
+                        ref
+                            .read(savedRouteRepositoryProvider)
+                            .delete(route.id)
+                            .then((_) => ref.invalidate(savedRoutesProvider));
+                      }
+                    },
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   _CalendarRow(
@@ -418,11 +430,13 @@ class _RouteListCard extends StatefulWidget {
     required this.routes,
     required this.selectedIndex,
     required this.onSelect,
+    required this.onDelete,
   });
 
   final List<SavedRouteItem> routes;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
+  final ValueChanged<int> onDelete;
 
   @override
   State<_RouteListCard> createState() => _RouteListCardState();
@@ -431,9 +445,10 @@ class _RouteListCard extends StatefulWidget {
 class _RouteListCardState extends State<_RouteListCard> {
   static const _pageSize = 3;
   int _currentPage = 0;
-  int _slideDirection = 1; // 1: 左スワイプ(次), -1: 右スワイプ(前)
+  int _slideDirection = 1;
 
-  int get _pageCount => (widget.routes.length / _pageSize).ceil();
+  int get _pageCount =>
+      widget.routes.isEmpty ? 1 : (widget.routes.length / _pageSize).ceil();
 
   void _goToPage(int page) {
     _slideDirection = page > _currentPage ? 1 : -1;
@@ -516,33 +531,68 @@ class _RouteListCardState extends State<_RouteListCard> {
                   key: ValueKey(_currentPage),
                   children: List.generate(_pageSize, (i) {
                     final hasItem = i < pageRoutes.length;
-                    return Visibility(
-                      visible: hasItem,
-                      maintainSize: true,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      child: Column(
-                        children: [
-                          _RouteItem(
-                            route: hasItem
-                                ? pageRoutes[i]
-                                : (
-                                    date: '',
-                                    name: '',
-                                    distance: '',
-                                    time: '',
-                                    walkSessionId: null
-                                  ),
-                            isSelected:
-                                hasItem && (offset + i) == widget.selectedIndex,
-                            onTap: hasItem
-                                ? () => widget.onSelect(offset + i)
-                                : null,
-                          ),
-                          if (i < _pageSize - 1)
-                            const SizedBox(height: AppSpacing.sm),
-                        ],
+                    final globalIndex = offset + i;
+                    const dummyItem = (
+                      id: 0,
+                      date: '',
+                      name: '',
+                      distance: '',
+                      time: '',
+                      walkSessionId: null,
+                    );
+                    final itemContent = Column(
+                      children: [
+                        _RouteItem(
+                          route: hasItem ? pageRoutes[i] : dummyItem,
+                          isSelected:
+                              hasItem && globalIndex == widget.selectedIndex,
+                          onTap: hasItem
+                              ? () => widget.onSelect(globalIndex)
+                              : null,
+                        ),
+                        if (i < _pageSize - 1)
+                          const SizedBox(height: AppSpacing.sm),
+                      ],
+                    );
+                    if (!hasItem) {
+                      return Visibility(
+                        visible: false,
+                        maintainSize: true,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        child: itemContent,
+                      );
+                    }
+                    return Dismissible(
+                      key: ValueKey(
+                        pageRoutes[i].id != 0
+                            ? 'r-${pageRoutes[i].id}'
+                            : 'i-$globalIndex',
                       ),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: AppSpacing.x2l),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade400,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.white,
+                        ),
+                      ),
+                      onDismissed: (_) {
+                        widget.onDelete(globalIndex);
+                        final newCount = widget.routes.length - 1;
+                        final maxPage = newCount == 0
+                            ? 0
+                            : ((newCount / _pageSize).ceil() - 1);
+                        if (_currentPage > maxPage) {
+                          setState(() => _currentPage = maxPage);
+                        }
+                      },
+                      child: itemContent,
                     );
                   }),
                 ),
@@ -770,14 +820,15 @@ class _SelectedRouteCard extends ConsumerWidget {
               final points = walkRoute.points
                   .map((p) => latlong2.LatLng(p.latitude, p.longitude))
                   .toList();
-              final center = points[points.length ~/ 2];
               return SizedBox(
                 width: double.infinity,
                 height: height,
                 child: FlutterMap(
                   options: MapOptions(
-                    initialCenter: center,
-                    initialZoom: MapConstants.defaultZoom,
+                    initialCameraFit: CameraFit.coordinates(
+                      coordinates: points,
+                      padding: const EdgeInsets.all(AppSpacing.x2l),
+                    ),
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.none,
                     ),
