@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:latlong2/latlong.dart' as latlong2;
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/utils/distance_calculator.dart';
 import 'package:tekushare/domain/entities/saved_route.dart';
@@ -58,6 +61,7 @@ List<WalkLog> _buildSessionLogs(
   return List.generate(7, (i) {
     if (i >= last7.length) {
       return (
+        sessionId: '',
         date: '-',
         startEndTime: '-',
         duration: '-',
@@ -76,6 +80,7 @@ List<WalkLog> _buildSessionLogs(
     final s = session.elapsedSeconds % 60;
 
     return (
+      sessionId: session.id,
       date: '${start.year}年${start.month.toString().padLeft(2, '0')}月'
           '${start.day.toString().padLeft(2, '0')}日($dayLabel)',
       startEndTime: end != null
@@ -194,11 +199,13 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
           final name = _nameController.text.isEmpty
               ? state.defaultRouteName
               : _nameController.text;
+          final sessionId = log.sessionId.isEmpty ? null : log.sessionId;
           final item = (
             date: log.date,
             name: name,
             distance: log.distance,
             time: log.duration,
+            walkSessionId: sessionId,
           );
           vm.saveRoute(item);
           final savedRoute = SavedRoute(
@@ -208,6 +215,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
             distance: log.distance,
             time: log.duration,
             createdAt: DateTime.now(),
+            walkSessionId: sessionId,
           );
           ref.read(savedRouteRepositoryProvider).save(savedRoute).then((_) {
             ref.invalidate(savedRoutesProvider);
@@ -240,6 +248,7 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
               name: r.name,
               distance: r.distance,
               time: r.time,
+              walkSessionId: r.walkSessionId,
             ))
         .toList();
     ref.read(walkRouteViewModelProvider.notifier).setRoutes(items);
@@ -517,7 +526,13 @@ class _RouteListCardState extends State<_RouteListCard> {
                           _RouteItem(
                             route: hasItem
                                 ? pageRoutes[i]
-                                : (date: '', name: '', distance: '', time: ''),
+                                : (
+                                    date: '',
+                                    name: '',
+                                    distance: '',
+                                    time: '',
+                                    walkSessionId: null
+                                  ),
                             isSelected:
                                 hasItem && (offset + i) == widget.selectedIndex,
                             onTap: hasItem
@@ -687,13 +702,20 @@ class _RouteItem extends StatelessWidget {
 // 選択中ルートカード
 // ──────────────────────────────────────────
 
-class _SelectedRouteCard extends StatelessWidget {
+class _SelectedRouteCard extends ConsumerWidget {
   const _SelectedRouteCard({required this.route});
 
   final SavedRouteItem route;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final walkRoutes = ref.watch(walkRoutesProvider).valueOrNull ?? [];
+    final walkRoute = route.walkSessionId == null
+        ? null
+        : walkRoutes
+            .where((r) => r.walkSessionId == route.walkSessionId)
+            .firstOrNull;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -729,18 +751,56 @@ class _SelectedRouteCard extends StatelessWidget {
             ),
           ),
           Builder(
-            builder: (context) => Container(
-              width: double.infinity,
-              height: AppSizingTheme.of(context).mapPlaceholderHeight,
-              color: AppColors.chipUnselected,
-              child: const Center(
-                child: Icon(
-                  Icons.map_outlined,
-                  size: 48,
-                  color: AppColors.textDisabled,
+            builder: (context) {
+              final height = AppSizingTheme.of(context).mapPlaceholderHeight;
+              if (walkRoute == null || walkRoute.points.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  height: height,
+                  color: AppColors.chipUnselected,
+                  child: const Center(
+                    child: Icon(
+                      Icons.map_outlined,
+                      size: 48,
+                      color: AppColors.textDisabled,
+                    ),
+                  ),
+                );
+              }
+              final points = walkRoute.points
+                  .map((p) => latlong2.LatLng(p.latitude, p.longitude))
+                  .toList();
+              final center = points[points.length ~/ 2];
+              return SizedBox(
+                width: double.infinity,
+                height: height,
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter: center,
+                    initialZoom: MapConstants.defaultZoom,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.none,
+                    ),
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.tekushare',
+                    ),
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: points,
+                          strokeWidth: MapConstants.polylineStrokeWidth,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-            ),
+              );
+            },
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),

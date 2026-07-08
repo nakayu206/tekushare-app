@@ -41,6 +41,11 @@ const SavedRouteModelSchema = CollectionSchema(
       id: 4,
       name: r'time',
       type: IsarType.string,
+    ),
+    r'walkSessionId': PropertySchema(
+      id: 5,
+      name: r'walkSessionId',
+      type: IsarType.string,
     )
   },
   estimateSize: _savedRouteModelEstimateSize,
@@ -67,6 +72,12 @@ int _savedRouteModelEstimateSize(
   bytesCount += 3 + object.distance.length * 3;
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.time.length * 3;
+  {
+    final value = object.walkSessionId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -81,6 +92,7 @@ void _savedRouteModelSerialize(
   writer.writeString(offsets[2], object.distance);
   writer.writeString(offsets[3], object.name);
   writer.writeString(offsets[4], object.time);
+  writer.writeString(offsets[5], object.walkSessionId);
 }
 
 SavedRouteModel _savedRouteModelDeserialize(
@@ -96,6 +108,7 @@ SavedRouteModel _savedRouteModelDeserialize(
   object.id = id;
   object.name = reader.readString(offsets[3]);
   object.time = reader.readString(offsets[4]);
+  object.walkSessionId = reader.readStringOrNull(offsets[5]);
   return object;
 }
 
@@ -116,6 +129,8 @@ P _savedRouteModelDeserializeProp<P>(
       return (reader.readString(offset)) as P;
     case 4:
       return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -871,6 +886,160 @@ extension SavedRouteModelQueryFilter
       ));
     });
   }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'walkSessionId',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'walkSessionId',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'walkSessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'walkSessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'walkSessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'walkSessionId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'walkSessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'walkSessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'walkSessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'walkSessionId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'walkSessionId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterFilterCondition>
+      walkSessionIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'walkSessionId',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension SavedRouteModelQueryObject
@@ -945,6 +1114,20 @@ extension SavedRouteModelQuerySortBy
       sortByTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'time', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterSortBy>
+      sortByWalkSessionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'walkSessionId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterSortBy>
+      sortByWalkSessionIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'walkSessionId', Sort.desc);
     });
   }
 }
@@ -1029,6 +1212,20 @@ extension SavedRouteModelQuerySortThenBy
       return query.addSortBy(r'time', Sort.desc);
     });
   }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterSortBy>
+      thenByWalkSessionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'walkSessionId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QAfterSortBy>
+      thenByWalkSessionIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'walkSessionId', Sort.desc);
+    });
+  }
 }
 
 extension SavedRouteModelQueryWhereDistinct
@@ -1065,6 +1262,14 @@ extension SavedRouteModelQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'time', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, SavedRouteModel, QDistinct>
+      distinctByWalkSessionId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'walkSessionId',
+          caseSensitive: caseSensitive);
     });
   }
 }
@@ -1105,6 +1310,13 @@ extension SavedRouteModelQueryProperty
   QueryBuilder<SavedRouteModel, String, QQueryOperations> timeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'time');
+    });
+  }
+
+  QueryBuilder<SavedRouteModel, String?, QQueryOperations>
+      walkSessionIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'walkSessionId');
     });
   }
 }

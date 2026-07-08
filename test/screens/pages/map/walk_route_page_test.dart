@@ -219,6 +219,7 @@ class _NonStandardDateViewModel extends WalkRouteViewModel {
         selectedDay: 1,
         logs: [
           (
+            sessionId: '',
             date: 'invalid-format',
             startEndTime: '10:00〜11:00',
             duration: '1時間',
@@ -922,6 +923,92 @@ void main() {
 
       // セッション内のスポット1件だけが件数に反映される
       expect(find.text('行きたいスポット：1件'), findsOneWidget);
+    });
+
+    // walkSessionId なし保存ルートはマップのプレースホルダーを表示する
+    testWidgets('shows map placeholder for route without walkSessionId',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _historyOverride,
+            _savedRouteRepoWithDataOverride,
+            _walkRoutesOverride,
+            _spotOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // walkSessionId が null の場合、マップアイコン（プレースホルダー）が表示される
+      expect(find.byIcon(Icons.map_outlined), findsOneWidget);
+    });
+
+    // walkSessionId 付きの保存ルートが FlutterMap を表示する
+    testWidgets('shows FlutterMap for route with walkSessionId', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const sessionId = 'test-id';
+      final savedRouteWithSession = [
+        SavedRoute(
+          id: 1,
+          name: 'GPSコース',
+          date: '2/7',
+          distance: '1.0km',
+          time: '00:15',
+          createdAt: DateTime(2026, 2, 7),
+          walkSessionId: sessionId,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            _historyOverride,
+            savedRouteRepositoryProvider.overrideWith(
+              (_) => _FakeSavedRouteRepository(routes: savedRouteWithSession),
+            ),
+            _walkRoutesWithDataOverride,
+            _spotOverride,
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const WalkRoutePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // FlutterMap がレンダリングされ、プレースホルダーは非表示
+      expect(find.byIcon(Icons.map_outlined), findsNothing);
     });
 
     // カレンダーの日付をタップしてもページが表示されている

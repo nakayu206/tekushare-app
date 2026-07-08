@@ -4,9 +4,11 @@ typedef SavedRouteItem = ({
   String date,
   String name,
   String distance,
-  String time
+  String time,
+  String? walkSessionId,
 });
 typedef WalkLog = ({
+  String sessionId,
   String date,
   String startEndTime,
   String duration,
@@ -30,6 +32,7 @@ class WalkRouteState {
 
   static const _defaultLogs = <WalkLog>[
     (
+      sessionId: '',
       date: '2026年02月01日(日)',
       startEndTime: '6:30~6:45',
       duration: '00:15',
@@ -38,6 +41,7 @@ class WalkRouteState {
       dayLabel: '日',
     ),
     (
+      sessionId: '',
       date: '2026年02月02日(月)',
       startEndTime: '7:05~7:20',
       duration: '00:15',
@@ -46,6 +50,7 @@ class WalkRouteState {
       dayLabel: '月',
     ),
     (
+      sessionId: '',
       date: '2026年02月03日(火)',
       startEndTime: '8:00~8:30',
       duration: '00:30',
@@ -54,6 +59,7 @@ class WalkRouteState {
       dayLabel: '火',
     ),
     (
+      sessionId: '',
       date: '2026年02月04日(水)',
       startEndTime: '7:00~7:15',
       duration: '00:15',
@@ -62,6 +68,7 @@ class WalkRouteState {
       dayLabel: '水',
     ),
     (
+      sessionId: '',
       date: '2026年02月05日(木)',
       startEndTime: '7:30~7:45',
       duration: '00:15',
@@ -70,6 +77,7 @@ class WalkRouteState {
       dayLabel: '木',
     ),
     (
+      sessionId: '',
       date: '2026年02月06日(金)',
       startEndTime: '8:10~8:40',
       duration: '00:30',
@@ -78,6 +86,7 @@ class WalkRouteState {
       dayLabel: '金',
     ),
     (
+      sessionId: '',
       date: '2026年02月07日(土)',
       startEndTime: '9:00~9:15',
       duration: '00:15',
