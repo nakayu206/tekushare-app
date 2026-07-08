@@ -7,6 +7,7 @@ abstract class MapConstants {
   static const double photoDeleteBadgeSize = 16.0;
   static const double photoDeleteIconSize = 10.0;
   static const double photoViewerCloseIconSize = 20.0;
+  static const double photoViewerCloseTapSize = 48.0;
   static const Color osmAttributionBg = Color(0xCCFFFFFF);
   static const double osmAttributionPaddingH = 6.0;
   static const double osmAttributionPaddingV = 2.0;

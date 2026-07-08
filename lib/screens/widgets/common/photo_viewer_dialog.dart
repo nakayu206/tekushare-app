@@ -43,17 +43,23 @@ void showPhotoViewer(
               right: AppSpacing.lg,
               child: GestureDetector(
                 onTap: () => Navigator.pop(ctx),
-                child: Container(
-                  width: AppSize.mapPinSize,
-                  height: AppSize.mapPinSize,
-                  decoration: const BoxDecoration(
-                    color: Colors.black54,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: MapConstants.photoViewerCloseIconSize,
+                child: SizedBox(
+                  width: MapConstants.photoViewerCloseTapSize,
+                  height: MapConstants.photoViewerCloseTapSize,
+                  child: Center(
+                    child: Container(
+                      width: AppSize.mapPinSize,
+                      height: AppSize.mapPinSize,
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: MapConstants.photoViewerCloseIconSize,
+                      ),
+                    ),
                   ),
                 ),
               ),
