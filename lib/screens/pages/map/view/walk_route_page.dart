@@ -756,18 +756,25 @@ class _RouteItem extends StatelessWidget {
 // 選択中ルートカード
 // ──────────────────────────────────────────
 
-class _SelectedRouteCard extends ConsumerWidget {
+class _SelectedRouteCard extends ConsumerStatefulWidget {
   const _SelectedRouteCard({required this.route});
 
   final SavedRouteItem route;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SelectedRouteCard> createState() => _SelectedRouteCardState();
+}
+
+class _SelectedRouteCardState extends ConsumerState<_SelectedRouteCard> {
+  double _strokeWidth = MapConstants.savedRoutePolylineStrokeWidth;
+
+  @override
+  Widget build(BuildContext context) {
     final walkRoutes = ref.watch(walkRoutesProvider).valueOrNull ?? [];
-    final walkRoute = route.walkSessionId == null
+    final walkRoute = widget.route.walkSessionId == null
         ? null
         : walkRoutes
-            .where((r) => r.walkSessionId == route.walkSessionId)
+            .where((r) => r.walkSessionId == widget.route.walkSessionId)
             .firstOrNull;
 
     return Container(
@@ -836,11 +843,31 @@ class _SelectedRouteCard extends ConsumerWidget {
                         padding: const EdgeInsets.all(AppSpacing.x2l),
                       ),
                       interactionOptions: interactionOptions,
+                      onMapEvent: (event) {
+                        if (event is MapEventMove) {
+                          final w = MapConstants.savedRouteStrokeWidthAtZoom(
+                            event.camera.zoom,
+                          );
+                          if ((w - _strokeWidth).abs() > 0.1) {
+                            setState(() => _strokeWidth = w);
+                          }
+                        }
+                      },
                     )
                   : MapOptions(
                       initialCenter: points.first,
                       initialZoom: MapConstants.defaultZoom,
                       interactionOptions: interactionOptions,
+                      onMapEvent: (event) {
+                        if (event is MapEventMove) {
+                          final w = MapConstants.savedRouteStrokeWidthAtZoom(
+                            event.camera.zoom,
+                          );
+                          if ((w - _strokeWidth).abs() > 0.1) {
+                            setState(() => _strokeWidth = w);
+                          }
+                        }
+                      },
                     );
               return SizedBox(
                 width: double.infinity,
@@ -857,8 +884,7 @@ class _SelectedRouteCard extends ConsumerWidget {
                       polylines: [
                         Polyline(
                           points: points,
-                          strokeWidth:
-                              MapConstants.savedRoutePolylineStrokeWidth,
+                          strokeWidth: _strokeWidth,
                           color: AppColors.primary,
                         ),
                       ],
@@ -875,9 +901,9 @@ class _SelectedRouteCard extends ConsumerWidget {
               runSpacing: AppSpacing.xs,
               alignment: WrapAlignment.start,
               children: [
-                _RouteTag(label: route.name),
-                _RouteTag(label: route.distance),
-                _RouteTag(label: route.time),
+                _RouteTag(label: widget.route.name),
+                _RouteTag(label: widget.route.distance),
+                _RouteTag(label: widget.route.time),
               ],
             ),
           ),
