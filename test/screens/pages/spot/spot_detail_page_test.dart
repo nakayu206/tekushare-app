@@ -372,7 +372,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(Dialog),
-          matching: find.text(AppStrings.listWentTab),
+          matching: find.text(AppStrings.spotDetailMoveToWentButton),
         ),
       );
       await tester.pumpAndSettle();
@@ -390,7 +390,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(Dialog),
-          matching: find.text(AppStrings.listWentTab),
+          matching: find.text(AppStrings.spotDetailMoveToWentButton),
         ),
       );
       await tester.pumpAndSettle();
