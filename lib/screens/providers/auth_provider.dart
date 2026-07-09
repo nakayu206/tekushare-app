@@ -75,7 +75,11 @@ class FirebaseAuthServiceImpl implements AuthService {
   Future<void> signOut() => _auth.signOut();
 
   @override
-  Future<void> deleteUser() => _auth.currentUser!.delete();
+  Future<void> deleteUser() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await user.delete();
+  }
 }
 
 String _mapErrorCode(String code) {

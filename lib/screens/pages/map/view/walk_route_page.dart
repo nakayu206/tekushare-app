@@ -899,10 +899,11 @@ class _SelectedRouteCardState extends ConsumerState<_SelectedRouteCard> {
                     ),
                   ),
                   Positioned(
-                    top: AppSpacing.xs,
-                    right: AppSpacing.xs,
-                    child: GestureDetector(
-                      onTap: () => Navigator.push(
+                    top: 0,
+                    right: 0,
+                    child: IconButton(
+                      tooltip: AppStrings.fullscreenMapTooltip,
+                      onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => _FullScreenRouteMapPage(
@@ -911,17 +912,14 @@ class _SelectedRouteCardState extends ConsumerState<_SelectedRouteCard> {
                           ),
                         ),
                       ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.85),
+                      icon: const Icon(Icons.fullscreen, size: 20),
+                      color: AppColors.primary,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.85),
+                        shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.xs),
                         ),
-                        padding: const EdgeInsets.all(AppSpacing.xs),
-                        child: const Icon(
-                          Icons.fullscreen,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
+                        tapTargetSize: MaterialTapTargetSize.padded,
                       ),
                     ),
                   ),

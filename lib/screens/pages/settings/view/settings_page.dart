@@ -88,9 +88,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         message: AppStrings.settingsDeleteAccountConfirmMessage,
         confirmLabel: AppStrings.settingsDeleteAccountConfirmButton,
         isDestructive: true,
-        onConfirm: () {
+        onConfirm: () async {
           ref.read(walkSessionProvider.notifier).resetWalk();
-          ref.read(authServiceProvider).deleteUser();
+          await ref.read(authServiceProvider).deleteUser();
+          if (!mounted) return;
           Navigator.popUntil(context, (route) => route.isFirst);
         },
         onCancel: () => Navigator.pop(context),

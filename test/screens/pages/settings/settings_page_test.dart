@@ -899,7 +899,7 @@ void main() {
       await tester.tap(find.text(AppStrings.settingsDeleteAccount));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('アカウントを消去しますか'), findsOneWidget);
+      expect(find.text(AppStrings.settingsDeleteAccountConfirmMessage), findsOneWidget);
     });
 
     // アカウント削除キャンセルでダイアログが閉じる
@@ -946,7 +946,7 @@ void main() {
       await tester.tap(find.text(AppStrings.cancelButton));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('アカウントを消去しますか'), findsNothing);
+      expect(find.text(AppStrings.settingsDeleteAccountConfirmMessage), findsNothing);
     });
 
     // アカウント削除確認で deleteUser が呼ばれる

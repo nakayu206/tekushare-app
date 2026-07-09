@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
@@ -9,7 +11,9 @@ import 'package:tekushare/core/constants/app_text_style.dart';
 /// - [title] を渡すと本文上部に primary 色の見出しを表示する。
 /// - [isDestructive] が true のとき確認ボタンを赤色にする。
 /// - [confirmColor] を渡すと [isDestructive] より優先してその色を使う。
-class AppConfirmDialog extends StatelessWidget {
+/// - [onConfirm] は同期・非同期どちらでも可。非同期の場合は完了まで
+///   確認ボタンを無効化する。
+class AppConfirmDialog extends StatefulWidget {
   const AppConfirmDialog({
     super.key,
     required this.message,
@@ -26,12 +30,19 @@ class AppConfirmDialog extends StatelessWidget {
   final String confirmLabel;
   final bool isDestructive;
   final Color? confirmColor;
-  final VoidCallback onConfirm;
+  final FutureOr<void> Function() onConfirm;
   final VoidCallback onCancel;
 
+  @override
+  State<AppConfirmDialog> createState() => _AppConfirmDialogState();
+}
+
+class _AppConfirmDialogState extends State<AppConfirmDialog> {
+  bool _processing = false;
+
   Color get _confirmColor {
-    if (confirmColor != null) return confirmColor!;
-    return isDestructive ? Colors.red.shade400 : AppColors.primary;
+    if (widget.confirmColor != null) return widget.confirmColor!;
+    return widget.isDestructive ? Colors.red.shade400 : AppColors.primary;
   }
 
   @override
@@ -50,9 +61,9 @@ class AppConfirmDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (title != null) ...[
+            if (widget.title != null) ...[
               Text(
-                title!,
+                widget.title!,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.primary,
@@ -63,7 +74,7 @@ class AppConfirmDialog extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
             ],
             Text(
-              message,
+              widget.message,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: AppTextStyle.md),
             ),
@@ -74,7 +85,7 @@ class AppConfirmDialog extends StatelessWidget {
                   child: SizedBox(
                     height: AppSpacing.x5l,
                     child: OutlinedButton(
-                      onPressed: onCancel,
+                      onPressed: _processing ? null : widget.onCancel,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.sm,
@@ -94,7 +105,13 @@ class AppConfirmDialog extends StatelessWidget {
                   child: SizedBox(
                     height: AppSpacing.x5l,
                     child: ElevatedButton(
-                      onPressed: onConfirm,
+                      onPressed: _processing
+                          ? null
+                          : () async {
+                              setState(() => _processing = true);
+                              await widget.onConfirm();
+                              if (mounted) setState(() => _processing = false);
+                            },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.sm,
@@ -106,7 +123,7 @@ class AppConfirmDialog extends StatelessWidget {
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                       ),
-                      child: Text(confirmLabel),
+                      child: Text(widget.confirmLabel),
                     ),
                   ),
                 ),

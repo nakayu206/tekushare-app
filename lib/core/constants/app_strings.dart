@@ -74,6 +74,7 @@ abstract class AppStrings {
   static const saveRouteButton = 'このルートを保存する';
   static const routeDeleteConfirmMessage = '本当に消去しますか？';
   static const routeDeleteButton = '消去';
+  static const fullscreenMapTooltip = 'マップを全画面表示';
   static const walkStartEndTime = '開始終了時間';
   static const walkDuration = '散歩時間';
   static const walkDistanceLabel = '距離';
