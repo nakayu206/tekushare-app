@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' as latlong2;
+import 'package:tekushare/screens/widgets/common/app_confirm_dialog.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -398,16 +399,18 @@ class _WalkRoutePageState extends ConsumerState<WalkRoutePage> {
         currentIndex: 2,
         onTap: (index) {
           if (index == 0) {
-            Navigator.pop(context);
+            Navigator.popUntil(context, (route) => route.isFirst);
           } else if (index == 1) {
-            Navigator.pushReplacement(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const SpotListPage()),
+              (route) => route.isFirst,
             );
           } else if (index == 3) {
-            Navigator.pushReplacement(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
+              (route) => route.isFirst,
             );
           }
         },
@@ -725,8 +728,11 @@ class _RouteItem extends StatelessWidget {
                 builder: (ctx) => GestureDetector(
                   onTap: () => showDialog<void>(
                     context: ctx,
-                    builder: (_) => _RouteDeleteConfirmDialog(
-                      routeName: route.name,
+                    builder: (_) => AppConfirmDialog(
+                      title: route.name,
+                      message: AppStrings.routeDeleteConfirmMessage,
+                      confirmLabel: AppStrings.routeDeleteButton,
+                      isDestructive: true,
                       onConfirm: () {
                         Navigator.pop(ctx);
                         onDelete!();
@@ -754,18 +760,25 @@ class _RouteItem extends StatelessWidget {
 // 選択中ルートカード
 // ──────────────────────────────────────────
 
-class _SelectedRouteCard extends ConsumerWidget {
+class _SelectedRouteCard extends ConsumerStatefulWidget {
   const _SelectedRouteCard({required this.route});
 
   final SavedRouteItem route;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SelectedRouteCard> createState() => _SelectedRouteCardState();
+}
+
+class _SelectedRouteCardState extends ConsumerState<_SelectedRouteCard> {
+  double _strokeWidth = MapConstants.savedRoutePolylineStrokeWidth;
+
+  @override
+  Widget build(BuildContext context) {
     final walkRoutes = ref.watch(walkRoutesProvider).valueOrNull ?? [];
-    final walkRoute = route.walkSessionId == null
+    final walkRoute = widget.route.walkSessionId == null
         ? null
         : walkRoutes
-            .where((r) => r.walkSessionId == route.walkSessionId)
+            .where((r) => r.walkSessionId == widget.route.walkSessionId)
             .firstOrNull;
 
     return Container(
@@ -824,45 +837,93 @@ class _SelectedRouteCard extends ConsumerWidget {
               final points = walkRoute.points
                   .map((p) => latlong2.LatLng(p.latitude, p.longitude))
                   .toList();
+              const interactionOptions = InteractionOptions(
+                flags: MapConstants.savedRouteMapFlags,
+              );
               final mapOptions = points.length >= 2
                   ? MapOptions(
                       initialCameraFit: CameraFit.coordinates(
                         coordinates: points,
                         padding: const EdgeInsets.all(AppSpacing.x2l),
                       ),
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.none,
-                      ),
+                      interactionOptions: interactionOptions,
+                      onMapEvent: (event) {
+                        if (event is MapEventMove) {
+                          final w = MapConstants.savedRouteStrokeWidthAtZoom(
+                            event.camera.zoom,
+                          );
+                          if ((w - _strokeWidth).abs() > 0.1) {
+                            setState(() => _strokeWidth = w);
+                          }
+                        }
+                      },
                     )
                   : MapOptions(
                       initialCenter: points.first,
                       initialZoom: MapConstants.defaultZoom,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.none,
-                      ),
+                      interactionOptions: interactionOptions,
+                      onMapEvent: (event) {
+                        if (event is MapEventMove) {
+                          final w = MapConstants.savedRouteStrokeWidthAtZoom(
+                            event.camera.zoom,
+                          );
+                          if ((w - _strokeWidth).abs() > 0.1) {
+                            setState(() => _strokeWidth = w);
+                          }
+                        }
+                      },
                     );
-              return SizedBox(
-                width: double.infinity,
-                height: height,
-                child: FlutterMap(
-                  options: mapOptions,
-                  children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.example.tekushare',
-                    ),
-                    PolylineLayer(
-                      polylines: [
-                        Polyline(
-                          points: points,
-                          strokeWidth: MapConstants.polylineStrokeWidth,
-                          color: AppColors.primary,
+              return Stack(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: height,
+                    child: FlutterMap(
+                      options: mapOptions,
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.tekushare',
+                        ),
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: points,
+                              strokeWidth: _strokeWidth,
+                              color: AppColors.primary,
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: IconButton(
+                      tooltip: AppStrings.fullscreenMapTooltip,
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => _FullScreenRouteMapPage(
+                            points: points,
+                            name: widget.route.name,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.fullscreen, size: 20),
+                      color: AppColors.primary,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.85),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.xs),
+                        ),
+                        tapTargetSize: MaterialTapTargetSize.padded,
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -873,9 +934,9 @@ class _SelectedRouteCard extends ConsumerWidget {
               runSpacing: AppSpacing.xs,
               alignment: WrapAlignment.start,
               children: [
-                _RouteTag(label: route.name),
-                _RouteTag(label: route.distance),
-                _RouteTag(label: route.time),
+                _RouteTag(label: widget.route.name),
+                _RouteTag(label: widget.route.distance),
+                _RouteTag(label: widget.route.time),
               ],
             ),
           ),
@@ -1262,102 +1323,6 @@ class _SaveConfirmDialog extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────
-// ルート削除確認ダイアログ
-// ──────────────────────────────────────────
-
-class _RouteDeleteConfirmDialog extends StatelessWidget {
-  const _RouteDeleteConfirmDialog({
-    required this.routeName,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final String routeName;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.x2l,
-          AppSpacing.x3l,
-          AppSpacing.x2l,
-          AppSpacing.x2l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              routeName,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.lg2,
-                fontWeight: AppTextStyle.semiBold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Text(
-              AppStrings.routeDeleteConfirmMessage,
-              style: TextStyle(fontSize: AppTextStyle.md),
-            ),
-            const SizedBox(height: AppSpacing.x2l),
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: AppSpacing.x5l,
-                    child: OutlinedButton(
-                      onPressed: onCancel,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                        ),
-                        side: const BorderSide(color: AppColors.primary),
-                        foregroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
-                      ),
-                      child: const Text(AppStrings.cancelButton),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: SizedBox(
-                    height: AppSpacing.x5l,
-                    child: ElevatedButton(
-                      onPressed: onConfirm,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                        ),
-                        backgroundColor: Colors.red.shade400,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
-                      ),
-                      child: const Text(AppStrings.routeDeleteButton),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
 // 保存完了ダイアログ
 // ──────────────────────────────────────────
 
@@ -1407,6 +1372,82 @@ class _SavedDialog extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 全画面ルートマップページ
+// ──────────────────────────────────────────
+
+class _FullScreenRouteMapPage extends StatefulWidget {
+  const _FullScreenRouteMapPage({
+    required this.points,
+    required this.name,
+  });
+
+  final List<latlong2.LatLng> points;
+  final String name;
+
+  @override
+  State<_FullScreenRouteMapPage> createState() =>
+      _FullScreenRouteMapPageState();
+}
+
+class _FullScreenRouteMapPageState extends State<_FullScreenRouteMapPage> {
+  double _strokeWidth = MapConstants.savedRoutePolylineStrokeWidth;
+
+  void _onMapEvent(MapEvent event) {
+    if (event is MapEventMove) {
+      final w = MapConstants.savedRouteStrokeWidthAtZoom(event.camera.zoom);
+      if ((w - _strokeWidth).abs() > 0.1) {
+        setState(() => _strokeWidth = w);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mapOptions = widget.points.length >= 2
+        ? MapOptions(
+            initialCameraFit: CameraFit.coordinates(
+              coordinates: widget.points,
+              padding: const EdgeInsets.all(AppSpacing.x2l),
+            ),
+            onMapEvent: _onMapEvent,
+          )
+        : MapOptions(
+            initialCenter: widget.points.first,
+            initialZoom: MapConstants.defaultZoom,
+            onMapEvent: _onMapEvent,
+          );
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        title: Text(widget.name),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: FlutterMap(
+        options: mapOptions,
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.tekushare',
+          ),
+          PolylineLayer(
+            polylines: [
+              Polyline(
+                points: widget.points,
+                strokeWidth: _strokeWidth,
+                color: AppColors.primary,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

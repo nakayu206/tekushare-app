@@ -37,6 +37,7 @@ abstract interface class AuthService {
   Future<void> signInWithEmail(String email, String password);
   Future<void> setDisplayName(String name);
   Future<void> signOut();
+  Future<void> deleteUser();
 }
 
 // ── Firebase Auth 実装 ────────────────────────────────────────────────────────
@@ -72,6 +73,13 @@ class FirebaseAuthServiceImpl implements AuthService {
 
   @override
   Future<void> signOut() => _auth.signOut();
+
+  @override
+  Future<void> deleteUser() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await user.delete();
+  }
 }
 
 String _mapErrorCode(String code) {

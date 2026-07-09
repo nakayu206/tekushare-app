@@ -93,16 +93,6 @@ void main() {
       expect(state().sharedAccounts, ['あかり', 'たかし', 'ゆか', 'けんじ']);
     });
 
-    // ログアウト（スタブ：状態変化なし）
-    test('logout does not throw', () {
-      expect(() => vm().logout(), returnsNormally);
-    });
-
-    // アカウント消去（スタブ：状態変化なし）
-    test('deleteAccount does not throw', () {
-      expect(() => vm().deleteAccount(), returnsNormally);
-    });
-
     // 他フィールドに影響しない
     test('updating one field does not affect others', () {
       vm().setTimerEnabled(false);

@@ -1,9 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/entities/walk_route.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/domain/repositories/route_repository.dart';
+import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
 import 'package:tekushare/domain/usecases/photo/remove_photo_from_spot.dart';
 import 'package:tekushare/domain/usecases/spot/delete_spot.dart';
@@ -11,11 +16,65 @@ import 'package:tekushare/domain/usecases/spot/update_spot.dart';
 import 'package:tekushare/domain/usecases/spot/get_spots.dart';
 import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
+import 'package:tekushare/domain/usecases/walk/end_walk.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
+import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+
+class _FakeAuthService implements AuthService {
+  bool signedOut = false;
+  bool deletedUser = false;
+
+  @override
+  Stream<User?> watchAuthState() => const Stream.empty();
+
+  @override
+  Future<void> registerWithEmail(
+          String email, String password, String displayName) async =>
+      {};
+
+  @override
+  Future<void> signInWithEmail(String email, String password) async {}
+
+  @override
+  Future<void> setDisplayName(String name) async {}
+
+  @override
+  Future<void> signOut() async => signedOut = true;
+
+  @override
+  Future<void> deleteUser() async => deletedUser = true;
+}
+
+class _FakeWalkSessionRepository implements WalkSessionRepository {
+  const _FakeWalkSessionRepository();
+
+  @override
+  Future<void> saveSession(WalkSession session) async {}
+
+  @override
+  Future<List<WalkSession>> getAllSessions() async => [];
+
+  @override
+  Future<WalkSession?> getSessionById(String id) async => null;
+}
+
+class _FakeWalkRouteRepository implements RouteRepository {
+  const _FakeWalkRouteRepository();
+
+  @override
+  Future<void> saveRoute(WalkRoute route) async {}
+
+  @override
+  Future<WalkRoute?> getRouteBySessionId(String sessionId) async => null;
+
+  @override
+  Future<List<WalkRoute>> getAllRoutes() async => [];
+}
 
 class _FakeSaveSpot implements SaveSpot {
   const _FakeSaveSpot();
@@ -654,6 +713,289 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SettingsPage), findsOneWidget);
+    });
+
+    // ── ログアウト ──
+
+    // ログアウトボタンをタップすると確認ダイアログが表示される
+    testWidgets('tapping logout button shows logout confirm dialog',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeAuth = _FakeAuthService();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(fakeAuth),
+            walkSessionProvider.overrideWith(
+              (ref) => WalkSessionNotifier(
+                endWalk: const EndWalk(
+                  _FakeWalkSessionRepository(),
+                  _FakeWalkRouteRepository(),
+                ),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(find.text(AppStrings.settingsLogout));
+      await tester.tap(find.text(AppStrings.settingsLogout));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.text(AppStrings.settingsLogoutConfirmMessage), findsOneWidget);
+    });
+
+    // ログアウトキャンセルでダイアログが閉じる
+    testWidgets('canceling logout dialog closes dialog', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeAuth = _FakeAuthService();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(fakeAuth),
+            walkSessionProvider.overrideWith(
+              (ref) => WalkSessionNotifier(
+                endWalk: const EndWalk(
+                  _FakeWalkSessionRepository(),
+                  _FakeWalkRouteRepository(),
+                ),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(find.text(AppStrings.settingsLogout));
+      await tester.tap(find.text(AppStrings.settingsLogout));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.cancelButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.settingsLogoutConfirmMessage), findsNothing);
+    });
+
+    // ログアウト確認で signOut が呼ばれる
+    testWidgets('confirming logout calls signOut', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeAuth = _FakeAuthService();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(fakeAuth),
+            walkSessionProvider.overrideWith(
+              (ref) => WalkSessionNotifier(
+                endWalk: const EndWalk(
+                  _FakeWalkSessionRepository(),
+                  _FakeWalkRouteRepository(),
+                ),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(find.text(AppStrings.settingsLogout));
+      await tester.tap(find.text(AppStrings.settingsLogout));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.settingsLogoutConfirmButton).last);
+      await tester.pumpAndSettle();
+
+      expect(fakeAuth.signedOut, isTrue);
+    });
+
+    // ── アカウント削除 ──
+
+    // アカウント削除ボタンをタップすると確認ダイアログが表示される
+    testWidgets('tapping delete account button shows confirm dialog',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeAuth = _FakeAuthService();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(fakeAuth),
+            walkSessionProvider.overrideWith(
+              (ref) => WalkSessionNotifier(
+                endWalk: const EndWalk(
+                  _FakeWalkSessionRepository(),
+                  _FakeWalkRouteRepository(),
+                ),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(find.text(AppStrings.settingsDeleteAccount));
+      await tester.tap(find.text(AppStrings.settingsDeleteAccount));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.settingsDeleteAccountConfirmMessage),
+          findsOneWidget);
+    });
+
+    // アカウント削除キャンセルでダイアログが閉じる
+    testWidgets('canceling delete account dialog closes dialog',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeAuth = _FakeAuthService();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(fakeAuth),
+            walkSessionProvider.overrideWith(
+              (ref) => WalkSessionNotifier(
+                endWalk: const EndWalk(
+                  _FakeWalkSessionRepository(),
+                  _FakeWalkRouteRepository(),
+                ),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(find.text(AppStrings.settingsDeleteAccount));
+      await tester.tap(find.text(AppStrings.settingsDeleteAccount));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.cancelButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.settingsDeleteAccountConfirmMessage),
+          findsNothing);
+    });
+
+    // アカウント削除確認で deleteUser が呼ばれる
+    testWidgets('confirming delete account calls deleteUser', (tester) async {
+      tester.view.physicalSize = const Size(1170, 3000);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeAuth = _FakeAuthService();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(fakeAuth),
+            walkSessionProvider.overrideWith(
+              (ref) => WalkSessionNotifier(
+                endWalk: const EndWalk(
+                  _FakeWalkSessionRepository(),
+                  _FakeWalkRouteRepository(),
+                ),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            builder: (context, child) {
+              final sw = MediaQuery.sizeOf(context).width;
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
+                ),
+                child: child!,
+              );
+            },
+            home: const SettingsPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(find.text(AppStrings.settingsDeleteAccount));
+      await tester.tap(find.text(AppStrings.settingsDeleteAccount));
+      await tester.pumpAndSettle();
+      await tester
+          .tap(find.text(AppStrings.settingsDeleteAccountConfirmButton));
+      await tester.pumpAndSettle();
+
+      expect(fakeAuth.deletedUser, isTrue);
     });
   });
 }

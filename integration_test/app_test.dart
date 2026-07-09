@@ -35,6 +35,8 @@ class _FakeAuthService implements AuthService {
   Future<void> setDisplayName(String name) async {}
   @override
   Future<void> signOut() async {}
+  @override
+  Future<void> deleteUser() async {}
 }
 
 void main() {

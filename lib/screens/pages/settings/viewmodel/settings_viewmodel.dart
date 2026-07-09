@@ -69,10 +69,6 @@ class SettingsViewModel extends Notifier<SettingsState> {
     final updated = List<String>.from(state.sharedAccounts)..remove(name);
     state = state.copyWith(sharedAccounts: updated);
   }
-
-  void logout() {}
-
-  void deleteAccount() {}
 }
 
 final settingsViewModelProvider =
