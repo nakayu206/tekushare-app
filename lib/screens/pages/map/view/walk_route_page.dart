@@ -869,28 +869,59 @@ class _SelectedRouteCardState extends ConsumerState<_SelectedRouteCard> {
                         }
                       },
                     );
-              return SizedBox(
-                width: double.infinity,
-                height: height,
-                child: FlutterMap(
-                  options: mapOptions,
-                  children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.example.tekushare',
-                    ),
-                    PolylineLayer(
-                      polylines: [
-                        Polyline(
-                          points: points,
-                          strokeWidth: _strokeWidth,
-                          color: AppColors.primary,
+              return Stack(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: height,
+                    child: FlutterMap(
+                      options: mapOptions,
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.tekushare',
+                        ),
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: points,
+                              strokeWidth: _strokeWidth,
+                              color: AppColors.primary,
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    top: AppSpacing.xs,
+                    right: AppSpacing.xs,
+                    child: GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => _FullScreenRouteMapPage(
+                            points: points,
+                            name: widget.route.name,
+                          ),
+                        ),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(AppRadius.xs),
+                        ),
+                        padding: const EdgeInsets.all(AppSpacing.xs),
+                        child: const Icon(
+                          Icons.fullscreen,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -1435,6 +1466,82 @@ class _SavedDialog extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 全画面ルートマップページ
+// ──────────────────────────────────────────
+
+class _FullScreenRouteMapPage extends StatefulWidget {
+  const _FullScreenRouteMapPage({
+    required this.points,
+    required this.name,
+  });
+
+  final List<latlong2.LatLng> points;
+  final String name;
+
+  @override
+  State<_FullScreenRouteMapPage> createState() =>
+      _FullScreenRouteMapPageState();
+}
+
+class _FullScreenRouteMapPageState extends State<_FullScreenRouteMapPage> {
+  double _strokeWidth = MapConstants.savedRoutePolylineStrokeWidth;
+
+  void _onMapEvent(MapEvent event) {
+    if (event is MapEventMove) {
+      final w = MapConstants.savedRouteStrokeWidthAtZoom(event.camera.zoom);
+      if ((w - _strokeWidth).abs() > 0.1) {
+        setState(() => _strokeWidth = w);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mapOptions = widget.points.length >= 2
+        ? MapOptions(
+            initialCameraFit: CameraFit.coordinates(
+              coordinates: widget.points,
+              padding: const EdgeInsets.all(AppSpacing.x2l),
+            ),
+            onMapEvent: _onMapEvent,
+          )
+        : MapOptions(
+            initialCenter: widget.points.first,
+            initialZoom: MapConstants.defaultZoom,
+            onMapEvent: _onMapEvent,
+          );
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        title: Text(widget.name),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: FlutterMap(
+        options: mapOptions,
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.tekushare',
+          ),
+          PolylineLayer(
+            polylines: [
+              Polyline(
+                points: widget.points,
+                strokeWidth: _strokeWidth,
+                color: AppColors.primary,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
