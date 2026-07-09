@@ -212,14 +212,13 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                 onExpand: _onPhotoExpand,
               ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
-              if (widget.spot.status == SpotStatus.wantToGo) ...[
-                _MoveToWentButton(onPressed: _onMoveToWentPressed),
-                const SizedBox(height: 12),
-                _DeleteButton(onPressed: _onDeletePressed),
-              ] else
-                _DeleteButton(onPressed: _onDeletePressed),
-              const SizedBox(height: 16),
+              _DeleteButton(onPressed: _onDeletePressed),
+              const SizedBox(height: 12),
               _SaveButton(onPressed: _onSavePressed),
+              if (widget.spot.status == SpotStatus.wantToGo) ...[
+                const SizedBox(height: 12),
+                _MoveToWentButton(onPressed: _onMoveToWentPressed),
+              ],
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
             ],
           ),
