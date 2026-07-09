@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' as latlong2;
+import 'package:tekushare/screens/widgets/common/app_confirm_dialog.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -727,8 +728,11 @@ class _RouteItem extends StatelessWidget {
                 builder: (ctx) => GestureDetector(
                   onTap: () => showDialog<void>(
                     context: ctx,
-                    builder: (_) => _RouteDeleteConfirmDialog(
-                      routeName: route.name,
+                    builder: (_) => AppConfirmDialog(
+                      title: route.name,
+                      message: AppStrings.routeDeleteConfirmMessage,
+                      confirmLabel: AppStrings.routeDeleteButton,
+                      isDestructive: true,
                       onConfirm: () {
                         Navigator.pop(ctx);
                         onDelete!();
@@ -1308,102 +1312,6 @@ class _SaveConfirmDialog extends StatelessWidget {
                         ),
                       ),
                       child: const Text(AppStrings.cancelButton),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// ルート削除確認ダイアログ
-// ──────────────────────────────────────────
-
-class _RouteDeleteConfirmDialog extends StatelessWidget {
-  const _RouteDeleteConfirmDialog({
-    required this.routeName,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final String routeName;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.x2l,
-          AppSpacing.x3l,
-          AppSpacing.x2l,
-          AppSpacing.x2l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              routeName,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.lg2,
-                fontWeight: AppTextStyle.semiBold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Text(
-              AppStrings.routeDeleteConfirmMessage,
-              style: TextStyle(fontSize: AppTextStyle.md),
-            ),
-            const SizedBox(height: AppSpacing.x2l),
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: AppSpacing.x5l,
-                    child: OutlinedButton(
-                      onPressed: onCancel,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                        ),
-                        side: const BorderSide(color: AppColors.primary),
-                        foregroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
-                      ),
-                      child: const Text(AppStrings.cancelButton),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: SizedBox(
-                    height: AppSpacing.x5l,
-                    child: ElevatedButton(
-                      onPressed: onConfirm,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                        ),
-                        backgroundColor: Colors.red.shade400,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
-                      ),
-                      child: const Text(AppStrings.routeDeleteButton),
                     ),
                   ),
                 ),

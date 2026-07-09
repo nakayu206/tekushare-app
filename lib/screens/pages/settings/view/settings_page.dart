@@ -14,6 +14,7 @@ import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+import 'package:tekushare/screens/widgets/common/app_confirm_dialog.dart';
 
 /// 設定画面
 class SettingsPage extends ConsumerStatefulWidget {
@@ -66,7 +67,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   void _showLogoutConfirmDialog() {
     showDialog<void>(
       context: context,
-      builder: (_) => _ConfirmActionDialog(
+      builder: (_) => AppConfirmDialog(
         message: AppStrings.settingsLogoutConfirmMessage,
         confirmLabel: AppStrings.settingsLogoutConfirmButton,
         isDestructive: false,
@@ -83,7 +84,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   void _showDeleteAccountConfirmDialog() {
     showDialog<void>(
       context: context,
-      builder: (_) => _ConfirmActionDialog(
+      builder: (_) => AppConfirmDialog(
         message: AppStrings.settingsDeleteAccountConfirmMessage,
         confirmLabel: AppStrings.settingsDeleteAccountConfirmButton,
         isDestructive: true,
@@ -1514,93 +1515,6 @@ class _AccountCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 汎用確認ダイアログ（ログアウト・アカウント消去）
-// ──────────────────────────────────────────
-
-class _ConfirmActionDialog extends StatelessWidget {
-  const _ConfirmActionDialog({
-    required this.message,
-    required this.confirmLabel,
-    required this.isDestructive,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final String message;
-  final String confirmLabel;
-  final bool isDestructive;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.x2l,
-          AppSpacing.x3l,
-          AppSpacing.x2l,
-          AppSpacing.x2l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: AppTextStyle.sm2),
-            ),
-            const SizedBox(height: AppSpacing.x2l),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      side: const BorderSide(color: AppColors.primary),
-                      foregroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                    ),
-                    child: const Text(AppStrings.cancelButton),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onConfirm,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      backgroundColor:
-                          isDestructive ? Colors.red : AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                    ),
-                    child: Text(confirmLabel),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

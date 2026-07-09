@@ -20,6 +20,7 @@ import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
+import 'package:tekushare/screens/widgets/common/app_confirm_dialog.dart';
 import 'package:tekushare/screens/widgets/common/category_chip_group.dart';
 import 'package:tekushare/screens/widgets/common/dashed_border_painter.dart';
 import 'package:tekushare/screens/widgets/common/photo_viewer_dialog.dart';
@@ -93,8 +94,10 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     final category = ref.read(spotDetailViewModelProvider).selectedCategory;
     showDialog<void>(
       context: context,
-      builder: (_) => _SaveConfirmDialog(
+      builder: (_) => AppConfirmDialog(
         title: title,
+        message: AppStrings.spotDetailSaveConfirmMessage,
+        confirmLabel: AppStrings.saveButton,
         onConfirm: () async {
           Navigator.pop(context);
           await ref.read(spotProvider.notifier).updateSpot(
@@ -111,10 +114,13 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   void _onDeletePressed() {
     showDialog<void>(
       context: context,
-      builder: (_) => _DeleteConfirmDialog(
+      builder: (_) => AppConfirmDialog(
         title: _titleController.text.isEmpty
             ? AppStrings.noTitle
             : _titleController.text,
+        message: AppStrings.spotDetailDeleteConfirmMessage,
+        confirmLabel: AppStrings.spotDetailDeleteButton,
+        isDestructive: true,
         onConfirm: () async {
           Navigator.pop(context);
           await ref.read(spotProvider.notifier).deleteSpot(widget.spot.id);
@@ -133,8 +139,11 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     final category = ref.read(spotDetailViewModelProvider).selectedCategory;
     showDialog<void>(
       context: context,
-      builder: (_) => _MoveToWentConfirmDialog(
+      builder: (_) => AppConfirmDialog(
         title: title,
+        message: AppStrings.spotDetailMoveToWentConfirmMessage,
+        confirmLabel: AppStrings.spotDetailMoveToWentButton,
+        confirmColor: AppColors.listSelected,
         onConfirm: () async {
           Navigator.pop(context);
           await ref.read(spotProvider.notifier).updateSpot(
@@ -596,255 +605,6 @@ class _SaveButton extends StatelessWidget {
             fontSize: sizing.detailBtnFontSize,
             fontWeight: FontWeight.w500,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 上書き保存確認ダイアログ
-// ──────────────────────────────────────────
-
-class _SaveConfirmDialog extends StatelessWidget {
-  const _SaveConfirmDialog({
-    required this.title,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final String title;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.lg2,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              AppStrings.spotDetailSaveConfirmMessage,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(AppStrings.cancelButton),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onConfirm,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(AppStrings.saveButton),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 削除確認ダイアログ
-// ──────────────────────────────────────────
-
-class _DeleteConfirmDialog extends StatelessWidget {
-  const _DeleteConfirmDialog({
-    required this.title,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final String title;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.lg2,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              AppStrings.spotDetailDeleteConfirmMessage,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(AppStrings.cancelButton),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onConfirm,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(AppStrings.spotDetailDeleteButton),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 行った！に保存確認ダイアログ
-// ──────────────────────────────────────────
-
-class _MoveToWentConfirmDialog extends StatelessWidget {
-  const _MoveToWentConfirmDialog({
-    required this.title,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final String title;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.x2l,
-        vertical: AppSpacing.x2l,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          28,
-          AppSpacing.lg,
-          AppSpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.lg2,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              AppStrings.spotDetailMoveToWentConfirmMessage,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(AppStrings.cancelButton),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onConfirm,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      backgroundColor: AppColors.listSelected,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(AppStrings.listWentTab),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );
