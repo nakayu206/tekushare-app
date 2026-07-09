@@ -826,22 +826,21 @@ class _SelectedRouteCard extends ConsumerWidget {
               final points = walkRoute.points
                   .map((p) => latlong2.LatLng(p.latitude, p.longitude))
                   .toList();
+              const interactionOptions = InteractionOptions(
+                flags: MapConstants.savedRouteMapFlags,
+              );
               final mapOptions = points.length >= 2
                   ? MapOptions(
                       initialCameraFit: CameraFit.coordinates(
                         coordinates: points,
                         padding: const EdgeInsets.all(AppSpacing.x2l),
                       ),
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.none,
-                      ),
+                      interactionOptions: interactionOptions,
                     )
                   : MapOptions(
                       initialCenter: points.first,
                       initialZoom: MapConstants.defaultZoom,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.none,
-                      ),
+                      interactionOptions: interactionOptions,
                     );
               return SizedBox(
                 width: double.infinity,
@@ -858,7 +857,8 @@ class _SelectedRouteCard extends ConsumerWidget {
                       polylines: [
                         Polyline(
                           points: points,
-                          strokeWidth: MapConstants.polylineStrokeWidth,
+                          strokeWidth:
+                              MapConstants.savedRoutePolylineStrokeWidth,
                           color: AppColors.primary,
                         ),
                       ],

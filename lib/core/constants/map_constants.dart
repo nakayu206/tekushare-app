@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 
 abstract class MapConstants {
   static const double defaultZoom = 17.0;
   static const double polylineStrokeWidth = 6.0;
+  // 保存済みルート表示用（小さいカードに埋め込まれるため細め）
+  static const double savedRoutePolylineStrokeWidth = 3.0;
+  // 保存済みルートカードのマップ操作フラグ（ピンチズーム・ダブルタップズームのみ）
+  static const int savedRouteMapFlags =
+      InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom;
   static const double photoThumbnailSize = 40.0;
   static const double photoDeleteBadgeSize = 16.0;
   static const double photoDeleteIconSize = 10.0;
