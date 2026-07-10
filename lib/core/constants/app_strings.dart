@@ -150,12 +150,10 @@ abstract class AppStrings {
   // 招待承認画面
   static const acceptInviteTitle = 'アカウント連携';
   static const acceptInviteMessage = 'さんと連携しますか？';
-  static const acceptInviteDescription =
-      '連携すると、行きたい！リストや行った！リストを共有できるようになります。';
+  static const acceptInviteDescription = '連携すると、行きたい！リストや行った！リストを共有できるようになります。';
   static const acceptInviteConfirmButton = '連携する';
   static const acceptInviteSuccessMessage = '連携しました！';
-  static const acceptInviteInvalidMessage =
-      'この招待リンクは無効か、期限が切れています。';
+  static const acceptInviteInvalidMessage = 'この招待リンクは無効か、期限が切れています。';
   static const acceptInviteSelfMessage = '自分自身のリンクは使用できません。';
   static const acceptInviteAlreadyLinkedMessage = 'すでに連携済みです。';
   static const acceptInviteErrorMessage = '連携に失敗しました。もう一度お試しください。';

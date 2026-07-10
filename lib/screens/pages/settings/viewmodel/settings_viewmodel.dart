@@ -81,7 +81,8 @@ class SettingsViewModel extends Notifier<SettingsState> {
   }
 
   Future<void> generateInviteLink() async {
-    final link = await ref.read(accountLinkRepositoryProvider).createInviteLink();
+    final link =
+        await ref.read(accountLinkRepositoryProvider).createInviteLink();
     state = state.copyWith(inviteLink: link);
   }
 }

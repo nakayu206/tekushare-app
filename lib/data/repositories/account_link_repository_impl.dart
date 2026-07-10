@@ -35,7 +35,8 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
       for (final doc in snapshot.docs) {
         final uids = List<String>.from(doc['uids'] as List);
         final otherUid = uids.firstWhere((u) => u != myUid);
-        final userDoc = await _firestore.collection('users').doc(otherUid).get();
+        final userDoc =
+            await _firestore.collection('users').doc(otherUid).get();
         final displayName = userDoc.data()?['displayName'] as String? ?? '';
         final createdAt = doc['createdAt'] as Timestamp?;
         accounts.add(LinkedAccount(

@@ -713,8 +713,7 @@ class _ShareCard extends ConsumerWidget {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content:
-                                  Text(AppStrings.accountLinkUnlinkError),
+                              content: Text(AppStrings.accountLinkUnlinkError),
                             ),
                           );
                         }
