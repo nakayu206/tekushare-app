@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,8 +44,17 @@ abstract interface class AuthService {
 // ── Firebase Auth 実装 ────────────────────────────────────────────────────────
 
 class FirebaseAuthServiceImpl implements AuthService {
-  FirebaseAuthServiceImpl(this._auth);
+  FirebaseAuthServiceImpl(this._auth, this._firestore);
   final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+
+  /// アカウント連携で相手の表示名を引けるよう、Firestore側にも同期する。
+  Future<void> _syncUserDoc(String uid, String displayName) {
+    return _firestore.collection('users').doc(uid).set({
+      'displayName': displayName,
+      'updatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
+  }
 
   @override
   Stream<User?> watchAuthState() => _auth.userChanges();
@@ -58,6 +68,8 @@ class FirebaseAuthServiceImpl implements AuthService {
     );
     await credential.user?.updateDisplayName(displayName);
     await credential.user?.reload();
+    final uid = credential.user?.uid;
+    if (uid != null) await _syncUserDoc(uid, displayName);
   }
 
   @override
@@ -69,6 +81,8 @@ class FirebaseAuthServiceImpl implements AuthService {
   Future<void> setDisplayName(String name) async {
     await _auth.currentUser?.updateDisplayName(name);
     await _auth.currentUser?.reload();
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) await _syncUserDoc(uid, name);
   }
 
   @override
@@ -98,7 +112,10 @@ String _mapErrorCode(String code) {
 // ── Providers ─────────────────────────────────────────────────────────────────
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  return FirebaseAuthServiceImpl(FirebaseAuth.instance);
+  return FirebaseAuthServiceImpl(
+    FirebaseAuth.instance,
+    FirebaseFirestore.instance,
+  );
 });
 
 // ── Email auth notifier ───────────────────────────────────────────────────────

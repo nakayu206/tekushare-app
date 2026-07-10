@@ -1,3 +1,4 @@
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,25 +6,78 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/screens/pages/account_link/view/accept_invite_page.dart';
 import 'package:tekushare/screens/pages/auth/view/display_name_page.dart';
 import 'package:tekushare/screens/pages/auth/view/email_auth_page.dart';
 import 'package:tekushare/screens/pages/home/view/home_page.dart';
+import 'package:tekushare/screens/providers/account_link_provider.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
 final routeObserver = RouteObserver<ModalRoute<void>>();
+final navigatorKey = GlobalKey<NavigatorState>();
 
 /// アプリのルートWidget
-class TekuShareApp extends ConsumerWidget {
+class TekuShareApp extends ConsumerStatefulWidget {
   const TekuShareApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TekuShareApp> createState() => _TekuShareAppState();
+}
+
+class _TekuShareAppState extends ConsumerState<TekuShareApp> {
+  final _appLinks = AppLinks();
+
+  @override
+  void initState() {
+    super.initState();
+    _appLinks.getInitialLink().then((uri) {
+      if (uri != null) _handleUri(uri);
+    });
+    _appLinks.uriLinkStream.listen(_handleUri);
+  }
+
+  /// tekushare://link/<token> を受け取り、ログイン済みなら即座に承認画面へ、
+  /// 未ログインなら pendingInviteTokenProvider に保持してログイン完了後に開く。
+  void _handleUri(Uri uri) {
+    if (uri.scheme != 'tekushare' || uri.host != 'link') return;
+    if (uri.pathSegments.isEmpty) return;
+    final token = uri.pathSegments.first;
+
+    final user = ref.read(authStateProvider).valueOrNull;
+    if (user != null && user.displayName?.isNotEmpty == true) {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => AcceptInvitePage(token: token)),
+      );
+    } else {
+      ref.read(pendingInviteTokenProvider.notifier).state = token;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final ready = ref.watch(appReadyProvider);
     final authState = ref.watch(authStateProvider);
+
+    ref.listen<AsyncValue<dynamic>>(authStateProvider, (previous, next) {
+      final user = next.valueOrNull;
+      if (user == null || user.displayName == null || user.displayName == '') {
+        return;
+      }
+      final token = ref.read(pendingInviteTokenProvider);
+      if (token == null) return;
+      ref.read(pendingInviteTokenProvider.notifier).state = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => AcceptInvitePage(token: token)),
+        );
+      });
+    });
+
     return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       navigatorObservers: [routeObserver],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),

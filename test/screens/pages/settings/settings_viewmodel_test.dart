@@ -28,7 +28,8 @@ void main() {
       expect(state().registeredContactName, null);
       expect(state().shareWantToGo, true);
       expect(state().shareVisited, true);
-      expect(state().sharedAccounts, ['あかり', 'たかし', 'ゆか', 'けんじ']);
+      expect(state().inviteLink, null);
+      expect(state().isEditingSharedAccounts, false);
     });
 
     // タイマーON/OFF
@@ -81,16 +82,12 @@ void main() {
       expect(state().shareVisited, false);
     });
 
-    // 共有アカウント消去
-    test('removeSharedAccount removes the specified account', () {
-      vm().removeSharedAccount('たかし');
-      expect(state().sharedAccounts, ['あかり', 'ゆか', 'けんじ']);
-    });
-
-    // 存在しないアカウントの消去は何もしない
-    test('removeSharedAccount with unknown name does not change list', () {
-      vm().removeSharedAccount('存在しない');
-      expect(state().sharedAccounts, ['あかり', 'たかし', 'ゆか', 'けんじ']);
+    // 連携アカウント一覧の編集モード切り替え
+    test('toggleEditSharedAccounts flips isEditingSharedAccounts', () {
+      vm().toggleEditSharedAccounts();
+      expect(state().isEditingSharedAccounts, true);
+      vm().toggleEditSharedAccounts();
+      expect(state().isEditingSharedAccounts, false);
     });
 
     // 他フィールドに影響しない
