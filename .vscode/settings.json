@@ -12,5 +12,6 @@
     "editor.suggestSelection": "first",
     "editor.tabCompletion": "onlySnippets"
   },
-  "cmake.configureOnOpen": false
+  "cmake.configureOnOpen": false,
+  "dart.showTodos": false
 }
