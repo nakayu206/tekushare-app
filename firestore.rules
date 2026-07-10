@@ -7,6 +7,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // uids ([fromUid, myUid] 2要素) に対して、inviteToken が指す招待が
+    // 「未使用・期限内・fromUidが自分ではなくuidsに含まれる」ことを検証する。
+    function isValidInviteFor(uids, inviteToken) {
+      let invite = get(/databases/$(database)/documents/linkInvites/$(inviteToken)).data;
+      return invite.fromUid != request.auth.uid
+        && invite.fromUid in uids
+        && invite.used == false
+        && invite.expiresAt > request.time;
+    }
+
     // users/{uid}
     // 連携相手の表示名を引けるよう、読み取りはログイン済みユーザー全員に許可する。
     // 書き込みは本人のみ。
@@ -44,9 +54,7 @@ service cloud.firestore {
         && request.auth.uid in request.resource.data.uids
         && request.resource.data.uids.size() == 2
         && exists(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken))
-        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.fromUid != request.auth.uid
-        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.fromUid in request.resource.data.uids
-        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.used == false;
+        && isValidInviteFor(request.resource.data.uids, request.resource.data.inviteToken);
 
       allow update: if false;
 

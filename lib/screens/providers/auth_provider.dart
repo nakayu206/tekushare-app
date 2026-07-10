@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // ── Auth state stream ─────────────────────────────────────────────────────────
@@ -49,11 +50,17 @@ class FirebaseAuthServiceImpl implements AuthService {
   final FirebaseFirestore _firestore;
 
   /// アカウント連携で相手の表示名を引けるよう、Firestore側にも同期する。
-  Future<void> _syncUserDoc(String uid, String displayName) {
-    return _firestore.collection('users').doc(uid).set({
-      'displayName': displayName,
-      'updatedAt': Timestamp.now(),
-    }, SetOptions(merge: true));
+  /// これは付随的な処理なので、失敗してもAuth側の成功（登録・表示名設定）は
+  /// 巻き込まない。同期は次回のsetDisplayName呼び出し等で再試行される。
+  Future<void> _syncUserDoc(String uid, String displayName) async {
+    try {
+      await _firestore.collection('users').doc(uid).set({
+        'displayName': displayName,
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('users/$uid の同期に失敗しました: $e');
+    }
   }
 
   @override

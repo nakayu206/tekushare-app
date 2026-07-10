@@ -28,6 +28,10 @@ class TekuShareApp extends ConsumerStatefulWidget {
 class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   final _appLinks = AppLinks();
 
+  // getInitialLink() と uriLinkStream の両方から同じ起動時リンクが
+  // 届くことがあるため、処理済みトークンを覚えて二重に画面を開かないようにする。
+  final _handledTokens = <String>{};
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +47,7 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
     if (uri.scheme != 'tekushare' || uri.host != 'link') return;
     if (uri.pathSegments.isEmpty) return;
     final token = uri.pathSegments.first;
+    if (!_handledTokens.add(token)) return;
 
     final user = ref.read(authStateProvider).valueOrNull;
     if (user != null && user.displayName?.isNotEmpty == true) {

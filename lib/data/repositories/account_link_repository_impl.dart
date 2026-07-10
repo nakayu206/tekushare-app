@@ -75,7 +75,9 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
       throw const InviteInvalidException();
     }
 
-    final fromUid = data['fromUid'] as String;
+    final fromUidRaw = data['fromUid'];
+    if (fromUidRaw is! String) throw const InviteInvalidException();
+    final fromUid = fromUidRaw;
     final userDoc = await _firestore.collection('users').doc(fromUid).get();
     final displayName = userDoc.data()?['displayName'] as String? ?? '';
     return InviteDetails(fromUid: fromUid, fromDisplayName: displayName);
@@ -97,7 +99,9 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
         throw const InviteInvalidException();
       }
 
-      final fromUid = data['fromUid'] as String;
+      final fromUidRaw = data['fromUid'];
+      if (fromUidRaw is! String) throw const InviteInvalidException();
+      final fromUid = fromUidRaw;
       if (fromUid == myUid) throw const SelfInviteException();
 
       final linkId = _linkIdOf(fromUid, myUid);

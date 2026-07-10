@@ -668,17 +668,17 @@ class _ShareCard extends ConsumerWidget {
                 ),
               ),
               if (linkedAccounts.isNotEmpty)
-                GestureDetector(
-                  onTap: vm.toggleEditSharedAccounts,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
-                    child: Icon(
-                      state.isEditingSharedAccounts
-                          ? Icons.check
-                          : Icons.edit_outlined,
-                      color: AppColors.primary,
-                      size: AppSize.iconSm,
-                    ),
+                IconButton(
+                  onPressed: vm.toggleEditSharedAccounts,
+                  tooltip: state.isEditingSharedAccounts
+                      ? AppStrings.accountLinkDoneTooltip
+                      : AppStrings.accountLinkEditTooltip,
+                  icon: Icon(
+                    state.isEditingSharedAccounts
+                        ? Icons.check
+                        : Icons.edit_outlined,
+                    color: AppColors.primary,
+                    size: AppSize.iconSm,
                   ),
                 ),
             ],
@@ -872,12 +872,12 @@ class _ContactRow extends StatelessWidget {
                         name,
                         style: const TextStyle(
                           fontSize: AppTextStyle.sm2,
-                          color: Colors.black,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
                     const Text(
-                      'スポットを見る',
+                      AppStrings.accountLinkViewSpots,
                       style: TextStyle(
                         fontSize: AppTextStyle.xs,
                         color: AppColors.primary,
@@ -894,15 +894,13 @@ class _ContactRow extends StatelessWidget {
             ),
           ),
           if (isEditing)
-            GestureDetector(
-              onTap: onUnlink,
-              child: const Padding(
-                padding: EdgeInsets.only(left: AppSpacing.sm),
-                child: Icon(
-                  Icons.delete_outline,
-                  color: AppColors.textDisabled,
-                  size: AppSize.iconSm,
-                ),
+            IconButton(
+              onPressed: onUnlink,
+              tooltip: AppStrings.accountLinkUnlinkTooltip,
+              icon: const Icon(
+                Icons.delete_outline,
+                color: AppColors.textDisabled,
+                size: AppSize.iconSm,
               ),
             ),
         ],

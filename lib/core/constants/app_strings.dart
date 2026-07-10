@@ -146,6 +146,10 @@ abstract class AppStrings {
   static const accountLinkGenerateError = 'リンクの作成に失敗しました';
   static const accountLinkUnlinkError = '連携の解除に失敗しました';
   static const accountLinkCopied = 'リンクをコピーしました';
+  static const accountLinkEditTooltip = '連携済みアカウントを編集';
+  static const accountLinkDoneTooltip = '編集を完了';
+  static const accountLinkUnlinkTooltip = '連携を解除';
+  static const accountLinkViewSpots = 'スポットを見る';
 
   // 招待承認画面
   static const acceptInviteTitle = 'アカウント連携';
