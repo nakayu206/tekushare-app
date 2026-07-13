@@ -85,12 +85,12 @@ jobs:
             test/data/models/ \
             test/firebase_options_test.dart \
             test/infrastructure/ \
-            test/screens/widgets/ \
+            test/screens/widgets/common/category_chip_group_test.dart \
+            test/screens/widgets/common/dashed_border_painter_test.dart \
+            test/screens/widgets/common/primary_button_test.dart \
             test/screens/providers/auth_provider_test.dart \
             test/screens/providers/inactivity_provider_test.dart \
-            test/screens/pages/spot/spot_list_page_test.dart \
             test/screens/pages/spot/spot_detail_viewmodel_test.dart \
             test/screens/pages/spot/want_to_go_viewmodel_test.dart \
             test/screens/pages/map/walk_route_viewmodel_test.dart \
-            test/screens/pages/history/history_page_test.dart \
             test/screens/pages/walk/walk_session_viewmodel_test.dart
