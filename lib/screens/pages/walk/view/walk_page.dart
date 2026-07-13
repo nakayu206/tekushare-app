@@ -111,10 +111,17 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     if (contacts.isEmpty) return;
     final senderName =
         ref.read(authStateProvider).valueOrNull?.displayName ?? '';
-    await ref.read(smsServiceProvider).sendInactivityAlert(
-          contacts: contacts,
-          senderName: senderName,
-        );
+    try {
+      await ref.read(smsServiceProvider).sendInactivityAlert(
+            contacts: contacts,
+            senderName: senderName,
+          );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.smsSendError)),
+      );
+    }
   }
 
   void _resetTimer() {
@@ -732,7 +739,7 @@ class _SafetyConfirmDialog extends StatefulWidget {
   });
 
   final VoidCallback onSafe;
-  final VoidCallback onTimeout;
+  final Future<void> Function() onTimeout;
 
   @override
   State<_SafetyConfirmDialog> createState() => _SafetyConfirmDialogState();
@@ -749,13 +756,13 @@ class _SafetyConfirmDialogState extends State<_SafetyConfirmDialog> {
     _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
   }
 
-  void _onTick(Timer _) {
+  Future<void> _onTick(Timer _) async {
     if (!mounted) return;
     setState(() => _secondsLeft--);
     if (_secondsLeft <= 0) {
       _timer?.cancel();
       Navigator.of(context).pop();
-      widget.onTimeout();
+      await widget.onTimeout();
     }
   }
 
@@ -767,39 +774,43 @@ class _SafetyConfirmDialogState extends State<_SafetyConfirmDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text(AppStrings.safetyConfirmTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(AppStrings.safetyConfirmBody),
-          const SizedBox(height: AppSpacing.x2l),
-          Text(
-            '$_secondsLeft秒',
-            style: const TextStyle(
-              fontSize: AppTextStyle.x3l,
-              fontWeight: AppTextStyle.bold,
-              color: AppColors.error,
+    return PopScope(
+      canPop: false,
+      child: AlertDialog(
+        title: const Text(AppStrings.safetyConfirmTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(AppStrings.safetyConfirmBody),
+            const SizedBox(height: AppSpacing.x2l),
+            Text(
+              '$_secondsLeft秒',
+              style: const TextStyle(
+                fontSize: AppTextStyle.x3l,
+                fontWeight: AppTextStyle.bold,
+                color: AppColors.error,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () {
+                _timer?.cancel();
+                Navigator.of(context).pop();
+                widget.onSafe();
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                minimumSize: const Size(double.infinity, 48),
+              ),
+              child: const Text(AppStrings.safetyOk),
             ),
           ),
         ],
       ),
-      actions: [
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: () {
-              _timer?.cancel();
-              Navigator.of(context).pop();
-              widget.onSafe();
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-            child: const Text(AppStrings.safetyOk),
-          ),
-        ),
-      ],
     );
   }
 }

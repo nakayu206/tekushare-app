@@ -32,6 +32,7 @@ abstract class AppStrings {
   static const timerFinishedMessage = '設定した時間になりました。';
   static const safetyOk = '元気です';
   static const safetyConfirmTitle = '大丈夫ですか？';
+  static const smsSendError = 'SMS送信に失敗しました';
   static const safetyConfirmBody = '動きがありません。\n応答がない場合、登録した通知先にSMSを送信します。';
 
   // 行きたい！ページ

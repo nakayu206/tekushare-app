@@ -32,10 +32,14 @@ class SmsServiceImpl implements SmsService {
     }
   }
 
-  /// Android: flutter_sms で直接送信
+  /// Android: flutter_sms で直接送信（1件失敗しても残りへ継続）
   Future<void> _sendAndroid(List<String> numbers, String message) async {
     for (final number in numbers) {
-      await sendSMS(message: message, recipients: [number], sendDirect: true);
+      try {
+        await sendSMS(message: message, recipients: [number], sendDirect: true);
+      } catch (_) {
+        // 送信失敗をスキップして次の連絡先へ
+      }
     }
   }
 
@@ -47,8 +51,9 @@ class SmsServiceImpl implements SmsService {
       path: recipients,
       queryParameters: {'body': message},
     );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    if (!await canLaunchUrl(uri)) {
+      throw Exception('SMSアプリを起動できませんでした');
     }
+    await launchUrl(uri);
   }
 }
