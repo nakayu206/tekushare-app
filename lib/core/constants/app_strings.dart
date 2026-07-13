@@ -164,6 +164,8 @@ abstract class AppStrings {
   static const accountLinkDoneTooltip = '編集を完了';
   static const accountLinkUnlinkTooltip = '連携を解除';
   static const accountLinkViewSpots = 'スポットを見る';
+  static const linkedAccountSpotsEmpty = '共有されたスポットがありません';
+  static const linkedAccountRoutesEmpty = '共有されたルートがありません';
 
   // SNSシェア
   static const shareInviteText = 'てくしぇあで散歩記録をシェアしませんか？';

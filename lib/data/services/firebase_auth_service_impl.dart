@@ -1,0 +1,79 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:tekushare/screens/providers/auth_provider.dart';
+
+class FirebaseAuthServiceImpl implements AuthService {
+  FirebaseAuthServiceImpl(this._auth, this._firestore);
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+
+  /// アカウント連携で相手の表示名を引けるよう、Firestore側にも同期する。
+  /// 付随的な処理なので失敗してもAuth側の成功を巻き込まない。
+  Future<void> _syncUserDoc(String uid, String displayName) async {
+    try {
+      await _firestore.collection('users').doc(uid).set({
+        'displayName': displayName,
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('users/$uid の同期に失敗しました: $e');
+    }
+  }
+
+  @override
+  Stream<AuthUser?> watchAuthState() {
+    return _auth.userChanges().map((user) {
+      if (user == null) return null;
+      return AuthUser(uid: user.uid, displayName: user.displayName);
+    });
+  }
+
+  @override
+  Future<void> registerWithEmail(
+      String email, String password, String displayName) async {
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      await credential.user?.updateDisplayName(displayName);
+      await credential.user?.reload();
+      final uid = credential.user?.uid;
+      if (uid != null) await _syncUserDoc(uid, displayName);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> signInWithEmail(String email, String password) async {
+    try {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> setDisplayName(String name) async {
+    try {
+      await _auth.currentUser?.updateDisplayName(name);
+      await _auth.currentUser?.reload();
+      final uid = _auth.currentUser?.uid;
+      if (uid != null) await _syncUserDoc(uid, name);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> signOut() => _auth.signOut();
+
+  @override
+  Future<void> deleteUser() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await user.delete();
+  }
+}

@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:tekushare/infrastructure/notification_service.dart';
-import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/notification_provider.dart';
 import 'package:tekushare/screens/providers/inactivity_provider.dart';
 
 import 'inactivity_provider_test.mocks.dart';

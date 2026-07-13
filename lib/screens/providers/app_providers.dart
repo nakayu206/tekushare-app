@@ -22,8 +22,8 @@ import 'package:tekushare/domain/repositories/saved_route_repository.dart';
 import 'package:tekushare/domain/repositories/spot_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/infrastructure/camera_service.dart';
-import 'package:tekushare/infrastructure/notification_service.dart';
 import 'package:tekushare/infrastructure/sms_service.dart';
+export 'package:tekushare/screens/providers/notification_provider.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
 /// Isar インスタンスを非同期で提供する。
@@ -67,10 +67,6 @@ final photoRepositoryProvider = Provider<PhotoRepository>((ref) {
 final contactRepositoryProvider = Provider<ContactRepository>((ref) {
   final uid = ref.watch(authStateProvider).value?.uid ?? '';
   return FirestoreContactRepositoryImpl(FirebaseFirestore.instance, uid);
-});
-
-final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService.instance;
 });
 
 final cameraServiceProvider = Provider<CameraService>((ref) {

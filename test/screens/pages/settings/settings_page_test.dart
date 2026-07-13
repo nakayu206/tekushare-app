@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,7 +35,7 @@ class _FakeAuthService implements AuthService {
   bool deletedUser = false;
 
   @override
-  Stream<User?> watchAuthState() => const Stream.empty();
+  Stream<AuthUser?> watchAuthState() => const Stream.empty();
 
   @override
   Future<void> registerWithEmail(

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -56,7 +55,7 @@ void main() {
           argThat(isA<String>()),
           argThat(isA<String>()),
         ),
-      ).thenThrow(FirebaseAuthException(code: 'email-already-in-use'));
+      ).thenThrow(const AuthException('email-already-in-use'));
 
       final container = makeContainer();
       addTearDown(container.dispose);
@@ -97,7 +96,7 @@ void main() {
           argThat(isA<String>()),
           argThat(isA<String>()),
         ),
-      ).thenThrow(FirebaseAuthException(code: 'invalid-credential'));
+      ).thenThrow(const AuthException('invalid-credential'));
 
       final container = makeContainer();
       addTearDown(container.dispose);
@@ -120,7 +119,7 @@ void main() {
           argThat(isA<String>()),
           argThat(isA<String>()),
         ),
-      ).thenThrow(FirebaseAuthException(code: 'invalid-credential'));
+      ).thenThrow(const AuthException('invalid-credential'));
 
       final container = makeContainer();
       addTearDown(container.dispose);

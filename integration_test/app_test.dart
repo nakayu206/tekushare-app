@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -16,21 +15,9 @@ import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
-/// Firebase を初期化せずに使えるフェイク User。
-class _FakeUser implements User {
-  @override
-  String? get displayName => 'テストユーザー';
-
-  @override
-  String get uid => '';
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
 class _FakeAuthService implements AuthService {
   @override
-  Stream<User?> watchAuthState() => const Stream.empty();
+  Stream<AuthUser?> watchAuthState() => const Stream.empty();
   @override
   Future<void> registerWithEmail(
     String email,
@@ -86,7 +73,11 @@ void main() {
       ProviderScope(
         overrides: [
           authServiceProvider.overrideWithValue(_FakeAuthService()),
-          authStateProvider.overrideWith((ref) => Stream.value(_FakeUser())),
+          authStateProvider.overrideWith(
+            (ref) => Stream.value(
+              const AuthUser(uid: '', displayName: 'テストユーザー'),
+            ),
+          ),
           spotRepositoryProvider.overrideWithValue(_FakeSpotRepository()),
           photoRepositoryProvider.overrideWithValue(_FakePhotoRepository()),
           contactRepositoryProvider.overrideWithValue(_FakeContactRepository()),

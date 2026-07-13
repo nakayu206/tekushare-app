@@ -1,13 +1,21 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// ── ドメイン型 ─────────────────────────────────────────────────────────────────
+
+class AuthUser {
+  const AuthUser({required this.uid, this.displayName});
+  final String uid;
+  final String? displayName;
+}
+
+class AuthException implements Exception {
+  const AuthException(this.code);
+  final String code;
+}
 
 // ── Auth state stream ─────────────────────────────────────────────────────────
 
-/// Firebase Auth の状態を監視する。
-/// userChanges() はプロフィール更新も検知するため displayName 更新後も自動再ルーティングされる。
-final authStateProvider = StreamProvider<User?>((ref) {
+final authStateProvider = StreamProvider<AuthUser?>((ref) {
   return ref.watch(authServiceProvider).watchAuthState();
 });
 
@@ -33,7 +41,7 @@ class EmailAuthError extends EmailAuthState {
 // ── Auth service interface ────────────────────────────────────────────────────
 
 abstract interface class AuthService {
-  Stream<User?> watchAuthState();
+  Stream<AuthUser?> watchAuthState();
   Future<void> registerWithEmail(
       String email, String password, String displayName);
   Future<void> signInWithEmail(String email, String password);
@@ -42,66 +50,15 @@ abstract interface class AuthService {
   Future<void> deleteUser();
 }
 
-// ── Firebase Auth 実装 ────────────────────────────────────────────────────────
+// ── Provider declaration ──────────────────────────────────────────────────────
+// 実装は ProviderScope.overrides（main_*.dart）で注入する。
 
-class FirebaseAuthServiceImpl implements AuthService {
-  FirebaseAuthServiceImpl(this._auth, this._firestore);
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
+final authServiceProvider = Provider<AuthService>((ref) {
+  throw UnimplementedError(
+      'authServiceProvider must be overridden in ProviderScope');
+});
 
-  /// アカウント連携で相手の表示名を引けるよう、Firestore側にも同期する。
-  /// これは付随的な処理なので、失敗してもAuth側の成功（登録・表示名設定）は
-  /// 巻き込まない。同期は次回のsetDisplayName呼び出し等で再試行される。
-  Future<void> _syncUserDoc(String uid, String displayName) async {
-    try {
-      await _firestore.collection('users').doc(uid).set({
-        'displayName': displayName,
-        'updatedAt': Timestamp.now(),
-      }, SetOptions(merge: true));
-    } catch (e) {
-      debugPrint('users/$uid の同期に失敗しました: $e');
-    }
-  }
-
-  @override
-  Stream<User?> watchAuthState() => _auth.userChanges();
-
-  @override
-  Future<void> registerWithEmail(
-      String email, String password, String displayName) async {
-    final credential = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    await credential.user?.updateDisplayName(displayName);
-    await credential.user?.reload();
-    final uid = credential.user?.uid;
-    if (uid != null) await _syncUserDoc(uid, displayName);
-  }
-
-  @override
-  Future<void> signInWithEmail(String email, String password) async {
-    await _auth.signInWithEmailAndPassword(email: email, password: password);
-  }
-
-  @override
-  Future<void> setDisplayName(String name) async {
-    await _auth.currentUser?.updateDisplayName(name);
-    await _auth.currentUser?.reload();
-    final uid = _auth.currentUser?.uid;
-    if (uid != null) await _syncUserDoc(uid, name);
-  }
-
-  @override
-  Future<void> signOut() => _auth.signOut();
-
-  @override
-  Future<void> deleteUser() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
-    await user.delete();
-  }
-}
+// ── Email auth notifier ───────────────────────────────────────────────────────
 
 String _mapErrorCode(String code) {
   return switch (code) {
@@ -116,17 +73,6 @@ String _mapErrorCode(String code) {
   };
 }
 
-// ── Providers ─────────────────────────────────────────────────────────────────
-
-final authServiceProvider = Provider<AuthService>((ref) {
-  return FirebaseAuthServiceImpl(
-    FirebaseAuth.instance,
-    FirebaseFirestore.instance,
-  );
-});
-
-// ── Email auth notifier ───────────────────────────────────────────────────────
-
 class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
   EmailAuthNotifier(this._service) : super(const EmailAuthIdle());
 
@@ -138,7 +84,7 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
     try {
       await _service.registerWithEmail(email, password, displayName);
       state = const EmailAuthIdle();
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
       state = EmailAuthError(_mapErrorCode(e.code));
     } catch (_) {
       state = const EmailAuthError('エラーが発生しました');
@@ -150,7 +96,7 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
     try {
       await _service.signInWithEmail(email, password);
       state = const EmailAuthIdle();
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
       state = EmailAuthError(_mapErrorCode(e.code));
     } catch (_) {
       state = const EmailAuthError('エラーが発生しました');
