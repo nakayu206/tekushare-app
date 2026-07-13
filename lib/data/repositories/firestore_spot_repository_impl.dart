@@ -49,9 +49,9 @@ class FirestoreSpotRepositoryImpl implements SpotRepository {
     final data = doc.data();
     return Spot(
       id: doc.id,
-      title: data['title'] as String,
-      latitude: (data['latitude'] as num).toDouble(),
-      longitude: (data['longitude'] as num).toDouble(),
+      title: data['title'] as String? ?? '',
+      latitude: (data['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (data['longitude'] as num?)?.toDouble() ?? 0.0,
       status: SpotStatus.values.firstWhere(
         (s) => s.name == (data['status'] as String? ?? ''),
         orElse: () => SpotStatus.wantToGo,
@@ -59,7 +59,7 @@ class FirestoreSpotRepositoryImpl implements SpotRepository {
       memo: data['memo'] as String?,
       category: data['category'] as String?,
       photoPaths: (data['photoPaths'] as List<dynamic>?)?.cast<String>() ?? [],
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 }

@@ -11,11 +11,17 @@ class ContactNotifier extends AsyncNotifier<void> {
   Future<void> build() async {}
 
   Future<void> save(Contact contact) async {
-    await ref.read(contactRepositoryProvider).saveContact(contact);
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(contactRepositoryProvider).saveContact(contact),
+    );
   }
 
   Future<void> delete(String id) async {
-    await ref.read(contactRepositoryProvider).deleteContact(id);
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(contactRepositoryProvider).deleteContact(id),
+    );
   }
 }
 
