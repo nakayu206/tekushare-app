@@ -19,6 +19,7 @@ import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
@@ -121,7 +122,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_locationOverride, _spotOverride],
+          overrides: [
+            _locationOverride,
+            _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -225,7 +230,10 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_spotOverride],
+          overrides: [
+            _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -327,7 +335,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_locationOverride, _spotOverride],
+          overrides: [
+            _locationOverride,
+            _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -382,7 +394,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_locationOverride, _spotOverride],
+          overrides: [
+            _locationOverride,
+            _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -424,7 +440,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_locationOverride, _spotOverride],
+          overrides: [
+            _locationOverride,
+            _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -466,7 +486,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_locationOverride, _spotOverride],
+          overrides: [
+            _locationOverride,
+            _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -513,6 +537,7 @@ void main() {
           overrides: [
             _locationOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
             cameraServiceProvider
                 .overrideWithValue(_FakeCameraService(fakePath)),
           ],
@@ -558,7 +583,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_locationOverride, _spotOverride],
+          overrides: [
+            _locationOverride,
+            _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;

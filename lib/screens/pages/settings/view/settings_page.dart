@@ -8,8 +8,11 @@ import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/domain/entities/contact.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/phone_register_page.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
+import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
@@ -25,41 +28,28 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  void _showPhoneSelectDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _PhoneSelectDialog(
-        onSelect: (contact) {
-          Navigator.pop(context);
-          if (!mounted) return;
-          _showPhoneConfirmDialog(contact);
-        },
+  void _openPhoneRegisterPage({Contact? existing}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PhoneRegisterPage(existing: existing),
       ),
     );
   }
 
-  void _showPhoneConfirmDialog(PhoneContact contact) {
-    final vm = ref.read(settingsViewModelProvider.notifier);
+  void _showContactsDialog(List<Contact> contacts) {
     showDialog<void>(
       context: context,
-      builder: (_) => _PhoneConfirmDialog(
-        contact: contact,
-        onConfirm: () {
-          vm.registerContact(contact.name);
+      builder: (_) => _ContactsListDialog(
+        contacts: contacts,
+        onEdit: (c) {
           Navigator.pop(context);
-          if (!mounted) return;
-          _showRegisteredDialog();
+          _openPhoneRegisterPage(existing: c);
         },
-        onCancel: () => Navigator.pop(context),
-      ),
-    );
-  }
-
-  void _showRegisteredDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _RegisteredDialog(
-        onClose: () => Navigator.pop(context),
+        onAdd: () {
+          Navigator.pop(context);
+          _openPhoneRegisterPage();
+        },
       ),
     );
   }
@@ -103,6 +93,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(settingsViewModelProvider);
     final vm = ref.read(settingsViewModelProvider.notifier);
+    final contacts = ref.watch(contactProvider).value ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -126,7 +117,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               _InactivityCard(
                 state: state,
                 vm: vm,
-                onContactTap: _showPhoneSelectDialog,
+                contacts: contacts,
+                onAddContact: () => _openPhoneRegisterPage(),
+                onShowContacts: () => _showContactsDialog(contacts),
               ),
               const SizedBox(height: AppSpacing.x2lp),
               _ShareCard(state: state, vm: vm),
@@ -479,12 +472,16 @@ class _InactivityCard extends StatelessWidget {
   const _InactivityCard({
     required this.state,
     required this.vm,
-    required this.onContactTap,
+    required this.contacts,
+    required this.onAddContact,
+    required this.onShowContacts,
   });
 
   final SettingsState state;
   final SettingsViewModel vm;
-  final VoidCallback onContactTap;
+  final List<Contact> contacts;
+  final VoidCallback onAddContact;
+  final VoidCallback onShowContacts;
 
   static final _inactivityOptions = List.generate(24, (i) => (i + 1) * 5);
 
@@ -536,7 +533,7 @@ class _InactivityCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               GestureDetector(
-                onTap: onContactTap,
+                onTap: contacts.isEmpty ? onAddContact : onShowContacts,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -548,10 +545,10 @@ class _InactivityCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSize.phoneIconGap),
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           AppStrings.settingsInactivityContact,
                           style: TextStyle(
                             fontSize: AppTextStyle.xs,
@@ -559,8 +556,10 @@ class _InactivityCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          AppStrings.settingsInactivityContactSet,
-                          style: TextStyle(
+                          contacts.isEmpty
+                              ? AppStrings.settingsInactivityContactSet
+                              : '${contacts.length}件登録中',
+                          style: const TextStyle(
                             fontSize: AppTextStyle.sm2,
                             color: AppColors.primary,
                           ),
@@ -602,6 +601,129 @@ class _InactivityCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 連絡先一覧ダイアログ
+// ──────────────────────────────────────────
+
+class _ContactsListDialog extends StatelessWidget {
+  const _ContactsListDialog({
+    required this.contacts,
+    required this.onEdit,
+    required this.onAdd,
+  });
+
+  final List<Contact> contacts;
+  final void Function(Contact) onEdit;
+  final VoidCallback onAdd;
+
+  static const _maxContacts = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = _maxContacts - contacts.length;
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.x2l,
+          AppSpacing.x3l,
+          AppSpacing.x2l,
+          AppSpacing.x2l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              AppStrings.settingsInactivityContact,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: AppTextStyle.semiBold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            ...contacts.map(
+              (c) => InkWell(
+                onTap: () => onEdit(c),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              c.name,
+                              style: const TextStyle(
+                                fontSize: AppTextStyle.lg2,
+                                color: AppColors.textPrimary,
+                                fontWeight: AppTextStyle.semiBold,
+                              ),
+                            ),
+                            Text(
+                              c.phone,
+                              style: const TextStyle(
+                                fontSize: AppTextStyle.md,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.primary,
+                        size: AppSize.iconMd,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (remaining > 0) ...[
+              const Divider(color: AppColors.primary),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'あと$remaining件まで登録できます',
+                style: const TextStyle(
+                  fontSize: AppTextStyle.xs,
+                  color: AppColors.textDisabled,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                height: AppSize.buttonHeight,
+                child: ElevatedButton(
+                  onPressed: onAdd,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                  ),
+                  child: const Text(
+                    AppStrings.settingsPhoneAddButton,
+                    style: TextStyle(
+                      fontSize: AppTextStyle.lg2,
+                      fontWeight: AppTextStyle.medium,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -1100,249 +1222,6 @@ class _ShareCheckbox extends StatelessWidget {
           side: const BorderSide(color: AppColors.textDisabled),
         ),
       ],
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 電話番号選択ダイアログ
-// ──────────────────────────────────────────
-
-class _PhoneSelectDialog extends StatelessWidget {
-  const _PhoneSelectDialog({required this.onSelect});
-
-  final ValueChanged<PhoneContact> onSelect;
-
-  static const _contacts = <PhoneContact>[
-    (name: 'あかり（娘）', phone: '080-XXXX-XXXX'),
-    (name: 'いきいき介護...', phone: '080-XXXX-XXXX'),
-    (name: 'たかし（弟）', phone: '080-XXXX-XXXX'),
-    (name: '坂本病院', phone: '080-XXXX-XXXX'),
-    (name: '警察', phone: '110'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.x2l),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              AppStrings.settingsPhoneSelectTitle,
-              style: TextStyle(
-                fontSize: AppTextStyle.lg2,
-                fontWeight: AppTextStyle.semiBold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ..._contacts.map(
-              (c) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            c.name,
-                            style: const TextStyle(
-                              fontSize: AppTextStyle.md2,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            c.phone,
-                            style: const TextStyle(
-                              fontSize: AppTextStyle.sm,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: AppSize.buttonHeight,
-                      child: ElevatedButton(
-                        onPressed: () => onSelect(c),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.full),
-                          ),
-                        ),
-                        child: const Text(
-                          AppStrings.settingsPhoneRegisterButton,
-                          style: TextStyle(fontSize: AppTextStyle.xs),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 電話番号登録確認ダイアログ
-// ──────────────────────────────────────────
-
-class _PhoneConfirmDialog extends StatelessWidget {
-  const _PhoneConfirmDialog({
-    required this.contact,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final PhoneContact contact;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.x2l,
-          AppSpacing.x3l,
-          AppSpacing.x2l,
-          AppSpacing.x2l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              contact.name,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.lg2,
-                fontWeight: AppTextStyle.semiBold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              contact.phone,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.md,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text(
-              AppStrings.settingsPhoneConfirmMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: AppTextStyle.md),
-            ),
-            const SizedBox(height: AppSpacing.x2l),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.primary),
-                      foregroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                    ),
-                    child: const Text(AppStrings.cancelButton),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onConfirm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                    ),
-                    child: const Text(AppStrings.settingsPhoneRegisterConfirm),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 登録完了ダイアログ
-// ──────────────────────────────────────────
-
-class _RegisteredDialog extends StatelessWidget {
-  const _RegisteredDialog({required this.onClose});
-
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.x2l,
-          AppSpacing.x3l,
-          AppSpacing.x2l,
-          AppSpacing.x2l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              AppStrings.settingsPhoneRegisteredMessage,
-              style: TextStyle(
-                fontSize: AppTextStyle.lg2,
-                fontWeight: AppTextStyle.medium,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.x2l),
-            SizedBox(
-              width: double.infinity,
-              height: AppSize.buttonHeight,
-              child: ElevatedButton(
-                onPressed: onClose,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                ),
-                child: const Text(AppStrings.closeButton),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

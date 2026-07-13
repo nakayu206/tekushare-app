@@ -23,6 +23,7 @@ import 'package:tekushare/screens/pages/map/viewmodel/walk_route_viewmodel.dart'
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/providers/walk_history_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
@@ -262,6 +263,7 @@ void main() {
             _savedRouteRepoWithDataOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -303,6 +305,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -348,6 +351,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesWithDataOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -438,6 +442,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -472,6 +477,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -509,6 +515,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -546,6 +553,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -586,6 +594,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -662,6 +671,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -756,6 +766,7 @@ void main() {
             _savedRouteRepoOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -851,6 +862,7 @@ void main() {
             savedRouteRepositoryProvider.overrideWith((_) => fakeRepo),
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -991,6 +1003,7 @@ void main() {
             _savedRouteRepoWithDataOverride,
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -1042,6 +1055,7 @@ void main() {
             ),
             _walkRoutesWithDataOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -1081,6 +1095,7 @@ void main() {
             savedRouteRepositoryProvider.overrideWith((_) => fakeRepo),
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -1120,6 +1135,7 @@ void main() {
             savedRouteRepositoryProvider.overrideWith((_) => fakeRepo),
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -1163,6 +1179,7 @@ void main() {
             savedRouteRepositoryProvider.overrideWith((_) => fakeRepo),
             _walkRoutesOverride,
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
