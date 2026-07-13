@@ -28,7 +28,7 @@ abstract class AppStrings {
   static const timerTurnaround = '折り返し';
   static const timerInactivity = '不活動';
   static const timerReset = 'リセット';
-  static const timerFinishedTitle = 'タイムアップ';
+  static const timerFinishedTitle = '散歩タイマー';
   static const timerFinishedMessage = '設定した時間になりました。';
   static const safetyOk = '元気です';
   static const safetyConfirmTitle = '大丈夫ですか？';
