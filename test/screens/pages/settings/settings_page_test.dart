@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/linked_account.dart';
@@ -163,6 +164,10 @@ final _contactOverride =
 
 void main() {
   group('SettingsPage', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
     Future<void> pumpPage(WidgetTester tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
@@ -186,7 +191,8 @@ void main() {
           ),
         ),
       );
-      await tester.pump();
+      await tester.pump(); // build
+      await tester.pump(); // sharedPrefsProvider 解決
     }
 
     // タイトルが表示される（AppBar + BottomNav で複数出る）
@@ -467,6 +473,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump(); // sharedPrefsProvider 解決
 
       await tester.ensureVisible(
         find.text(AppStrings.settingsShareWantToGo),
@@ -502,6 +509,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump(); // sharedPrefsProvider 解決
 
       await tester.ensureVisible(
         find.text(AppStrings.settingsShareVisited).first,
@@ -537,6 +545,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump(); // sharedPrefsProvider 解決
 
       await tester.ensureVisible(
         find.text(AppStrings.settingsShareSaveButton),
@@ -653,6 +662,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump(); // sharedPrefsProvider 解決
 
       final checkboxes = find.byType(Checkbox);
       await tester.ensureVisible(checkboxes.first);

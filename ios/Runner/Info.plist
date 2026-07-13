@@ -39,7 +39,11 @@
 				</array>
 			</dict>
 		</array>
-		<key>UIApplicationSceneManifest</key>
+		<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>sms</string>
+	</array>
+	<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>
 			<false/>

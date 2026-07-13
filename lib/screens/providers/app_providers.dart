@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekushare/data/models/saved_route_model.dart';
 import 'package:tekushare/data/models/walk_route_model.dart';
 import 'package:tekushare/data/models/walk_session_model.dart';
@@ -22,6 +23,7 @@ import 'package:tekushare/domain/repositories/spot_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/infrastructure/camera_service.dart';
 import 'package:tekushare/infrastructure/notification_service.dart';
+import 'package:tekushare/infrastructure/sms_service.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
 /// Isar インスタンスを非同期で提供する。
@@ -75,6 +77,10 @@ final cameraServiceProvider = Provider<CameraService>((ref) {
   return CameraService();
 });
 
+final smsServiceProvider = Provider<SmsService>((ref) {
+  return const SmsServiceImpl();
+});
+
 final accountLinkRepositoryProvider = Provider<AccountLinkRepository>((ref) {
   return AccountLinkRepositoryImpl(
     FirebaseFirestore.instance,
@@ -82,8 +88,15 @@ final accountLinkRepositoryProvider = Provider<AccountLinkRepository>((ref) {
   );
 });
 
-/// DB 初期化完了を表すプロバイダー。
+final sharedPrefsProvider = FutureProvider<SharedPreferences>((ref) async {
+  return SharedPreferences.getInstance();
+});
+
+/// DB・SharedPreferences 初期化完了を表すプロバイダー。
 /// ウィジェットテストでは overrideWith(() async {}) で即時解決できる。
 final appReadyProvider = FutureProvider<void>((ref) async {
-  await ref.watch(isarProvider.future);
+  await Future.wait([
+    ref.watch(isarProvider.future),
+    ref.watch(sharedPrefsProvider.future),
+  ]);
 });

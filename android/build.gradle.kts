@@ -5,6 +5,21 @@ allprojects {
     }
 }
 
+// flutter_sms 等の古いプラグインで Java/Kotlin JVM ターゲットが混在する問題を解消する
+subprojects {
+    afterEvaluate {
+        extensions.findByType<com.android.build.gradle.LibraryExtension>()?.compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+            compilerOptions {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            }
+        }
+    }
+}
+
 // AGP 8.x は namespace を必須とするが、古い Flutter プラグイン（isar_flutter_libs 等）は
 // build.gradle に namespace を持たない。
 // afterEvaluate では AGP のチェック後になり遅すぎるため、plugins.withId でプラグイン適用直後にフックし、
