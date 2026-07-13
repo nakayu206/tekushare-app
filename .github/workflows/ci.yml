@@ -72,18 +72,17 @@ jobs:
       - name: Prepare libisar.so for tests
         run: cp "$(find ~/.pub-cache -name 'libisar.so' | head -1)" .
 
-      # 10. 単体テスト（Firebase 非依存のパスのみ明示的に実行）
+      # 10. 単体テスト（Firebase・Isar 非依存のパスのみ明示的に実行）
       #     firebase_auth / cloud_firestore を直接・間接 import するファイルは
       #     Linux でコンパイル不可のため除外する。
+      #     Isar の FFI ランタイムを必要とする *_repository_impl_test.dart も除外する。
+      #     （phone_register_page_test → contact_provider → app_providers → Firebase も除外）
       - name: Run unit tests
         run: |
           xvfb-run flutter test -d linux --reporter expanded \
             test/core/ \
             test/domain/ \
             test/data/models/ \
-            test/data/repositories/route_repository_impl_test.dart \
-            test/data/repositories/walk_session_repository_impl_test.dart \
-            test/data/repositories/spot_repository_impl_test.dart \
             test/firebase_options_test.dart \
             test/infrastructure/ \
             test/screens/widgets/ \
@@ -94,5 +93,4 @@ jobs:
             test/screens/pages/spot/want_to_go_viewmodel_test.dart \
             test/screens/pages/map/walk_route_viewmodel_test.dart \
             test/screens/pages/history/history_page_test.dart \
-            test/screens/pages/walk/walk_session_viewmodel_test.dart \
-            test/screens/pages/settings/phone_register_page_test.dart
+            test/screens/pages/walk/walk_session_viewmodel_test.dart
