@@ -11,6 +11,7 @@ import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/domain/entities/contact.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/phone_register_page.dart';
+import 'package:tekushare/screens/providers/account_link_provider.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
@@ -733,16 +734,16 @@ class _ContactsListDialog extends StatelessWidget {
 // シェアカード
 // ──────────────────────────────────────────
 
-class _ShareCard extends StatelessWidget {
+class _ShareCard extends ConsumerWidget {
   const _ShareCard({required this.state, required this.vm});
 
   final SettingsState state;
   final SettingsViewModel vm;
 
-  static const _shareLink = 'https://tekushare.app/share/abc...';
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final linkedAccounts = ref.watch(linkedAccountsProvider).valueOrNull ?? [];
+
     return _SettingCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSize.timerCardPaddingH,
@@ -766,77 +767,136 @@ class _ShareCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.settingsShareTitle,
-                    style: TextStyle(
-                      fontSize: AppTextStyle.lg2,
-                      fontWeight: AppTextStyle.semiBold,
-                      color: AppColors.textPrimary,
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.settingsShareTitle,
+                      style: TextStyle(
+                        fontSize: AppTextStyle.lg2,
+                        fontWeight: AppTextStyle.semiBold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  Text(
-                    AppStrings.settingsShareSubtitle,
-                    style: TextStyle(
-                      fontSize: AppTextStyle.xs,
-                      color: AppColors.textDisabled,
+                    Text(
+                      AppStrings.settingsShareSubtitle,
+                      style: TextStyle(
+                        fontSize: AppTextStyle.xs,
+                        color: AppColors.textDisabled,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              if (linkedAccounts.isNotEmpty)
+                IconButton(
+                  onPressed: vm.toggleEditSharedAccounts,
+                  tooltip: state.isEditingSharedAccounts
+                      ? AppStrings.accountLinkDoneTooltip
+                      : AppStrings.accountLinkEditTooltip,
+                  icon: Icon(
+                    state.isEditingSharedAccounts
+                        ? Icons.check
+                        : Icons.edit_outlined,
+                    color: AppColors.primary,
+                    size: AppSize.iconSm,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          for (final name in state.sharedAccounts)
-            Dismissible(
-              key: ValueKey(name),
-              direction: DismissDirection.endToStart,
-              confirmDismiss: (_) => showDialog<bool>(
-                context: context,
-                builder: (_) => _SharedAccountDeleteDialog(
-                  name: name,
-                  onConfirm: () => Navigator.pop(context, true),
-                  onCancel: () => Navigator.pop(context, false),
-                ),
-              ).then((v) => v ?? false),
-              onDismissed: (_) => vm.removeSharedAccount(name),
-              background: Container(
-                color: Colors.red,
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: const Text(
-                  AppStrings.settingsShareDeleteAccount,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: AppTextStyle.sm2,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              child: Column(
-                children: [
-                  _ContactRow(
-                    name: name,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => _SharedRoutesPage(accountName: name),
-                      ),
+          for (final account in linkedAccounts)
+            Column(
+              children: [
+                _ContactRow(
+                  name: account.displayName,
+                  isEditing: state.isEditingSharedAccounts,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          _SharedRoutesPage(accountName: account.displayName),
                     ),
                   ),
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.primary,
+                  onUnlink: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => AppConfirmDialog(
+                      title: account.displayName,
+                      message: AppStrings.settingsShareDeleteConfirmMessage,
+                      confirmLabel: AppStrings.settingsShareDeleteConfirmButton,
+                      isDestructive: true,
+                      onConfirm: () async {
+                        try {
+                          await vm.unlinkAccount(account.uid);
+                          if (context.mounted) Navigator.pop(context);
+                        } catch (_) {
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(AppStrings.accountLinkUnlinkError),
+                            ),
+                          );
+                        }
+                      },
+                      onCancel: () => Navigator.pop(context),
+                    ),
                   ),
-                ],
-              ),
+                ),
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppColors.primary,
+                ),
+              ],
             ),
           const SizedBox(height: AppSpacing.sm),
           const SizedBox(height: AppSpacing.x4lp),
-          const _ShareLinkArea(link: _shareLink),
+          const Text(
+            AppStrings.accountLinkInviteDescription,
+            style: TextStyle(
+              fontSize: AppTextStyle.xs,
+              color: AppColors.textDisabled,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (state.inviteLink != null)
+            _ShareLinkArea(link: state.inviteLink!)
+          else
+            SizedBox(
+              width: double.infinity,
+              height: AppSize.buttonHeight,
+              child: OutlinedButton(
+                onPressed: () async {
+                  try {
+                    await vm.generateInviteLink();
+                  } catch (e) {
+                    debugPrint('generateInviteLink failed: $e');
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(AppStrings.accountLinkGenerateError),
+                      ),
+                    );
+                  }
+                },
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary),
+                  foregroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                ),
+                child: const Text(
+                  AppStrings.accountLinkGenerateButton,
+                  style: TextStyle(
+                    fontSize: AppTextStyle.lg2,
+                    fontWeight: AppTextStyle.medium,
+                  ),
+                ),
+              ),
+            ),
           const SizedBox(height: AppSpacing.x2lm),
           const Center(
             child: Text(
@@ -904,47 +964,68 @@ class _ShareCard extends StatelessWidget {
 }
 
 class _ContactRow extends StatelessWidget {
-  const _ContactRow({required this.name, required this.onTap});
+  const _ContactRow({
+    required this.name,
+    required this.isEditing,
+    required this.onTap,
+    required this.onUnlink,
+  });
 
   final String name;
+  final bool isEditing;
   final VoidCallback onTap;
+  final VoidCallback onUnlink;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                name,
-                style: const TextStyle(
-                  fontSize: AppTextStyle.sm2,
-                  color: Colors.black,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: AppTextStyle.sm2,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      AppStrings.accountLinkViewSpots,
+                      style: TextStyle(
+                        fontSize: AppTextStyle.xs,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.primary,
+                      size: AppSize.iconMd,
+                    ),
+                  ],
                 ),
               ),
             ),
-            const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'スポットを見る',
-                  style: TextStyle(
-                    fontSize: AppTextStyle.xs,
-                    color: AppColors.primary,
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: AppColors.primary,
-                  size: AppSize.iconMd,
-                ),
-              ],
+          ),
+          if (isEditing)
+            IconButton(
+              onPressed: onUnlink,
+              tooltip: AppStrings.accountLinkUnlinkTooltip,
+              icon: const Icon(
+                Icons.delete_outline,
+                color: AppColors.textDisabled,
+                size: AppSize.iconSm,
+              ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -1094,7 +1175,12 @@ class _ShareLinkArea extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.md),
           ElevatedButton(
-            onPressed: () => Clipboard.setData(ClipboardData(text: link)),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: link));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text(AppStrings.accountLinkCopied)),
+              );
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.shareLinkButton,
               foregroundColor: Colors.white,
@@ -1226,103 +1312,10 @@ class _ShareCheckbox extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────
-// 共有アカウント消去確認ダイアログ
-// ──────────────────────────────────────────
-
-class _SharedAccountDeleteDialog extends StatelessWidget {
-  const _SharedAccountDeleteDialog({
-    required this.name,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final String name;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.x2l,
-          AppSpacing.x3l,
-          AppSpacing.x2l,
-          AppSpacing.x2l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              name,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: AppTextStyle.lg2,
-                fontWeight: AppTextStyle.semiBold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Text(
-              AppStrings.settingsShareDeleteConfirmMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: AppTextStyle.md),
-            ),
-            const SizedBox(height: AppSpacing.x2l),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      side: const BorderSide(color: AppColors.primary),
-                      foregroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                    ),
-                    child: const Text(AppStrings.cancelButton),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onConfirm,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                    ),
-                    child:
-                        const Text(AppStrings.settingsShareDeleteConfirmButton),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
 // アカウントカード
 // ──────────────────────────────────────────
 
-class _AccountCard extends StatelessWidget {
+class _AccountCard extends ConsumerWidget {
   const _AccountCard({
     required this.onLogout,
     required this.onDeleteAccount,
@@ -1332,7 +1325,9 @@ class _AccountCard extends StatelessWidget {
   final VoidCallback onDeleteAccount;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final displayName = ref.watch(authStateProvider).valueOrNull?.displayName;
+
     return _SettingCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSize.timerCardPaddingH,
@@ -1349,6 +1344,16 @@ class _AccountCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
+          if (displayName != null && displayName.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              displayName,
+              style: const TextStyle(
+                fontSize: AppTextStyle.md2,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
             width: double.infinity,

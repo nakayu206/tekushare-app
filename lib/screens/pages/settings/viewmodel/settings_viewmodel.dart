@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 
 typedef PhoneContact = ({String name, String phone});
 
@@ -12,7 +13,8 @@ class SettingsState {
     this.registeredContactName,
     this.shareWantToGo = true,
     this.shareVisited = true,
-    this.sharedAccounts = const ['あかり', 'たかし', 'ゆか', 'けんじ'],
+    this.inviteLink,
+    this.isEditingSharedAccounts = false,
   });
 
   final bool timerEnabled;
@@ -23,7 +25,8 @@ class SettingsState {
   final String? registeredContactName;
   final bool shareWantToGo;
   final bool shareVisited;
-  final List<String> sharedAccounts;
+  final String? inviteLink;
+  final bool isEditingSharedAccounts;
 
   SettingsState copyWith({
     bool? timerEnabled,
@@ -34,7 +37,8 @@ class SettingsState {
     String? registeredContactName,
     bool? shareWantToGo,
     bool? shareVisited,
-    List<String>? sharedAccounts,
+    String? inviteLink,
+    bool? isEditingSharedAccounts,
   }) =>
       SettingsState(
         timerEnabled: timerEnabled ?? this.timerEnabled,
@@ -46,7 +50,9 @@ class SettingsState {
             registeredContactName ?? this.registeredContactName,
         shareWantToGo: shareWantToGo ?? this.shareWantToGo,
         shareVisited: shareVisited ?? this.shareVisited,
-        sharedAccounts: sharedAccounts ?? this.sharedAccounts,
+        inviteLink: inviteLink ?? this.inviteLink,
+        isEditingSharedAccounts:
+            isEditingSharedAccounts ?? this.isEditingSharedAccounts,
       );
 }
 
@@ -65,9 +71,19 @@ class SettingsViewModel extends Notifier<SettingsState> {
       state = state.copyWith(registeredContactName: name);
   void setShareWantToGo(bool v) => state = state.copyWith(shareWantToGo: v);
   void setShareVisited(bool v) => state = state.copyWith(shareVisited: v);
-  void removeSharedAccount(String name) {
-    final updated = List<String>.from(state.sharedAccounts)..remove(name);
-    state = state.copyWith(sharedAccounts: updated);
+
+  void toggleEditSharedAccounts() => state = state.copyWith(
+        isEditingSharedAccounts: !state.isEditingSharedAccounts,
+      );
+
+  Future<void> unlinkAccount(String uid) {
+    return ref.read(accountLinkRepositoryProvider).unlink(uid);
+  }
+
+  Future<void> generateInviteLink() async {
+    final link =
+        await ref.read(accountLinkRepositoryProvider).createInviteLink();
+    state = state.copyWith(inviteLink: link);
   }
 }
 

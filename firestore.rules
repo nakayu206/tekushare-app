@@ -1,8 +1,59 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidInviteFor(uids, inviteToken) {
+      let invite = get(/databases/$(database)/documents/linkInvites/$(inviteToken)).data;
+      return invite.fromUid != request.auth.uid
+        && invite.fromUid in uids
+        && invite.used == false
+        && invite.expiresAt > request.time;
+    }
+
+    // users/{uid}: 連携相手の表示名を引けるよう読み取りはログイン済み全員に許可
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // users/{uid}/contacts, spots, photos などサブコレクションはオーナーのみ
+    match /users/{uid}/{document=**} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /linkInvites/{token} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.used == false;
+
+      allow update: if isSignedIn()
+        && resource.data.fromUid != request.auth.uid
+        && resource.data.used == false
+        && request.resource.data.used == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used']);
+
+      allow delete: if false;
+    }
+
+    match /accountLinks/{linkId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.uids;
+
+      allow create: if isSignedIn()
+        && request.auth.uid in request.resource.data.uids
+        && request.resource.data.uids.size() == 2
+        && exists(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken))
+        && isValidInviteFor(request.resource.data.uids, request.resource.data.inviteToken);
+
+      allow update: if false;
+
+      allow delete: if isSignedIn() && request.auth.uid in resource.data.uids;
     }
   }
 }

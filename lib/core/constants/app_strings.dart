@@ -117,7 +117,6 @@ abstract class AppStrings {
   static const settingsShareVisited = '行った！リスト';
   static const settingsShareSendButton = 'リンクを送る';
   static const settingsShareSaveButton = '内容保存';
-  static const settingsShareDeleteAccount = '消去';
   static const settingsShareDeleteConfirmMessage = '本当に消去してよろしいですか？';
   static const settingsShareDeleteConfirmButton = '消去する';
   static const pickerDone = '完了';
@@ -150,4 +149,27 @@ abstract class AppStrings {
       'アカウントを消去しますか？\nこの操作は取り消せません。';
   static const settingsLogoutConfirmButton = 'ログアウト';
   static const settingsDeleteAccountConfirmButton = '消去する';
+
+  // アカウント連携（シェアカード内）
+  static const accountLinkInviteDescription =
+      'リンクを送って、相手が開くと連携できます。\nアプリを両方の端末に入れておく必要があります。';
+  static const accountLinkGenerateButton = 'リンクを作成';
+  static const accountLinkGenerateError = 'リンクの作成に失敗しました';
+  static const accountLinkUnlinkError = '連携の解除に失敗しました';
+  static const accountLinkCopied = 'リンクをコピーしました';
+  static const accountLinkEditTooltip = '連携済みアカウントを編集';
+  static const accountLinkDoneTooltip = '編集を完了';
+  static const accountLinkUnlinkTooltip = '連携を解除';
+  static const accountLinkViewSpots = 'スポットを見る';
+
+  // 招待承認画面
+  static const acceptInviteTitle = 'アカウント連携';
+  static const acceptInviteMessage = 'さんと連携しますか？';
+  static const acceptInviteDescription = '連携すると、行きたい！リストや行った！リストを共有できるようになります。';
+  static const acceptInviteConfirmButton = '連携する';
+  static const acceptInviteSuccessMessage = '連携しました！';
+  static const acceptInviteInvalidMessage = 'この招待リンクは無効か、期限が切れています。';
+  static const acceptInviteSelfMessage = '自分自身のリンクは使用できません。';
+  static const acceptInviteAlreadyLinkedMessage = 'すでに連携済みです。';
+  static const acceptInviteErrorMessage = '連携に失敗しました。もう一度お試しください。';
 }

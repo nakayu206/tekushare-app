@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/domain/entities/linked_account.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/domain/repositories/account_link_repository.dart';
 import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/domain/usecases/photo/attach_photo_to_spot.dart';
@@ -21,6 +23,7 @@ import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/phone_register_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
@@ -126,6 +129,21 @@ class _FakeDeleteSpot implements DeleteSpot {
   const _FakeDeleteSpot();
   @override
   Future<void> call(String id) async {}
+}
+
+class _FakeAccountLinkRepository implements AccountLinkRepository {
+  const _FakeAccountLinkRepository();
+  @override
+  Stream<List<LinkedAccount>> watchLinkedAccounts() => const Stream.empty();
+  @override
+  Future<String> createInviteLink() async => 'tekushare://link/fake-token';
+  @override
+  Future<InviteDetails> fetchInviteDetails(String token) =>
+      throw UnimplementedError();
+  @override
+  Future<void> acceptInvite(String token) => throw UnimplementedError();
+  @override
+  Future<void> unlink(String otherUid) async {}
 }
 
 final _spotOverride = spotProvider.overrideWith(
@@ -538,7 +556,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_contactOverride],
+          overrides: [
+            accountLinkRepositoryProvider
+                .overrideWithValue(const _FakeAccountLinkRepository()),
+            _contactOverride,
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -553,6 +575,13 @@ void main() {
           ),
         ),
       );
+      await tester.pump();
+
+      // 招待リンクを生成するまでコピー欄は表示されない
+      await tester.ensureVisible(
+        find.text(AppStrings.accountLinkGenerateButton),
+      );
+      await tester.tap(find.text(AppStrings.accountLinkGenerateButton));
       await tester.pump();
 
       await tester.ensureVisible(
