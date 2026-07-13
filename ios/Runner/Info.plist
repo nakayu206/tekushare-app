@@ -42,6 +42,7 @@
 		<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>sms</string>
+		<string>instagram</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 		<dict>

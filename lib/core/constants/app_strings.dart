@@ -165,6 +165,11 @@ abstract class AppStrings {
   static const accountLinkUnlinkTooltip = '連携を解除';
   static const accountLinkViewSpots = 'スポットを見る';
 
+  // SNSシェア
+  static const shareInviteText = 'てくしぇあで散歩記録をシェアしませんか？';
+  static const shareLinkRequired = 'リンクを先に作成してください';
+  static const shareInstagramCopied = 'リンクをコピーしました。Instagramに貼り付けてください';
+
   // 招待承認画面
   static const acceptInviteTitle = 'アカウント連携';
   static const acceptInviteMessage = 'さんと連携しますか？';
