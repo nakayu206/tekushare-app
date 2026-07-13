@@ -12,10 +12,13 @@ class LinkedAccountDetailPage extends StatelessWidget {
 
   final LinkedAccount account;
 
-  static const _mockSpots = [
-    (title: 'お気に入り公園', category: '公園', isWantToGo: true),
-    (title: '駅前カフェ', category: 'カフェ', isWantToGo: false),
-    (title: '商店街の和食屋', category: 'ランチ', isWantToGo: true),
+  static const _mockWantToGoSpots = [
+    (title: 'お気に入り公園', category: '公園'),
+    (title: '商店街の和食屋', category: 'ランチ'),
+  ];
+
+  static const _mockVisitedSpots = [
+    (title: '駅前カフェ', category: 'カフェ'),
   ];
 
   static const _mockRoutes = [
@@ -44,16 +47,31 @@ class LinkedAccountDetailPage extends StatelessWidget {
             const SizedBox(height: AppSpacing.x2lp),
             const _SectionHeader(label: AppStrings.wantToGo),
             const SizedBox(height: AppSpacing.sm),
-            if (_mockSpots.isEmpty)
+            if (_mockWantToGoSpots.isEmpty)
               const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
             else
-              for (final spot in _mockSpots)
+              for (final spot in _mockWantToGoSpots)
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: _SpotCard(
                     title: spot.title,
                     category: spot.category,
-                    isWantToGo: spot.isWantToGo,
+                    isWantToGo: true,
+                  ),
+                ),
+            const SizedBox(height: AppSpacing.x2lp),
+            const _SectionHeader(label: AppStrings.listWentTab),
+            const SizedBox(height: AppSpacing.sm),
+            if (_mockVisitedSpots.isEmpty)
+              const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
+            else
+              for (final spot in _mockVisitedSpots)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _SpotCard(
+                    title: spot.title,
+                    category: spot.category,
+                    isWantToGo: false,
                   ),
                 ),
             const SizedBox(height: AppSpacing.x2lp),
