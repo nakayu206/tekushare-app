@@ -11,6 +11,7 @@ import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/domain/entities/contact.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/linked_account_detail_page.dart';
 import 'package:tekushare/screens/pages/settings/view/phone_register_page.dart';
 import 'package:tekushare/screens/providers/account_link_provider.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
@@ -816,8 +817,7 @@ class _ShareCard extends ConsumerWidget {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          _SharedRoutesPage(accountName: account.displayName),
+                      builder: (_) => LinkedAccountDetailPage(account: account),
                     ),
                   ),
                   onUnlink: () => showDialog<void>(
@@ -1027,107 +1027,6 @@ class _ContactRow extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _SharedRoutesPage extends StatelessWidget {
-  const _SharedRoutesPage({required this.accountName});
-
-  final String accountName;
-
-  static const _mockSpots = [
-    (name: 'お気に入り公園', category: '公園', status: '行きたい！'),
-    (name: '駅前カフェ', category: 'カフェ', status: '行った！'),
-    (name: '商店街の和食屋', category: 'ランチ', status: '行きたい！'),
-    (name: '図書館前の広場', category: 'そのほか', status: '行った！'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        title: Text(accountName),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          itemCount: _mockSpots.length,
-          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-          itemBuilder: (context, i) {
-            final spot = _mockSpots[i];
-            return Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: AppColors.chipUnselected),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: AppSpacing.xs,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          spot.name,
-                          style: const TextStyle(
-                            fontSize: AppTextStyle.md2,
-                            fontWeight: AppTextStyle.medium,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          spot.category,
-                          style: const TextStyle(
-                            fontSize: AppTextStyle.sm,
-                            color: AppColors.textDisabled,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      border: Border.all(color: AppColors.primary),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
-                    child: Text(
-                      spot.status,
-                      style: const TextStyle(
-                        fontSize: AppTextStyle.xs,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
       ),
     );
   }
