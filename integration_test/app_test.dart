@@ -5,13 +5,18 @@ import 'package:integration_test/integration_test.dart';
 import 'package:tekushare/app.dart';
 import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/domain/entities/contact.dart';
+import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/repositories/contact_repository.dart';
+import 'package:tekushare/domain/repositories/photo_repository.dart';
+import 'package:tekushare/domain/repositories/spot_repository.dart';
 import 'package:tekushare/screens/pages/home/view/home_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
 /// Firebase を初期化せずに使えるフェイク User。
-/// app.dart が参照するのは displayName のみ。
 class _FakeUser implements User {
   @override
   String? get displayName => 'テストユーザー';
@@ -42,6 +47,33 @@ class _FakeAuthService implements AuthService {
   Future<void> deleteUser() async {}
 }
 
+class _FakeSpotRepository implements SpotRepository {
+  @override
+  Future<void> saveSpot(Spot spot) async {}
+  @override
+  Stream<List<Spot>> getSpots() => Stream.value([]);
+  @override
+  Future<void> updateSpotStatus(String id, SpotStatus status) async {}
+  @override
+  Future<void> deleteSpot(String id) async {}
+}
+
+class _FakePhotoRepository implements PhotoRepository {
+  @override
+  Future<void> attachPhoto(String spotId, String imagePath) async {}
+  @override
+  Future<void> removePhoto(String spotId, String imagePath) async {}
+}
+
+class _FakeContactRepository implements ContactRepository {
+  @override
+  Stream<List<Contact>> watchContacts() => Stream.value([]);
+  @override
+  Future<void> saveContact(Contact contact) async {}
+  @override
+  Future<void> deleteContact(String id) async {}
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -54,8 +86,10 @@ void main() {
       ProviderScope(
         overrides: [
           authServiceProvider.overrideWithValue(_FakeAuthService()),
-          // ログイン済みユーザーを即時提供し Firebase アクセスを回避
           authStateProvider.overrideWith((ref) => Stream.value(_FakeUser())),
+          spotRepositoryProvider.overrideWithValue(_FakeSpotRepository()),
+          photoRepositoryProvider.overrideWithValue(_FakePhotoRepository()),
+          contactRepositoryProvider.overrideWithValue(_FakeContactRepository()),
         ],
         child: const TekuShareApp(),
       ),
