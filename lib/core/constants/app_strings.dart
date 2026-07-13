@@ -129,6 +129,16 @@ abstract class AppStrings {
   static const settingsPhoneConfirmMessage = '安否確認先の電話番号に\n登録しますか？';
   static const settingsPhoneRegisterConfirm = '登録する';
   static const settingsPhoneRegisteredMessage = '登録しました！';
+  static const settingsPhoneNameLabel = '名前';
+  static const settingsPhoneNameHint = '例：あかり（娘）';
+  static const settingsPhoneNameRequired = '名前を入力してください';
+  static const settingsPhoneNumberLabel = '電話番号';
+  static const settingsPhoneNumberHint = '例：080-0000-0000';
+  static const settingsPhoneNumberRequired = '電話番号を入力してください';
+  static const settingsPhoneSaveButton = '上書き保存';
+  static const settingsPhoneDeleteButton = '登録を削除する';
+  static const settingsPhoneDeleteConfirmMessage = '通知先の登録を削除しますか？';
+  static const settingsPhoneDeleteConfirmButton = '削除する';
 
   // アカウント管理
   static const settingsAccountTitle = 'アカウント';

@@ -18,9 +18,11 @@ import 'package:tekushare/domain/usecases/spot/save_spot.dart';
 import 'package:tekushare/domain/usecases/spot/update_spot_status.dart';
 import 'package:tekushare/domain/usecases/walk/end_walk.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
+import 'package:tekushare/screens/pages/settings/view/phone_register_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
+import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
@@ -138,6 +140,9 @@ final _spotOverride = spotProvider.overrideWith(
   ),
 );
 
+final _contactOverride =
+    contactProvider.overrideWith((ref) => Stream.value(null));
+
 void main() {
   group('SettingsPage', () {
     Future<void> pumpPage(WidgetTester tester) async {
@@ -148,6 +153,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -227,6 +233,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -269,7 +276,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_spotOverride],
+          overrides: [_contactOverride, _spotOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -311,6 +318,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -405,73 +413,14 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    // 通知先設定ボタンをタップすると電話番号選択ダイアログが開く
-    testWidgets('tapping set contact button opens phone select dialog',
-        (tester) async {
+    // 通知先をタップすると PhoneRegisterPage に遷移する
+    testWidgets('tapping contact opens PhoneRegisterPage', (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.text(AppStrings.settingsInactivityContactSet));
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.settingsPhoneSelectTitle), findsOneWidget);
-    });
-
-    // 電話番号を選択すると確認ダイアログが表示される
-    testWidgets('selecting contact shows confirm dialog', (tester) async {
-      await pumpPage(tester);
-
-      await tester.tap(find.text(AppStrings.settingsInactivityContactSet));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.settingsPhoneRegisterButton).first);
-      await tester.pumpAndSettle();
-
-      expect(find.text(AppStrings.settingsPhoneConfirmMessage), findsOneWidget);
-    });
-
-    // 登録するをタップすると登録完了ダイアログが表示される
-    testWidgets('confirming contact shows registered dialog', (tester) async {
-      await pumpPage(tester);
-
-      await tester.tap(find.text(AppStrings.settingsInactivityContactSet));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.settingsPhoneRegisterButton).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.settingsPhoneRegisterConfirm));
-      await tester.pumpAndSettle();
-
-      expect(
-          find.text(AppStrings.settingsPhoneRegisteredMessage), findsOneWidget);
-    });
-
-    // 登録完了ダイアログを閉じる
-    testWidgets('closing registered dialog dismisses it', (tester) async {
-      await pumpPage(tester);
-
-      await tester.tap(find.text(AppStrings.settingsInactivityContactSet));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.settingsPhoneRegisterButton).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.settingsPhoneRegisterConfirm));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.closeButton));
-      await tester.pumpAndSettle();
-
-      expect(
-          find.text(AppStrings.settingsPhoneRegisteredMessage), findsNothing);
-    });
-
-    // 確認ダイアログのキャンセル
-    testWidgets('canceling confirm dialog closes it', (tester) async {
-      await pumpPage(tester);
-
-      await tester.tap(find.text(AppStrings.settingsInactivityContactSet));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.settingsPhoneRegisterButton).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.cancelButton));
-      await tester.pumpAndSettle();
-
-      expect(find.text(AppStrings.settingsPhoneConfirmMessage), findsNothing);
+      expect(find.byType(PhoneRegisterPage), findsOneWidget);
     });
 
     // シェアの行きたいリストチェックボックスをタップする
@@ -483,6 +432,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -517,6 +467,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -551,6 +502,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -585,6 +537,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -619,6 +572,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -653,6 +607,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [_contactOverride],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
@@ -729,6 +684,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            _contactOverride,
             authServiceProvider.overrideWithValue(fakeAuth),
             walkSessionProvider.overrideWith(
               (ref) => WalkSessionNotifier(
@@ -774,6 +730,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            _contactOverride,
             authServiceProvider.overrideWithValue(fakeAuth),
             walkSessionProvider.overrideWith(
               (ref) => WalkSessionNotifier(
@@ -820,6 +777,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            _contactOverride,
             authServiceProvider.overrideWithValue(fakeAuth),
             walkSessionProvider.overrideWith(
               (ref) => WalkSessionNotifier(
@@ -869,6 +827,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            _contactOverride,
             authServiceProvider.overrideWithValue(fakeAuth),
             walkSessionProvider.overrideWith(
               (ref) => WalkSessionNotifier(
@@ -915,6 +874,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            _contactOverride,
             authServiceProvider.overrideWithValue(fakeAuth),
             walkSessionProvider.overrideWith(
               (ref) => WalkSessionNotifier(
@@ -962,6 +922,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            _contactOverride,
             authServiceProvider.overrideWithValue(fakeAuth),
             walkSessionProvider.overrideWith(
               (ref) => WalkSessionNotifier(
