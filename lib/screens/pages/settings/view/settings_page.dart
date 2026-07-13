@@ -663,16 +663,16 @@ class _ContactsListDialog extends StatelessWidget {
                             Text(
                               c.name,
                               style: const TextStyle(
-                                fontSize: AppTextStyle.sm2,
-                                color: AppColors.primary,
+                                fontSize: AppTextStyle.lg2,
+                                color: AppColors.textPrimary,
                                 fontWeight: AppTextStyle.semiBold,
                               ),
                             ),
                             Text(
                               c.phone,
                               style: const TextStyle(
-                                fontSize: AppTextStyle.xs,
-                                color: AppColors.textDisabled,
+                                fontSize: AppTextStyle.md,
+                                color: AppColors.primary,
                               ),
                             ),
                           ],
