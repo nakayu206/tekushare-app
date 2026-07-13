@@ -1,13 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 
 void main() {
   group('SettingsViewModel', () {
     late ProviderContainer container;
 
-    setUp(() {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
       container = ProviderContainer();
+      // prefs ロード完了を待ってから各テストへ
+      await container.read(sharedPrefsProvider.future);
     });
 
     tearDown(() {
@@ -96,6 +101,22 @@ void main() {
       expect(state().timerRoundTrip, true);
       expect(state().timerMinutes, 30);
       expect(state().inactivityEnabled, false);
+    });
+
+    // 永続化確認: 変更値が prefs に保存され再読み込みで復元される
+    test('persisted values are restored in new container', () async {
+      vm().setTimerEnabled(false);
+      vm().setTimerMinutes(45);
+      vm().setInactivityEnabled(true);
+
+      final container2 = ProviderContainer();
+      addTearDown(container2.dispose);
+      await container2.read(sharedPrefsProvider.future);
+
+      final state2 = container2.read(settingsViewModelProvider);
+      expect(state2.timerEnabled, false);
+      expect(state2.timerMinutes, 45);
+      expect(state2.inactivityEnabled, true);
     });
   });
 }

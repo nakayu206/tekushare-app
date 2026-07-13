@@ -60,7 +60,9 @@ class _WalkPageState extends ConsumerState<WalkPage> {
       final settings = ref.read(settingsViewModelProvider);
       ref.read(walkTimerProvider.notifier).initializeIfNeeded(
             timerEnabled: settings.timerEnabled,
-            timerMinutes: settings.timerMinutes,
+            timerMinutes: settings.timerRoundTrip
+                ? settings.timerMinutes ~/ 2
+                : settings.timerMinutes,
             inactivityEnabled: settings.inactivityEnabled,
             inactivityMinutes: settings.inactivityMinutes,
           );
