@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/domain/entities/contact.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 
-final contactProvider = StreamProvider<Contact?>((ref) {
-  return ref.watch(contactRepositoryProvider).watchContact();
+final contactProvider = StreamProvider<List<Contact>>((ref) {
+  return ref.watch(contactRepositoryProvider).watchContacts();
 });
 
 class ContactNotifier extends AsyncNotifier<void> {
@@ -14,8 +14,8 @@ class ContactNotifier extends AsyncNotifier<void> {
     await ref.read(contactRepositoryProvider).saveContact(contact);
   }
 
-  Future<void> delete() async {
-    await ref.read(contactRepositoryProvider).deleteContact();
+  Future<void> delete(String id) async {
+    await ref.read(contactRepositoryProvider).deleteContact(id);
   }
 }
 

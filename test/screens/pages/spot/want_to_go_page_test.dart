@@ -125,7 +125,7 @@ void main() {
           overrides: [
             _locationOverride,
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -232,7 +232,7 @@ void main() {
         ProviderScope(
           overrides: [
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -338,7 +338,7 @@ void main() {
           overrides: [
             _locationOverride,
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -397,7 +397,7 @@ void main() {
           overrides: [
             _locationOverride,
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -443,7 +443,7 @@ void main() {
           overrides: [
             _locationOverride,
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -489,7 +489,7 @@ void main() {
           overrides: [
             _locationOverride,
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -537,7 +537,7 @@ void main() {
           overrides: [
             _locationOverride,
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
             cameraServiceProvider
                 .overrideWithValue(_FakeCameraService(fakePath)),
           ],
@@ -586,7 +586,7 @@ void main() {
           overrides: [
             _locationOverride,
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {

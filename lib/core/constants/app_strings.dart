@@ -139,6 +139,7 @@ abstract class AppStrings {
   static const settingsPhoneDeleteButton = '登録を削除する';
   static const settingsPhoneDeleteConfirmMessage = '通知先の登録を削除しますか？';
   static const settingsPhoneDeleteConfirmButton = '削除する';
+  static const settingsPhoneAddButton = '追加する';
 
   // アカウント管理
   static const settingsAccountTitle = 'アカウント';

@@ -130,7 +130,7 @@ void main() {
               (ref) => Stream<Position>.error(Exception('GPS unavailable')),
             ),
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -215,7 +215,7 @@ void main() {
               (ref) => Stream<Position>.error(Exception('GPS unavailable')),
             ),
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             navigatorKey: navKey,

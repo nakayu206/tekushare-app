@@ -9,7 +9,9 @@ import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_confirm_dialog.dart';
 
 class PhoneRegisterPage extends ConsumerStatefulWidget {
-  const PhoneRegisterPage({super.key});
+  const PhoneRegisterPage({super.key, this.existing});
+
+  final Contact? existing;
 
   @override
   ConsumerState<PhoneRegisterPage> createState() => _PhoneRegisterPageState();
@@ -19,6 +21,15 @@ class _PhoneRegisterPageState extends ConsumerState<PhoneRegisterPage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existing != null) {
+      _nameController.text = widget.existing!.name;
+      _phoneController.text = widget.existing!.phone;
+    }
+  }
 
   @override
   void dispose() {
@@ -33,10 +44,13 @@ class _PhoneRegisterPageState extends ConsumerState<PhoneRegisterPage> {
       context: context,
       builder: (_) => AppConfirmDialog(
         message: AppStrings.settingsPhoneConfirmMessage,
-        confirmLabel: AppStrings.settingsPhoneRegisterConfirm,
+        confirmLabel: widget.existing == null
+            ? AppStrings.settingsPhoneRegisterConfirm
+            : AppStrings.settingsPhoneSaveButton,
         onConfirm: () async {
           await ref.read(contactNotifierProvider.notifier).save(
                 Contact(
+                  id: widget.existing?.id ?? '',
                   name: _nameController.text.trim(),
                   phone: _phoneController.text.trim(),
                 ),
@@ -63,7 +77,9 @@ class _PhoneRegisterPageState extends ConsumerState<PhoneRegisterPage> {
         confirmLabel: AppStrings.settingsPhoneDeleteConfirmButton,
         isDestructive: true,
         onConfirm: () async {
-          await ref.read(contactNotifierProvider.notifier).delete();
+          await ref
+              .read(contactNotifierProvider.notifier)
+              .delete(widget.existing!.id);
           if (!mounted) return;
           Navigator.pop(context);
           if (!mounted) return;
@@ -76,138 +92,119 @@ class _PhoneRegisterPageState extends ConsumerState<PhoneRegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final contactAsync = ref.watch(contactProvider);
-
-    return contactAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        title: const Text(AppStrings.settingsInactivityContact),
+        centerTitle: true,
+        elevation: 0,
       ),
-      error: (_, __) => const Scaffold(
-        body: Center(child: Text('エラーが発生しました')),
-      ),
-      data: (contact) {
-        if (_nameController.text.isEmpty && contact != null) {
-          _nameController.text = contact.name;
-          _phoneController.text = contact.phone;
-        }
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: AppBar(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            title: const Text(AppStrings.settingsInactivityContact),
-            centerTitle: true,
-            elevation: 0,
-          ),
-          body: SafeArea(
-            top: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppSpacing.lg),
-                    const Text(
-                      AppStrings.settingsPhoneNameLabel,
-                      style: TextStyle(
-                        fontSize: AppTextStyle.sm2,
-                        color: AppColors.textPrimary,
-                        fontWeight: AppTextStyle.medium,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    TextFormField(
-                      controller: _nameController,
-                      keyboardType: TextInputType.name,
-                      textInputAction: TextInputAction.next,
-                      decoration: _inputDecoration(
-                        AppStrings.settingsPhoneNameHint,
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? AppStrings.settingsPhoneNameRequired
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    const Text(
-                      AppStrings.settingsPhoneNumberLabel,
-                      style: TextStyle(
-                        fontSize: AppTextStyle.sm2,
-                        color: AppColors.textPrimary,
-                        fontWeight: AppTextStyle.medium,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    TextFormField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _onSave(),
-                      decoration: _inputDecoration(
-                        AppStrings.settingsPhoneNumberHint,
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? AppStrings.settingsPhoneNumberRequired
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.x3l),
-                    SizedBox(
-                      width: double.infinity,
-                      height: AppSize.buttonHeight,
-                      child: ElevatedButton(
-                        onPressed: _onSave,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.full),
-                          ),
-                        ),
-                        child: Text(
-                          contact == null
-                              ? AppStrings.settingsPhoneRegisterConfirm
-                              : AppStrings.settingsPhoneSaveButton,
-                          style: const TextStyle(
-                            fontSize: AppTextStyle.lg2,
-                            fontWeight: AppTextStyle.medium,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (contact != null) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      SizedBox(
-                        width: double.infinity,
-                        height: AppSize.buttonHeight,
-                        child: OutlinedButton(
-                          onPressed: _onDelete,
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.red),
-                            foregroundColor: Colors.red,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.full),
-                            ),
-                          ),
-                          child: const Text(
-                            AppStrings.settingsPhoneDeleteButton,
-                            style: TextStyle(
-                              fontSize: AppTextStyle.lg2,
-                              fontWeight: AppTextStyle.medium,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: AppSpacing.lg),
+                const Text(
+                  AppStrings.settingsPhoneNameLabel,
+                  style: TextStyle(
+                    fontSize: AppTextStyle.sm2,
+                    color: AppColors.textPrimary,
+                    fontWeight: AppTextStyle.medium,
+                  ),
                 ),
-              ),
+                const SizedBox(height: AppSpacing.xs),
+                TextFormField(
+                  controller: _nameController,
+                  keyboardType: TextInputType.name,
+                  textInputAction: TextInputAction.next,
+                  decoration:
+                      _inputDecoration(AppStrings.settingsPhoneNameHint),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? AppStrings.settingsPhoneNameRequired
+                      : null,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const Text(
+                  AppStrings.settingsPhoneNumberLabel,
+                  style: TextStyle(
+                    fontSize: AppTextStyle.sm2,
+                    color: AppColors.textPrimary,
+                    fontWeight: AppTextStyle.medium,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _onSave(),
+                  decoration:
+                      _inputDecoration(AppStrings.settingsPhoneNumberHint),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? AppStrings.settingsPhoneNumberRequired
+                      : null,
+                ),
+                const SizedBox(height: AppSpacing.x3l),
+                SizedBox(
+                  width: double.infinity,
+                  height: AppSize.buttonHeight,
+                  child: ElevatedButton(
+                    onPressed: _onSave,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                      ),
+                    ),
+                    child: Text(
+                      widget.existing == null
+                          ? AppStrings.settingsPhoneRegisterConfirm
+                          : AppStrings.settingsPhoneSaveButton,
+                      style: const TextStyle(
+                        fontSize: AppTextStyle.lg2,
+                        fontWeight: AppTextStyle.medium,
+                      ),
+                    ),
+                  ),
+                ),
+                if (widget.existing != null) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(
+                    width: double.infinity,
+                    height: AppSize.buttonHeight,
+                    child: OutlinedButton(
+                      onPressed: _onDelete,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        foregroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                        ),
+                      ),
+                      child: const Text(
+                        AppStrings.settingsPhoneDeleteButton,
+                        style: TextStyle(
+                          fontSize: AppTextStyle.lg2,
+                          fontWeight: AppTextStyle.medium,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

@@ -119,7 +119,7 @@ void main() {
         ProviderScope(
           overrides: [
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
             if (camera != null)
               cameraServiceProvider.overrideWith((ref) => camera)
             else
@@ -159,7 +159,7 @@ void main() {
         ProviderScope(
           overrides: [
             _spotOverride,
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
             _cameraOverride,
           ],
           child: MaterialApp(

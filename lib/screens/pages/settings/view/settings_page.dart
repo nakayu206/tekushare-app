@@ -28,10 +28,12 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  void _openPhoneRegisterPage() {
+  void _openPhoneRegisterPage({Contact? existing}) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const PhoneRegisterPage()),
+      MaterialPageRoute(
+        builder: (_) => PhoneRegisterPage(existing: existing),
+      ),
     );
   }
 
@@ -74,7 +76,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(settingsViewModelProvider);
     final vm = ref.read(settingsViewModelProvider.notifier);
-    final contact = ref.watch(contactProvider).value;
+    final contacts = ref.watch(contactProvider).value ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -98,8 +100,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               _InactivityCard(
                 state: state,
                 vm: vm,
-                contact: contact,
-                onContactTap: _openPhoneRegisterPage,
+                contacts: contacts,
+                onAddContact: () => _openPhoneRegisterPage(),
+                onEditContact: (c) => _openPhoneRegisterPage(existing: c),
               ),
               const SizedBox(height: AppSpacing.x2lp),
               _ShareCard(state: state, vm: vm),
@@ -452,25 +455,30 @@ class _InactivityCard extends StatelessWidget {
   const _InactivityCard({
     required this.state,
     required this.vm,
-    required this.onContactTap,
-    this.contact,
+    required this.contacts,
+    required this.onAddContact,
+    required this.onEditContact,
   });
 
   final SettingsState state;
   final SettingsViewModel vm;
-  final VoidCallback onContactTap;
-  final Contact? contact;
+  final List<Contact> contacts;
+  final VoidCallback onAddContact;
+  final void Function(Contact) onEditContact;
 
+  static const _maxContacts = 5;
   static final _inactivityOptions = List.generate(24, (i) => (i + 1) * 5);
 
   @override
   Widget build(BuildContext context) {
+    final remaining = _maxContacts - contacts.length;
     return _SettingCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSize.timerCardPaddingH,
         vertical: AppSize.timerCardPaddingV,
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,52 +517,43 @@ class _InactivityCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: onContactTap,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ExcludeSemantics(
-                      child: SvgPicture.asset(
-                        'assets/SVG/phone.svg',
-                        width: AppSize.iconLg,
-                        height: AppSize.iconLg,
-                      ),
-                    ),
-                    const SizedBox(width: AppSize.phoneIconGap),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          AppStrings.settingsInactivityContact,
-                          style: TextStyle(
-                            fontSize: AppTextStyle.xs,
-                            color: Colors.black,
-                          ),
-                        ),
-                        Text(
-                          contact?.name ??
-                              AppStrings.settingsInactivityContactSet,
-                          style: const TextStyle(
-                            fontSize: AppTextStyle.sm2,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        if (contact != null)
-                          Text(
-                            contact!.phone,
-                            style: const TextStyle(
-                              fontSize: AppTextStyle.xs,
-                              color: AppColors.textDisabled,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
+            ],
+          ),
+          if (contacts.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            ...contacts.map(
+              (c) => _ContactTile(
+                contact: c,
+                onTap: () => onEditContact(c),
               ),
-              const SizedBox(width: AppSpacing.lg),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (remaining > 0)
+                Text(
+                  'あと$remaining件まで登録できます',
+                  style: const TextStyle(
+                    fontSize: AppTextStyle.xs,
+                    color: AppColors.textDisabled,
+                  ),
+                ),
+              if (remaining > 0)
+                TextButton(
+                  onPressed: onAddContact,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    AppStrings.settingsPhoneAddButton,
+                    style: TextStyle(fontSize: AppTextStyle.sm2),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -586,6 +585,61 @@ class _InactivityCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ContactTile extends StatelessWidget {
+  const _ContactTile({required this.contact, required this.onTap});
+
+  final Contact contact;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Row(
+          children: [
+            ExcludeSemantics(
+              child: SvgPicture.asset(
+                'assets/SVG/phone.svg',
+                width: AppSize.iconLg,
+                height: AppSize.iconLg,
+              ),
+            ),
+            const SizedBox(width: AppSize.phoneIconGap),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    contact.name,
+                    style: const TextStyle(
+                      fontSize: AppTextStyle.sm2,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    contact.phone,
+                    style: const TextStyle(
+                      fontSize: AppTextStyle.xs,
+                      color: AppColors.textDisabled,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.primary,
+              size: AppSize.iconMd,
+            ),
+          ],
+        ),
       ),
     );
   }

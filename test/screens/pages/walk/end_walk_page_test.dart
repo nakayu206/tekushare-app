@@ -340,7 +340,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {

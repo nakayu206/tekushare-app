@@ -8,32 +8,37 @@ class FirestoreContactRepositoryImpl implements ContactRepository {
   final FirebaseFirestore _firestore;
   final String _uid;
 
-  DocumentReference<Map<String, dynamic>> get _doc => _firestore
-      .collection('users')
-      .doc(_uid)
-      .collection('settings')
-      .doc('contact');
+  CollectionReference<Map<String, dynamic>> get _collection =>
+      _firestore.collection('users').doc(_uid).collection('contacts');
 
   @override
-  Stream<Contact?> watchContact() {
+  Stream<List<Contact>> watchContacts() {
     if (_uid.isEmpty) return const Stream.empty();
-    return _doc.snapshots().map((snap) {
-      if (!snap.exists) return null;
-      final data = snap.data()!;
-      return Contact(
-        name: data['name'] as String,
-        phone: data['phone'] as String,
-      );
-    });
+    return _collection.snapshots().map(
+          (snap) => snap.docs
+              .map(
+                (doc) => Contact(
+                  id: doc.id,
+                  name: doc.data()['name'] as String,
+                  phone: doc.data()['phone'] as String,
+                ),
+              )
+              .toList(),
+        );
   }
 
   @override
   Future<void> saveContact(Contact contact) async {
-    await _doc.set({'name': contact.name, 'phone': contact.phone});
+    final data = {'name': contact.name, 'phone': contact.phone};
+    if (contact.id.isEmpty) {
+      await _collection.add(data);
+    } else {
+      await _collection.doc(contact.id).set(data);
+    }
   }
 
   @override
-  Future<void> deleteContact() async {
-    await _doc.delete();
+  Future<void> deleteContact(String id) async {
+    await _collection.doc(id).delete();
   }
 }

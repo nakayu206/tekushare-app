@@ -141,7 +141,7 @@ final _spotOverride = spotProvider.overrideWith(
 );
 
 final _contactOverride =
-    contactProvider.overrideWith((ref) => Stream.value(null));
+    contactProvider.overrideWith((ref) => Stream.value([]));
 
 void main() {
   group('SettingsPage', () {
@@ -414,10 +414,11 @@ void main() {
     });
 
     // 通知先をタップすると PhoneRegisterPage に遷移する
-    testWidgets('tapping contact opens PhoneRegisterPage', (tester) async {
+    testWidgets('tapping add contact button opens PhoneRegisterPage',
+        (tester) async {
       await pumpPage(tester);
 
-      await tester.tap(find.text(AppStrings.settingsInactivityContactSet));
+      await tester.tap(find.text(AppStrings.settingsPhoneAddButton));
       await tester.pumpAndSettle();
 
       expect(find.byType(PhoneRegisterPage), findsOneWidget);

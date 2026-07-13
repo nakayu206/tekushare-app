@@ -212,7 +212,7 @@ void main() {
           (ref) => locationStream ?? const Stream.empty(),
         ),
         _notificationOverride,
-        contactProvider.overrideWith((ref) => Stream.value(null)),
+        contactProvider.overrideWith((ref) => Stream.value([])),
         if (camera != null) cameraServiceProvider.overrideWith((ref) => camera),
       ];
 
@@ -558,7 +558,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            contactProvider.overrideWith((ref) => Stream.value(null)),
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
