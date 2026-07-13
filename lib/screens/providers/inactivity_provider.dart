@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/domain/usecases/walk/check_inactivity.dart';
 import 'package:tekushare/infrastructure/notification_service.dart';
-import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/notification_provider.dart';
 
 class InactivityNotifier extends StateNotifier<DateTime> {
   InactivityNotifier({required NotificationService notificationService})

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,7 +28,7 @@ class _FakeSpotRepository implements SpotRepository {
 
 class _FakeAuthService implements AuthService {
   @override
-  Stream<User?> watchAuthState() => const Stream.empty();
+  Stream<AuthUser?> watchAuthState() => const Stream.empty();
   @override
   Future<void> registerWithEmail(
     String email,
