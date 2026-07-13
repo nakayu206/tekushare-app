@@ -22,6 +22,7 @@ import 'package:tekushare/domain/repositories/spot_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/infrastructure/camera_service.dart';
 import 'package:tekushare/infrastructure/notification_service.dart';
+import 'package:tekushare/infrastructure/sms_service.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
 /// Isar インスタンスを非同期で提供する。
@@ -73,6 +74,10 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 
 final cameraServiceProvider = Provider<CameraService>((ref) {
   return CameraService();
+});
+
+final smsServiceProvider = Provider<SmsService>((ref) {
+  return const SmsServiceImpl();
 });
 
 final accountLinkRepositoryProvider = Provider<AccountLinkRepository>((ref) {

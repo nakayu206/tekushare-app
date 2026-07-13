@@ -22,6 +22,8 @@ import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/auth_provider.dart';
+import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/providers/walk_timer_provider.dart';
@@ -82,7 +84,19 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     if (ts.inactSecondsLeft == 0 && !ts.inactFired) {
       ref.read(walkTimerProvider.notifier).markInactFired();
       await svc.showInactivityNotification();
+      await _sendSmsToContacts();
     }
+  }
+
+  Future<void> _sendSmsToContacts() async {
+    final contacts = ref.read(contactProvider).valueOrNull ?? [];
+    if (contacts.isEmpty) return;
+    final senderName =
+        ref.read(authStateProvider).valueOrNull?.displayName ?? '';
+    await ref.read(smsServiceProvider).sendInactivityAlert(
+          contacts: contacts,
+          senderName: senderName,
+        );
   }
 
   void _resetTimer() {
