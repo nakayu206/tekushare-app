@@ -169,6 +169,7 @@ abstract class AppStrings {
   static const shareInviteText = 'てくしぇあで散歩記録をシェアしませんか？';
   static const shareLinkRequired = 'リンクを先に作成してください';
   static const shareInstagramCopied = 'リンクをコピーしました。Instagramに貼り付けてください';
+  static const shareError = 'シェアに失敗しました';
 
   // 招待承認画面
   static const acceptInviteTitle = 'アカウント連携';

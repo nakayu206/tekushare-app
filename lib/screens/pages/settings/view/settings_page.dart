@@ -1222,9 +1222,15 @@ class _ShareAppIcons extends StatelessWidget {
     if (!_checkLink(context)) return;
     final text =
         Uri.encodeComponent('${AppStrings.shareInviteText}\n$inviteLink');
-    final uri = Uri.parse('https://line.me/R/msg/text/?$text');
-    if (await canLaunchUrl(uri)) {
+    final uri = Uri.parse('https://line.me/R/share?text=$text');
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.shareError)),
+        );
+      }
     }
   }
 
@@ -1233,17 +1239,27 @@ class _ShareAppIcons extends StatelessWidget {
     final text =
         Uri.encodeComponent('${AppStrings.shareInviteText}\n$inviteLink');
     final uri = Uri.parse('https://x.com/intent/tweet?text=$text');
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.shareError)),
+        );
+      }
     }
   }
 
   Future<void> _shareToInstagram(BuildContext context) async {
     if (!_checkLink(context)) return;
     await Clipboard.setData(ClipboardData(text: inviteLink!));
-    final instagramUri = Uri.parse('instagram://app');
-    if (await canLaunchUrl(instagramUri)) {
-      await launchUrl(instagramUri, mode: LaunchMode.externalApplication);
+    try {
+      final instagramUri = Uri.parse('instagram://app');
+      if (await canLaunchUrl(instagramUri)) {
+        await launchUrl(instagramUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      // Instagram 未インストール時もクリップボードコピー済みなのでスナックバーを表示
     }
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
