@@ -39,7 +39,6 @@ class LinkedAccountDetailPage extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        bottom: false,
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
