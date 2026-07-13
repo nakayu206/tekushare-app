@@ -32,11 +32,11 @@ class SmsServiceImpl implements SmsService {
     }
   }
 
-  /// Android: flutter_sms で直接送信（1件失敗しても残りへ継続）
+  /// Android: flutter_sms で SMS アプリを開き宛先・本文をセット（1件失敗しても残りへ継続）
   Future<void> _sendAndroid(List<String> numbers, String message) async {
     for (final number in numbers) {
       try {
-        await sendSMS(message: message, recipients: [number], sendDirect: true);
+        await sendSMS(message: message, recipients: [number]);
       } catch (_) {
         // 送信失敗をスキップして次の連絡先へ
       }

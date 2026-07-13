@@ -26,7 +26,7 @@ dependencies:
   app_links: ^6.4.0
   latlong2: ^0.10.1
   url_launcher: ^6.3.2
-  flutter_sms: ^2.3.3
+  flutter_sms: ^3.0.1
   shared_preferences: ^2.3.4
 
 dev_dependencies:
