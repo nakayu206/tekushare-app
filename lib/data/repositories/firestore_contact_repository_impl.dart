@@ -29,6 +29,7 @@ class FirestoreContactRepositoryImpl implements ContactRepository {
 
   @override
   Future<void> saveContact(Contact contact) async {
+    if (_uid.isEmpty) return;
     final data = {'name': contact.name, 'phone': contact.phone};
     if (contact.id.isEmpty) {
       await _collection.add(data);
@@ -39,6 +40,7 @@ class FirestoreContactRepositoryImpl implements ContactRepository {
 
   @override
   Future<void> deleteContact(String id) async {
+    if (_uid.isEmpty) return;
     await _collection.doc(id).delete();
   }
 }
