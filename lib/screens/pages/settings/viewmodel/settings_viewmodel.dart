@@ -63,6 +63,7 @@ class SettingsViewModel extends Notifier<SettingsState> {
   static const _kTimerMinutes = 'settings_timerMinutes';
   static const _kInactivityEnabled = 'settings_inactivityEnabled';
   static const _kInactivityMinutes = 'settings_inactivityMinutes';
+  static const _kRegisteredContactName = 'settings_registeredContactName';
   static const _kShareWantToGo = 'settings_shareWantToGo';
   static const _kShareVisited = 'settings_shareVisited';
 
@@ -76,6 +77,7 @@ class SettingsViewModel extends Notifier<SettingsState> {
         timerMinutes: prefs.getInt(_kTimerMinutes) ?? 30,
         inactivityEnabled: prefs.getBool(_kInactivityEnabled) ?? false,
         inactivityMinutes: prefs.getInt(_kInactivityMinutes) ?? 15,
+        registeredContactName: prefs.getString(_kRegisteredContactName),
         shareWantToGo: prefs.getBool(_kShareWantToGo) ?? true,
         shareVisited: prefs.getBool(_kShareVisited) ?? true,
       ),
@@ -111,8 +113,10 @@ class SettingsViewModel extends Notifier<SettingsState> {
     state = state.copyWith(inactivityMinutes: v);
   }
 
-  void registerContact(String name) =>
-      state = state.copyWith(registeredContactName: name);
+  void registerContact(String name) {
+    _prefs.setString(_kRegisteredContactName, name);
+    state = state.copyWith(registeredContactName: name);
+  }
 
   void setShareWantToGo(bool v) {
     _prefs.setBool(_kShareWantToGo, v);
