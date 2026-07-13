@@ -17,6 +17,7 @@ import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_detail_page.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
@@ -118,6 +119,7 @@ void main() {
         ProviderScope(
           overrides: [
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
             if (camera != null)
               cameraServiceProvider.overrideWith((ref) => camera)
             else
@@ -155,7 +157,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [_spotOverride, _cameraOverride],
+          overrides: [
+            _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
+            _cameraOverride,
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;

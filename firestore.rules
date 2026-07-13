@@ -7,8 +7,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // uids ([fromUid, myUid] 2要素) に対して、inviteToken が指す招待が
-    // 「未使用・期限内・fromUidが自分ではなくuidsに含まれる」ことを検証する。
     function isValidInviteFor(uids, inviteToken) {
       let invite = get(/databases/$(database)/documents/linkInvites/$(inviteToken)).data;
       return invite.fromUid != request.auth.uid
@@ -17,17 +15,17 @@ service cloud.firestore {
         && invite.expiresAt > request.time;
     }
 
-    // users/{uid}
-    // 連携相手の表示名を引けるよう、読み取りはログイン済みユーザー全員に許可する。
-    // 書き込みは本人のみ。
+    // users/{uid}: 連携相手の表示名を引けるよう読み取りはログイン済み全員に許可
     match /users/{uid} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == uid;
     }
 
-    // linkInvites/{token}
-    // 招待リンクのトークンドキュメント。作成は本人のみ、
-    // 使用済みフラグの更新は「招待した本人以外」が使用時に1回だけ行える。
+    // users/{uid}/contacts, spots, photos などサブコレクションはオーナーのみ
+    match /users/{uid}/{document=**} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
     match /linkInvites/{token} {
       allow read: if isSignedIn();
 
@@ -44,9 +42,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // accountLinks/{linkId}
-    // 連携関係そのもの。linkIdは2人のUIDをソートして "_" で結合したもの。
-    // 作成は「有効な招待(inviteToken)を経由して」相手を招待した側以外が行う場合のみ許可。
     match /accountLinks/{linkId} {
       allow read: if isSignedIn() && request.auth.uid in resource.data.uids;
 

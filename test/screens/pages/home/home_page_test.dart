@@ -24,6 +24,7 @@ import 'package:tekushare/app.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/clock_provider.dart';
+import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
@@ -129,6 +130,7 @@ void main() {
               (ref) => Stream<Position>.error(Exception('GPS unavailable')),
             ),
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             builder: (context, child) {
@@ -213,6 +215,7 @@ void main() {
               (ref) => Stream<Position>.error(Exception('GPS unavailable')),
             ),
             _spotOverride,
+            contactProvider.overrideWith((ref) => Stream.value([])),
           ],
           child: MaterialApp(
             navigatorKey: navKey,

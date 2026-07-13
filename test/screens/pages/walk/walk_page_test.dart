@@ -19,6 +19,7 @@ import 'package:tekushare/infrastructure/notification_service.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
 import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
+import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
@@ -211,6 +212,7 @@ void main() {
           (ref) => locationStream ?? const Stream.empty(),
         ),
         _notificationOverride,
+        contactProvider.overrideWith((ref) => Stream.value([])),
         if (camera != null) cameraServiceProvider.overrideWith((ref) => camera),
       ];
 
@@ -555,6 +557,9 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            contactProvider.overrideWith((ref) => Stream.value([])),
+          ],
           child: MaterialApp(
             builder: (context, child) {
               final sw = MediaQuery.sizeOf(context).width;
