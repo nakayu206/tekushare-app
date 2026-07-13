@@ -17,6 +17,9 @@ class _FakeUser implements User {
   String? get displayName => 'テストユーザー';
 
   @override
+  String get uid => '';
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
