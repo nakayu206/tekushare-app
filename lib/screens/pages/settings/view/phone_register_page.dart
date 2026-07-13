@@ -40,33 +40,32 @@ class _PhoneRegisterPageState extends ConsumerState<PhoneRegisterPage> {
 
   Future<void> _onSave() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => _RegisterConfirmDialog(name: name, phone: phone),
+    );
+    if (confirmed != true) return;
+
+    await ref.read(contactNotifierProvider.notifier).save(
+          Contact(
+            id: widget.existing?.id ?? '',
+            name: name,
+            phone: phone,
+          ),
+        );
+    if (!mounted) return;
+
     await showDialog<void>(
       context: context,
-      builder: (_) => AppConfirmDialog(
-        message: AppStrings.settingsPhoneConfirmMessage,
-        confirmLabel: widget.existing == null
-            ? AppStrings.settingsPhoneRegisterConfirm
-            : AppStrings.settingsPhoneSaveButton,
-        onConfirm: () async {
-          await ref.read(contactNotifierProvider.notifier).save(
-                Contact(
-                  id: widget.existing?.id ?? '',
-                  name: _nameController.text.trim(),
-                  phone: _phoneController.text.trim(),
-                ),
-              );
-          if (!mounted) return;
-          Navigator.pop(context);
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppStrings.settingsPhoneRegisteredMessage),
-            ),
-          );
-        },
-        onCancel: () => Navigator.pop(context),
+      builder: (_) => _RegisterSuccessDialog(
+        onClose: () => Navigator.pop(context),
       ),
     );
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 
   void _onDelete() {
@@ -237,6 +236,150 @@ class _PhoneRegisterPageState extends ConsumerState<PhoneRegisterPage> {
       ),
       filled: true,
       fillColor: Colors.white,
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 登録確認ダイアログ
+// ──────────────────────────────────────────
+
+class _RegisterConfirmDialog extends StatelessWidget {
+  const _RegisterConfirmDialog({required this.name, required this.phone});
+
+  final String name;
+  final String phone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.x2l,
+          AppSpacing.x3l,
+          AppSpacing.x2l,
+          AppSpacing.x2l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              name,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.xl,
+                fontWeight: AppTextStyle.semiBold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              phone,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const Text(
+              AppStrings.settingsPhoneConfirmMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppTextStyle.md),
+            ),
+            const SizedBox(height: AppSpacing.x2l),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: const Text(AppStrings.cancelButton),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: const Text(AppStrings.settingsPhoneRegisterConfirm),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 登録完了ダイアログ
+// ──────────────────────────────────────────
+
+class _RegisterSuccessDialog extends StatelessWidget {
+  const _RegisterSuccessDialog({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.x2l,
+          AppSpacing.x3l,
+          AppSpacing.x2l,
+          AppSpacing.x2l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              AppStrings.settingsPhoneRegisteredMessage,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: AppTextStyle.semiBold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.x2l),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onClose,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                ),
+                child: const Text(AppStrings.closeButton),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

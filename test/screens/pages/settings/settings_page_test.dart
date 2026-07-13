@@ -418,7 +418,7 @@ void main() {
         (tester) async {
       await pumpPage(tester);
 
-      await tester.tap(find.text(AppStrings.settingsPhoneAddButton));
+      await tester.tap(find.text(AppStrings.settingsInactivityContactSet));
       await tester.pumpAndSettle();
 
       expect(find.byType(PhoneRegisterPage), findsOneWidget);

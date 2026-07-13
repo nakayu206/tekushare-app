@@ -37,6 +37,23 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  void _showContactsDialog(List<Contact> contacts) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => _ContactsListDialog(
+        contacts: contacts,
+        onEdit: (c) {
+          Navigator.pop(context);
+          _openPhoneRegisterPage(existing: c);
+        },
+        onAdd: () {
+          Navigator.pop(context);
+          _openPhoneRegisterPage();
+        },
+      ),
+    );
+  }
+
   void _showLogoutConfirmDialog() {
     showDialog<void>(
       context: context,
@@ -102,7 +119,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 vm: vm,
                 contacts: contacts,
                 onAddContact: () => _openPhoneRegisterPage(),
-                onEditContact: (c) => _openPhoneRegisterPage(existing: c),
+                onShowContacts: () => _showContactsDialog(contacts),
               ),
               const SizedBox(height: AppSpacing.x2lp),
               _ShareCard(state: state, vm: vm),
@@ -457,28 +474,25 @@ class _InactivityCard extends StatelessWidget {
     required this.vm,
     required this.contacts,
     required this.onAddContact,
-    required this.onEditContact,
+    required this.onShowContacts,
   });
 
   final SettingsState state;
   final SettingsViewModel vm;
   final List<Contact> contacts;
   final VoidCallback onAddContact;
-  final void Function(Contact) onEditContact;
+  final VoidCallback onShowContacts;
 
-  static const _maxContacts = 5;
   static final _inactivityOptions = List.generate(24, (i) => (i + 1) * 5);
 
   @override
   Widget build(BuildContext context) {
-    final remaining = _maxContacts - contacts.length;
     return _SettingCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSize.timerCardPaddingH,
         vertical: AppSize.timerCardPaddingV,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,43 +531,45 @@ class _InactivityCard extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
-          ),
-          if (contacts.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            ...contacts.map(
-              (c) => _ContactTile(
-                contact: c,
-                onTap: () => onEditContact(c),
+              const SizedBox(width: AppSpacing.sm),
+              GestureDetector(
+                onTap: contacts.isEmpty ? onAddContact : onShowContacts,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ExcludeSemantics(
+                      child: SvgPicture.asset(
+                        'assets/SVG/phone.svg',
+                        width: AppSize.iconLg,
+                        height: AppSize.iconLg,
+                      ),
+                    ),
+                    const SizedBox(width: AppSize.phoneIconGap),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          AppStrings.settingsInactivityContact,
+                          style: TextStyle(
+                            fontSize: AppTextStyle.xs,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Text(
+                          contacts.isEmpty
+                              ? AppStrings.settingsInactivityContactSet
+                              : '${contacts.length}件登録中',
+                          style: const TextStyle(
+                            fontSize: AppTextStyle.sm2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (remaining > 0)
-                Text(
-                  'あと$remaining件まで登録できます',
-                  style: const TextStyle(
-                    fontSize: AppTextStyle.xs,
-                    color: AppColors.textDisabled,
-                  ),
-                ),
-              if (remaining > 0)
-                TextButton(
-                  onPressed: onAddContact,
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text(
-                    AppStrings.settingsPhoneAddButton,
-                    style: TextStyle(fontSize: AppTextStyle.sm2),
-                  ),
-                ),
+              const SizedBox(width: AppSpacing.lg),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -590,54 +606,122 @@ class _InactivityCard extends StatelessWidget {
   }
 }
 
-class _ContactTile extends StatelessWidget {
-  const _ContactTile({required this.contact, required this.onTap});
+// ──────────────────────────────────────────
+// 連絡先一覧ダイアログ
+// ──────────────────────────────────────────
 
-  final Contact contact;
-  final VoidCallback onTap;
+class _ContactsListDialog extends StatelessWidget {
+  const _ContactsListDialog({
+    required this.contacts,
+    required this.onEdit,
+    required this.onAdd,
+  });
+
+  final List<Contact> contacts;
+  final void Function(Contact) onEdit;
+  final VoidCallback onAdd;
+
+  static const _maxContacts = 5;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
+    final remaining = _maxContacts - contacts.length;
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.x2l,
+          AppSpacing.x3l,
+          AppSpacing.x2l,
+          AppSpacing.x2l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            ExcludeSemantics(
-              child: SvgPicture.asset(
-                'assets/SVG/phone.svg',
-                width: AppSize.iconLg,
-                height: AppSize.iconLg,
+            const Text(
+              AppStrings.settingsInactivityContact,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: AppTextStyle.semiBold,
               ),
             ),
-            const SizedBox(width: AppSize.phoneIconGap),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    contact.name,
-                    style: const TextStyle(
-                      fontSize: AppTextStyle.sm2,
-                      color: Colors.black,
-                    ),
+            const SizedBox(height: AppSpacing.md),
+            ...contacts.map(
+              (c) => InkWell(
+                onTap: () => onEdit(c),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              c.name,
+                              style: const TextStyle(
+                                fontSize: AppTextStyle.sm2,
+                                color: AppColors.primary,
+                                fontWeight: AppTextStyle.semiBold,
+                              ),
+                            ),
+                            Text(
+                              c.phone,
+                              style: const TextStyle(
+                                fontSize: AppTextStyle.xs,
+                                color: AppColors.textDisabled,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.primary,
+                        size: AppSize.iconMd,
+                      ),
+                    ],
                   ),
-                  Text(
-                    contact.phone,
-                    style: const TextStyle(
-                      fontSize: AppTextStyle.xs,
-                      color: AppColors.textDisabled,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.primary,
-              size: AppSize.iconMd,
-            ),
+            if (remaining > 0) ...[
+              const Divider(color: AppColors.primary),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'あと$remaining件まで登録できます',
+                style: const TextStyle(
+                  fontSize: AppTextStyle.xs,
+                  color: AppColors.textDisabled,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                height: AppSize.buttonHeight,
+                child: ElevatedButton(
+                  onPressed: onAdd,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                  ),
+                  child: const Text(
+                    AppStrings.settingsPhoneAddButton,
+                    style: TextStyle(
+                      fontSize: AppTextStyle.lg2,
+                      fontWeight: AppTextStyle.medium,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
