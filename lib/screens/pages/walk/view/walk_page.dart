@@ -13,6 +13,7 @@ import 'package:tekushare/domain/entities/lat_lng.dart' as domain;
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
@@ -84,8 +85,23 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     if (ts.inactSecondsLeft == 0 && !ts.inactFired) {
       ref.read(walkTimerProvider.notifier).markInactFired();
       await svc.showInactivityNotification();
-      await _sendSmsToContacts();
+      _showSafetyConfirmDialog();
     }
+  }
+
+  void _showSafetyConfirmDialog() {
+    if (!mounted) return;
+    final settings = ref.read(settingsViewModelProvider);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _SafetyConfirmDialog(
+        onSafe: () => ref
+            .read(walkTimerProvider.notifier)
+            .resetInact(settings.inactivityMinutes),
+        onTimeout: _sendSmsToContacts,
+      ),
+    );
   }
 
   Future<void> _sendSmsToContacts() async {
@@ -697,6 +713,91 @@ class _WalkActionButton extends StatelessWidget {
                 ),
               ),
       ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 安否確認ダイアログ（カウントダウン付き）
+// ──────────────────────────────────────────
+
+const _safetyGracePeriodSeconds = 60;
+
+class _SafetyConfirmDialog extends StatefulWidget {
+  const _SafetyConfirmDialog({
+    required this.onSafe,
+    required this.onTimeout,
+  });
+
+  final VoidCallback onSafe;
+  final VoidCallback onTimeout;
+
+  @override
+  State<_SafetyConfirmDialog> createState() => _SafetyConfirmDialogState();
+}
+
+class _SafetyConfirmDialogState extends State<_SafetyConfirmDialog> {
+  late int _secondsLeft;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _secondsLeft = _safetyGracePeriodSeconds;
+    _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
+  }
+
+  void _onTick(Timer _) {
+    if (!mounted) return;
+    setState(() => _secondsLeft--);
+    if (_secondsLeft <= 0) {
+      _timer?.cancel();
+      Navigator.of(context).pop();
+      widget.onTimeout();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text(AppStrings.safetyConfirmTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(AppStrings.safetyConfirmBody),
+          const SizedBox(height: AppSpacing.x2l),
+          Text(
+            '$_secondsLeft秒',
+            style: const TextStyle(
+              fontSize: AppTextStyle.x3l,
+              fontWeight: AppTextStyle.bold,
+              color: AppColors.error,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () {
+              _timer?.cancel();
+              Navigator.of(context).pop();
+              widget.onSafe();
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text(AppStrings.safetyOk),
+          ),
+        ),
+      ],
     );
   }
 }

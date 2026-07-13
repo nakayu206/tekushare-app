@@ -31,6 +31,8 @@ abstract class AppStrings {
   static const timerFinishedTitle = 'タイムアップ';
   static const timerFinishedMessage = '設定した時間になりました。';
   static const safetyOk = '元気です';
+  static const safetyConfirmTitle = '大丈夫ですか？';
+  static const safetyConfirmBody = '動きがありません。\n応答がない場合、登録した通知先にSMSを送信します。';
 
   // 行きたい！ページ
   static const wantToGoPageTitle = '行きたい！';
