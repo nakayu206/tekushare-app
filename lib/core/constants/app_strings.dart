@@ -28,7 +28,7 @@ abstract class AppStrings {
   static const timerTurnaround = '折り返し';
   static const timerInactivity = '不活動';
   static const timerReset = 'リセット';
-  static const timerFinishedTitle = 'タイムアップ';
+  static const timerFinishedTitle = '散歩タイマー';
   static const timerFinishedMessage = '設定した時間になりました。';
   static const safetyOk = '元気です';
   static const safetyConfirmTitle = '大丈夫ですか？';
@@ -164,6 +164,12 @@ abstract class AppStrings {
   static const accountLinkDoneTooltip = '編集を完了';
   static const accountLinkUnlinkTooltip = '連携を解除';
   static const accountLinkViewSpots = 'スポットを見る';
+
+  // SNSシェア
+  static const shareInviteText = 'てくしぇあで散歩記録をシェアしませんか？';
+  static const shareLinkRequired = 'リンクを先に作成してください';
+  static const shareInstagramCopied = 'リンクをコピーしました。Instagramに貼り付けてください';
+  static const shareError = 'シェアに失敗しました';
 
   // 招待承認画面
   static const acceptInviteTitle = 'アカウント連携';

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
@@ -908,7 +909,7 @@ class _ShareCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.x2lmm),
-          const _ShareAppIcons(),
+          _ShareAppIcons(inviteLink: state.inviteLink),
           const SizedBox(height: AppSpacing.x3lp),
           const Center(
             child: Text(
@@ -1205,7 +1206,67 @@ class _ShareLinkArea extends StatelessWidget {
 }
 
 class _ShareAppIcons extends StatelessWidget {
-  const _ShareAppIcons();
+  const _ShareAppIcons({this.inviteLink});
+
+  final String? inviteLink;
+
+  bool _checkLink(BuildContext context) {
+    if (inviteLink != null) return true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.shareLinkRequired)),
+    );
+    return false;
+  }
+
+  Future<void> _shareToLine(BuildContext context) async {
+    if (!_checkLink(context)) return;
+    final text =
+        Uri.encodeComponent('${AppStrings.shareInviteText}\n$inviteLink');
+    final uri = Uri.parse('https://line.me/R/share?text=$text');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.shareError)),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareToX(BuildContext context) async {
+    if (!_checkLink(context)) return;
+    final text =
+        Uri.encodeComponent('${AppStrings.shareInviteText}\n$inviteLink');
+    final uri = Uri.parse('https://x.com/intent/tweet?text=$text');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.shareError)),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareToInstagram(BuildContext context) async {
+    if (!_checkLink(context)) return;
+    await Clipboard.setData(ClipboardData(text: inviteLink!));
+    try {
+      final instagramUri = Uri.parse('instagram://app');
+      if (await canLaunchUrl(instagramUri)) {
+        await launchUrl(instagramUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      // Instagram 未インストール時もクリップボードコピー済みなのでスナックバーを表示
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.shareInstagramCopied)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1216,19 +1277,19 @@ class _ShareAppIcons extends StatelessWidget {
           assetPath: 'assets/SVG/LINE.png',
           isPng: true,
           label: 'LINE',
-          onTap: () {},
+          onTap: () => _shareToLine(context),
         ),
         _AppIconItem(
           assetPath: 'assets/SVG/Instagram.png',
           isPng: true,
           label: 'Instagram',
-          onTap: () {},
+          onTap: () => _shareToInstagram(context),
         ),
         _AppIconItem(
           assetPath: 'assets/SVG/X.png',
           isPng: true,
           label: 'X',
-          onTap: () {},
+          onTap: () => _shareToX(context),
         ),
       ],
     );
