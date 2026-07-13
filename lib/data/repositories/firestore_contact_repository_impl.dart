@@ -13,14 +13,14 @@ class FirestoreContactRepositoryImpl implements ContactRepository {
 
   @override
   Stream<List<Contact>> watchContacts() {
-    if (_uid.isEmpty) return const Stream.empty();
+    if (_uid.isEmpty) return Stream.value([]);
     return _collection.snapshots().map(
           (snap) => snap.docs
               .map(
                 (doc) => Contact(
                   id: doc.id,
-                  name: doc.data()['name'] as String,
-                  phone: doc.data()['phone'] as String,
+                  name: doc.data()['name'] as String? ?? '',
+                  phone: doc.data()['phone'] as String? ?? '',
                 ),
               )
               .toList(),

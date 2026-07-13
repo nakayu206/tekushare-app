@@ -18,7 +18,7 @@ class FirestoreSpotRepositoryImpl implements SpotRepository {
 
   @override
   Stream<List<Spot>> getSpots() {
-    if (_uid.isEmpty) return const Stream.empty();
+    if (_uid.isEmpty) return Stream.value([]);
     return _collection.snapshots().map(
           (snapshot) => snapshot.docs.map(_fromDoc).toList(),
         );
@@ -52,10 +52,13 @@ class FirestoreSpotRepositoryImpl implements SpotRepository {
       title: data['title'] as String,
       latitude: (data['latitude'] as num).toDouble(),
       longitude: (data['longitude'] as num).toDouble(),
-      status: SpotStatus.values.byName(data['status'] as String),
+      status: SpotStatus.values.firstWhere(
+        (s) => s.name == (data['status'] as String? ?? ''),
+        orElse: () => SpotStatus.wantToGo,
+      ),
       memo: data['memo'] as String?,
       category: data['category'] as String?,
-      photoPaths: (data['photoPaths'] as List<dynamic>).cast<String>(),
+      photoPaths: (data['photoPaths'] as List<dynamic>?)?.cast<String>() ?? [],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
