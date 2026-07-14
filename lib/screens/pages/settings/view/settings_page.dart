@@ -66,6 +66,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         isDestructive: false,
         onConfirm: () {
           ref.read(walkSessionProvider.notifier).resetWalk();
+          ref.invalidate(settingsViewModelProvider);
           ref.read(authServiceProvider).signOut();
           Navigator.popUntil(context, (route) => route.isFirst);
         },

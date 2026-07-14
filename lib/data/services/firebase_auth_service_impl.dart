@@ -49,7 +49,15 @@ class FirebaseAuthServiceImpl implements AuthService {
   @override
   Future<void> signInWithEmail(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = credential.user;
+      final name = user?.displayName;
+      if (user != null && name != null && name.isNotEmpty) {
+        await _syncUserDoc(user.uid, name);
+      }
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }

@@ -41,12 +41,14 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
     _appLinks.uriLinkStream.listen(_handleUri);
   }
 
-  /// tekushare://link/<token> を受け取り、ログイン済みなら即座に承認画面へ、
+  /// 招待リンクを受け取り、ログイン済みなら即座に承認画面へ、
   /// 未ログインなら pendingInviteTokenProvider に保持してログイン完了後に開く。
+  /// 対応スキーム:
+  ///   - tekushare://link/<token>
+  ///   - https://tekushare.web.app/link/<token>
   void _handleUri(Uri uri) {
-    if (uri.scheme != 'tekushare' || uri.host != 'link') return;
-    if (uri.pathSegments.isEmpty) return;
-    final token = uri.pathSegments.first;
+    final token = _extractToken(uri);
+    if (token == null) return;
     if (!_handledTokens.add(token)) return;
 
     final user = ref.read(authStateProvider).valueOrNull;
@@ -57,6 +59,19 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
     } else {
       ref.read(pendingInviteTokenProvider.notifier).state = token;
     }
+  }
+
+  String? _extractToken(Uri uri) {
+    if (uri.scheme == 'tekushare' && uri.host == 'link') {
+      return uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+    }
+    if (uri.scheme == 'https' &&
+        uri.host == 'tekushare.web.app' &&
+        uri.pathSegments.length >= 2 &&
+        uri.pathSegments[0] == 'link') {
+      return uri.pathSegments[1];
+    }
+    return null;
   }
 
   @override

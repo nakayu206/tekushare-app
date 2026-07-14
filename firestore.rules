@@ -57,7 +57,8 @@ service cloud.firestore {
     }
 
     match /accountLinks/{linkId} {
-      allow read: if isSignedIn() && request.auth.uid in resource.data.uids;
+      // resource == null は未作成ドキュメントの存在確認（連携済みチェック）を許可する
+      allow read: if isSignedIn() && (resource == null || request.auth.uid in resource.data.uids);
 
       allow create: if isSignedIn()
         && request.auth.uid in request.resource.data.uids
