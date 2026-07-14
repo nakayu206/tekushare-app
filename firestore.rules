@@ -7,6 +7,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // 自分と otherUid が連携済みかどうかを確認する
+    // linkId は2つのUIDをソートして _ でつないだもの（AccountLinkRepositoryImpl._linkIdOf と同一）
+    function isLinkedWith(otherUid) {
+      let linkId = request.auth.uid < otherUid
+        ? request.auth.uid + '_' + otherUid
+        : otherUid + '_' + request.auth.uid;
+      return exists(/databases/$(database)/documents/accountLinks/$(linkId));
+    }
+
     function isValidInviteFor(uids, inviteToken) {
       let invite = get(/databases/$(database)/documents/linkInvites/$(inviteToken)).data;
       return invite.fromUid != request.auth.uid
@@ -24,6 +33,14 @@ service cloud.firestore {
     // users/{uid}/contacts, spots, photos などサブコレクションはオーナーのみ
     match /users/{uid}/{document=**} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // 連携済みユーザーは相手の共有設定に応じてスポットを読み取り可
+    match /users/{uid}/spots/{spotId} {
+      allow read: if isSignedIn()
+        && isLinkedWith(uid)
+        && (get(/databases/$(database)/documents/users/$(uid)).data.shareWantToGo == true
+          || get(/databases/$(database)/documents/users/$(uid)).data.shareVisited == true);
     }
 
     match /linkInvites/{token} {
