@@ -803,7 +803,7 @@ class _ShareCard extends ConsumerWidget {
                         ? Icons.check
                         : Icons.edit_outlined,
                     color: AppColors.primary,
-                    size: AppSize.iconSm,
+                    size: AppSize.iconMd,
                   ),
                 ),
             ],
@@ -1023,8 +1023,8 @@ class _ContactRow extends StatelessWidget {
               tooltip: AppStrings.accountLinkUnlinkTooltip,
               icon: const Icon(
                 Icons.delete_outline,
-                color: AppColors.textDisabled,
-                size: AppSize.iconSm,
+                color: Colors.red,
+                size: AppSize.iconMd,
               ),
             ),
         ],

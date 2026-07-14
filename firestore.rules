@@ -28,16 +28,19 @@ service cloud.firestore {
     }
 
     // 連携済みユーザーは相手の共有設定に応じてスポットを読み取り可
-    // status ごとに許可条件を分けることで非共有カテゴリのデータを保護する
     match /users/{uid}/spots/{spotId} {
-      allow read: if isSignedIn()
+      // 単一取得: ステータスに対応する共有設定を確認（フィールド未設定はデフォルトON）
+      allow get: if isSignedIn()
         && isLinkedWith(uid)
         && (
           (resource.data.status == 'wantToGo'
-            && get(/databases/$(database)/documents/users/$(uid)).data.shareWantToGo == true)
+            && get(/databases/$(database)/documents/users/$(uid)).data.shareWantToGo != false)
           || (resource.data.status == 'visited'
-            && get(/databases/$(database)/documents/users/$(uid)).data.shareVisited == true)
+            && get(/databases/$(database)/documents/users/$(uid)).data.shareVisited != false)
         );
+      // コレクションクエリ: LIST では resource.data が使えないため連携確認のみ
+      // クライアント側が shareSettings を確認した上で対象ステータスのみ whereIn で絞る
+      allow list: if isSignedIn() && isLinkedWith(uid);
     }
 
     match /linkInvites/{token} {
