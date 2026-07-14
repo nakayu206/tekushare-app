@@ -40,7 +40,8 @@ class _AcceptInvitePageState extends ConsumerState<AcceptInvitePage> {
       );
       if (!mounted) return;
       Navigator.pop(context);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('acceptInvite error: $e\n$st');
       if (!mounted) return;
       setState(() => _accepting = false);
       ScaffoldMessenger.of(context).showSnackBar(
