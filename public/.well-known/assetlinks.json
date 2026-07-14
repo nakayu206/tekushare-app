@@ -1,0 +1,32 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.tekushare",
+      "sha256_cert_fingerprints": [
+        "8C:57:66:69:BC:F2:56:D7:41:40:08:CA:4E:2F:55:47:CC:64:B5:37:B3:01:4E:BF:7C:67:AA:51:75:C8:50:28"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.tekushare.dev",
+      "sha256_cert_fingerprints": [
+        "8C:57:66:69:BC:F2:56:D7:41:40:08:CA:4E:2F:55:47:CC:64:B5:37:B3:01:4E:BF:7C:67:AA:51:75:C8:50:28"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.tekushare.stg",
+      "sha256_cert_fingerprints": [
+        "8C:57:66:69:BC:F2:56:D7:41:40:08:CA:4E:2F:55:47:CC:64:B5:37:B3:01:4E:BF:7C:67:AA:51:75:C8:50:28"
+      ]
+    }
+  }
+]

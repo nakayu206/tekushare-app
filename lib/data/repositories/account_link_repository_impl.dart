@@ -61,7 +61,7 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
       'expiresAt': Timestamp.fromDate(now.add(_inviteValidDuration)),
       'used': false,
     });
-    return 'tekushare://link/${ref.id}';
+    return 'https://tekushare.web.app/link/${ref.id}';
   }
 
   @override
