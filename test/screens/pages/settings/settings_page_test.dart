@@ -144,6 +144,22 @@ class _FakeAccountLinkRepository implements AccountLinkRepository {
   Future<void> acceptInvite(String token) => throw UnimplementedError();
   @override
   Future<void> unlink(String otherUid) async {}
+  @override
+  Future<void> updateShareSettings({
+    required bool shareWantToGo,
+    required bool shareVisited,
+  }) async {}
+  @override
+  Future<({bool shareWantToGo, bool shareVisited})> fetchShareSettings(
+          String otherUid) async =>
+      (shareWantToGo: true, shareVisited: true);
+  @override
+  Future<List<Spot>> fetchSharedSpots(
+    String otherUid, {
+    required bool shareWantToGo,
+    required bool shareVisited,
+  }) async =>
+      [];
 }
 
 final _spotOverride = spotProvider.overrideWith(

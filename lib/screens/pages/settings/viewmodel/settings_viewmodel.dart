@@ -118,14 +118,34 @@ class SettingsViewModel extends Notifier<SettingsState> {
     state = state.copyWith(registeredContactName: name);
   }
 
-  void setShareWantToGo(bool v) {
+  Future<void> setShareWantToGo(bool v) async {
+    final prev = state.shareWantToGo;
     _prefs.setBool(_kShareWantToGo, v);
     state = state.copyWith(shareWantToGo: v);
+    try {
+      await ref.read(accountLinkRepositoryProvider).updateShareSettings(
+            shareWantToGo: v,
+            shareVisited: state.shareVisited,
+          );
+    } catch (_) {
+      _prefs.setBool(_kShareWantToGo, prev);
+      state = state.copyWith(shareWantToGo: prev);
+    }
   }
 
-  void setShareVisited(bool v) {
+  Future<void> setShareVisited(bool v) async {
+    final prev = state.shareVisited;
     _prefs.setBool(_kShareVisited, v);
     state = state.copyWith(shareVisited: v);
+    try {
+      await ref.read(accountLinkRepositoryProvider).updateShareSettings(
+            shareWantToGo: state.shareWantToGo,
+            shareVisited: v,
+          );
+    } catch (_) {
+      _prefs.setBool(_kShareVisited, prev);
+      state = state.copyWith(shareVisited: prev);
+    }
   }
 
   void toggleEditSharedAccounts() => state = state.copyWith(
