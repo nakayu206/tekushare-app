@@ -209,19 +209,19 @@ class _PhotoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tileSize =
-        (MediaQuery.sizeOf(context).width - AppSpacing.lg * 2 - AppSpacing.sm) /
-            2;
+    final screenW = MediaQuery.sizeOf(context).width;
+    final tileW = (screenW - 32 - AppSpacing.md) / 2;
+    final tileH = AppSizingTheme.of(context).photoBoxHeight;
     return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.md,
       children: [
         for (final path in photoPaths)
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.sm),
             child: SizedBox(
-              width: tileSize,
-              height: tileSize,
+              width: tileW,
+              height: tileH,
               child: Image.network(
                 path,
                 fit: BoxFit.cover,
