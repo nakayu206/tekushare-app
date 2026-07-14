@@ -51,8 +51,6 @@ class LinkedSpotDetailPage extends StatelessWidget {
                   longitude: spot.longitude,
                   height: sizing.locationAreaHeight * 1.4),
               SizedBox(height: sizing.sectionSpacing),
-              _StatusChip(isWantToGo: isWantToGo),
-              SizedBox(height: sizing.sectionSpacing),
               _TitleText(title: spot.title),
               if (spot.category != null && spot.category!.isNotEmpty) ...[
                 SizedBox(height: sizing.sectionSpacing),
@@ -124,35 +122,6 @@ class _MapArea extends StatelessWidget {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.isWantToGo});
-
-  final bool isWantToGo;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        border: Border.all(color: AppColors.primary),
-        borderRadius: BorderRadius.circular(AppRadius.full),
-      ),
-      child: Text(
-        isWantToGo ? AppStrings.wantToGo : AppStrings.listWentTab,
-        style: const TextStyle(
-          fontSize: AppTextStyle.sm,
-          color: AppColors.primary,
-          fontWeight: AppTextStyle.medium,
         ),
       ),
     );
