@@ -49,7 +49,7 @@ class LinkedSpotDetailPage extends StatelessWidget {
                   point: point,
                   latitude: spot.latitude,
                   longitude: spot.longitude,
-                  height: sizing.locationAreaHeight),
+                  height: sizing.locationAreaHeight * 1.4),
               SizedBox(height: sizing.sectionSpacing),
               _StatusChip(isWantToGo: isWantToGo),
               SizedBox(height: sizing.sectionSpacing),
