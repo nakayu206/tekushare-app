@@ -87,7 +87,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   }
 
   void _onPhotoExpand(String path) {
-    showPhotoViewer(context, path, () => _onPhotoDelete(path));
+    showPhotoViewer(context, path, onDelete: () => _onPhotoDelete(path));
   }
 
   void _onSavePressed() {
@@ -102,12 +102,12 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         title: title,
         message: AppStrings.spotDetailSaveConfirmMessage,
         confirmLabel: AppStrings.saveButton,
-        onConfirm: () {
-          notifier.updateSpot(
+        onConfirm: () => _runWithLoading(
+          () => notifier.updateSpot(
             widget.spot.copyWith(title: title, category: category),
-          );
-          _popWithSnackBar(AppStrings.saved);
-        },
+          ),
+          AppStrings.saved,
+        ),
         onCancel: () => Navigator.pop(context),
       ),
     );
@@ -124,10 +124,10 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         message: AppStrings.spotDetailDeleteConfirmMessage,
         confirmLabel: AppStrings.spotDetailDeleteButton,
         isDestructive: true,
-        onConfirm: () {
-          notifier.deleteSpot(widget.spot.id);
-          _popWithSnackBar(AppStrings.spotDetailDeleted);
-        },
+        onConfirm: () => _runWithLoading(
+          () => notifier.deleteSpot(widget.spot.id),
+          AppStrings.spotDetailDeleted,
+        ),
         onCancel: () => Navigator.pop(context),
       ),
     );
@@ -146,24 +146,39 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         message: AppStrings.spotDetailMoveToWentConfirmMessage,
         confirmLabel: AppStrings.spotDetailMoveToWentButton,
         confirmColor: AppColors.listSelected,
-        onConfirm: () {
-          notifier.updateSpot(
+        onConfirm: () => _runWithLoading(
+          () => notifier.updateSpot(
             widget.spot.copyWith(
               title: title,
               status: SpotStatus.visited,
               category: category,
             ),
-          );
-          _popWithSnackBar(AppStrings.spotDetailMoveToWentDone);
-        },
+          ),
+          AppStrings.spotDetailMoveToWentDone,
+        ),
         onCancel: () => Navigator.pop(context),
       ),
     );
   }
 
-  void _popWithSnackBar(String message) {
-    final messenger = ScaffoldMessenger.of(context);
+  /// 確認ダイアログを閉じ→ローディング表示→操作完了→ページバック+SnackBar
+  Future<void> _runWithLoading(
+    Future<void> Function() operation,
+    String message,
+  ) async {
     Navigator.pop(context); // 確認ダイアログを閉じる
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+    await operation();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.pop(context); // ローディングを閉じる
     Navigator.pop(context); // 詳細ページから戻る
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }

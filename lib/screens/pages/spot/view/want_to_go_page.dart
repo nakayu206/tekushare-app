@@ -62,7 +62,7 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
   }
 
   void _onPhotoExpand(String path) {
-    showPhotoViewer(context, path, () => _onPhotoDelete(path));
+    showPhotoViewer(context, path, onDelete: () => _onPhotoDelete(path));
   }
 
   void _onSavePressed() {
