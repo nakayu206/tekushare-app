@@ -101,9 +101,9 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         title: title,
         message: AppStrings.spotDetailSaveConfirmMessage,
         confirmLabel: AppStrings.saveButton,
-        onConfirm: () async {
+        onConfirm: () {
           Navigator.pop(context);
-          await notifier.updateSpot(
+          notifier.updateSpot(
             widget.spot.copyWith(title: title, category: category),
           );
           if (!mounted) return;
@@ -125,9 +125,9 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         message: AppStrings.spotDetailDeleteConfirmMessage,
         confirmLabel: AppStrings.spotDetailDeleteButton,
         isDestructive: true,
-        onConfirm: () async {
+        onConfirm: () {
           Navigator.pop(context);
-          await notifier.deleteSpot(widget.spot.id);
+          notifier.deleteSpot(widget.spot.id);
           if (!mounted) return;
           _showResultDialog(AppStrings.spotDetailDeleted);
         },
@@ -149,9 +149,9 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         message: AppStrings.spotDetailMoveToWentConfirmMessage,
         confirmLabel: AppStrings.spotDetailMoveToWentButton,
         confirmColor: AppColors.listSelected,
-        onConfirm: () async {
+        onConfirm: () {
           Navigator.pop(context);
-          await notifier.updateSpot(
+          notifier.updateSpot(
             widget.spot.copyWith(
               title: title,
               status: SpotStatus.visited,
@@ -208,7 +208,8 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               _LocationArea(
                 latitude: widget.spot.latitude,
                 longitude: widget.spot.longitude,
-                photoPaths: widget.spot.photoPaths,
+                photoPaths: _photoPaths,
+                onPhotoExpand: _onPhotoExpand,
               ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               CategoryChipGroup(
@@ -274,11 +275,13 @@ class _LocationArea extends StatelessWidget {
     required this.latitude,
     required this.longitude,
     required this.photoPaths,
+    this.onPhotoExpand,
   });
 
   final double latitude;
   final double longitude;
   final List<String> photoPaths;
+  final void Function(String path)? onPhotoExpand;
 
   @override
   Widget build(BuildContext context) {
@@ -330,18 +333,21 @@ class _LocationArea extends StatelessWidget {
                     point: point,
                     width: MapConstants.photoThumbnailSize,
                     height: MapConstants.photoThumbnailSize,
-                    child: ClipOval(
-                      child: Image.network(
-                        path,
-                        width: MapConstants.photoThumbnailSize,
-                        height: MapConstants.photoThumbnailSize,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const ColoredBox(
-                          color: AppColors.textDisabled,
-                          child: Icon(
-                            Icons.photo,
-                            color: Colors.white,
-                            size: AppSize.iconSm,
+                    child: GestureDetector(
+                      onTap: () => onPhotoExpand?.call(path),
+                      child: ClipOval(
+                        child: Image.network(
+                          path,
+                          width: MapConstants.photoThumbnailSize,
+                          height: MapConstants.photoThumbnailSize,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const ColoredBox(
+                            color: AppColors.textDisabled,
+                            child: Icon(
+                              Icons.photo,
+                              color: Colors.white,
+                              size: AppSize.iconSm,
+                            ),
                           ),
                         ),
                       ),

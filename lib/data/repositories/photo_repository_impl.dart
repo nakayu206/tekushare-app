@@ -11,7 +11,7 @@ class PhotoRepositoryImpl implements PhotoRepository {
   Future<String> attachPhoto(String spotId, String imagePath) async {
     await _isar.writeTxn(() async {
       final model = await _isar.spotModels.getByUid(spotId);
-      if (model == null) return;
+      if (model == null) throw StateError('Spot not found: $spotId');
       model.photoPaths = [...model.photoPaths, imagePath];
       await _isar.spotModels.put(model);
     });
