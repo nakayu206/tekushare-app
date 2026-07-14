@@ -32,7 +32,7 @@ void main() {
     when(mockSpotRepo.updateSpotStatus(any, any))
         .thenAnswer((_) => Future<void>.value());
     when(mockPhotoRepo.attachPhoto(any, any))
-        .thenAnswer((_) => Future<void>.value());
+        .thenAnswer((_) => Future<String>.value(''));
     when(mockPhotoRepo.removePhoto(any, any))
         .thenAnswer((_) => Future<void>.value());
   });

@@ -1,8 +1,41 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tekushare/domain/entities/linked_account.dart';
+import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/domain/repositories/account_link_repository.dart';
 import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+
+class _FakeAccountLinkRepository implements AccountLinkRepository {
+  @override
+  Stream<List<LinkedAccount>> watchLinkedAccounts() => Stream.value([]);
+  @override
+  Future<String> createInviteLink() async => '';
+  @override
+  Future<InviteDetails> fetchInviteDetails(String token) async =>
+      throw const InviteInvalidException();
+  @override
+  Future<void> acceptInvite(String token) async {}
+  @override
+  Future<void> unlink(String otherUid) async {}
+  @override
+  Future<void> updateShareSettings({
+    required bool shareWantToGo,
+    required bool shareVisited,
+  }) async {}
+  @override
+  Future<({bool shareWantToGo, bool shareVisited})> fetchShareSettings(
+          String otherUid) async =>
+      (shareWantToGo: true, shareVisited: true);
+  @override
+  Future<List<Spot>> fetchSharedSpots(
+    String otherUid, {
+    required bool shareWantToGo,
+    required bool shareVisited,
+  }) async =>
+      [];
+}
 
 void main() {
   group('SettingsViewModel', () {
@@ -10,7 +43,12 @@ void main() {
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      container = ProviderContainer();
+      container = ProviderContainer(
+        overrides: [
+          accountLinkRepositoryProvider
+              .overrideWithValue(_FakeAccountLinkRepository()),
+        ],
+      );
       // prefs ロード完了を待ってから各テストへ
       await container.read(sharedPrefsProvider.future);
     });

@@ -27,11 +27,12 @@ void main() {
   });
 
   group('createInviteLink', () {
-    test('tekushare://link/ 形式のURLを返し、Firestoreにドキュメントを作る', () async {
+    test('https://tekushare.web.app/link/ 形式のURLを返し、Firestoreにドキュメントを作る',
+        () async {
       final repo = repoFor('uidA');
       final link = await repo.createInviteLink();
 
-      expect(link, startsWith('tekushare://link/'));
+      expect(link, startsWith('https://tekushare.web.app/link/'));
 
       final token = link.split('/').last;
       final doc = await firestore.collection('linkInvites').doc(token).get();

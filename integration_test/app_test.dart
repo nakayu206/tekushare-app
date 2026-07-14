@@ -47,7 +47,8 @@ class _FakeSpotRepository implements SpotRepository {
 
 class _FakePhotoRepository implements PhotoRepository {
   @override
-  Future<void> attachPhoto(String spotId, String imagePath) async {}
+  Future<String> attachPhoto(String spotId, String imagePath) async =>
+      imagePath;
   @override
   Future<void> removePhoto(String spotId, String imagePath) async {}
 }

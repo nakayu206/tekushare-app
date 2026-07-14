@@ -485,10 +485,10 @@ packages:
     dependency: "direct main"
     description:
       name: firebase_storage
-      sha256: "8b581635d61852bf74d95d21ca181a3c52815813f5fafafa69da3610b870e998"
+      sha256: f732bbcd82d21cfbe49b6fe5f4c50334f5f3660a151f004f58da388f8e39e6d3
       url: "https://pub.dev"
     source: hosted
-    version: "13.4.4"
+    version: "13.4.3"
   firebase_storage_platform_interface:
     dependency: transitive
     description:

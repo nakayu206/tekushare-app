@@ -110,7 +110,7 @@ class _FakeUpdateSpotStatus implements UpdateSpotStatus {
 class _FakeAttachPhotoToSpot implements AttachPhotoToSpot {
   const _FakeAttachPhotoToSpot();
   @override
-  Future<void> call(String spotId, String imagePath) async {}
+  Future<String> call(String spotId, String imagePath) async => imagePath;
 }
 
 class _FakeRemovePhotoFromSpot implements RemovePhotoFromSpot {
