@@ -369,8 +369,8 @@ void main() {
           findsOneWidget);
     });
 
-    // 行った！確認でステータス変更完了ダイアログが表示される
-    testWidgets('confirming move to went shows result dialog', (tester) async {
+    // 行った！確認でSnackBarにメッセージが表示される
+    testWidgets('confirming move to went shows snackbar', (tester) async {
       await pumpPage(tester, isWantToGo: true);
 
       await tester.tap(find.text(AppStrings.spotDetailMoveToWentButton));
@@ -381,14 +381,13 @@ void main() {
           matching: find.text(AppStrings.spotDetailMoveToWentButton),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(find.text(AppStrings.spotDetailMoveToWentDone), findsOneWidget);
     });
 
-    // 行った！完了ダイアログの閉じるでページを離れる
-    testWidgets('closing move-to-went result dialog leaves the page',
-        (tester) async {
+    // 行った！確認で詳細ページから離れる
+    testWidgets('confirming move to went leaves the page', (tester) async {
       await pumpPushedPage(tester, isWantToGo: true);
 
       await tester.tap(find.text(AppStrings.spotDetailMoveToWentButton));
@@ -399,8 +398,6 @@ void main() {
           matching: find.text(AppStrings.spotDetailMoveToWentButton),
         ),
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.closeButton));
       await tester.pumpAndSettle();
 
       expect(find.byType(SpotDetailPage), findsNothing);
@@ -481,9 +478,8 @@ void main() {
           find.text(AppStrings.spotDetailDeleteConfirmMessage), findsNothing);
     });
 
-    // 削除確認で削除完了ダイアログが表示される
-    testWidgets('confirming delete shows deletion complete dialog',
-        (tester) async {
+    // 削除確認でSnackBarにメッセージが表示される
+    testWidgets('confirming delete shows snackbar', (tester) async {
       await pumpPage(tester, isWantToGo: false);
 
       await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
@@ -494,14 +490,13 @@ void main() {
           matching: find.text(AppStrings.spotDetailDeleteButton),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(find.text(AppStrings.spotDetailDeleted), findsOneWidget);
     });
 
-    // 削除完了ダイアログの閉じるでページを離れる
-    testWidgets('closing deletion complete dialog leaves the page',
-        (tester) async {
+    // 削除確認で詳細ページから離れる
+    testWidgets('confirming delete leaves the page', (tester) async {
       await pumpPushedPage(tester, isWantToGo: false);
 
       await tester.tap(find.text(AppStrings.spotDetailDeleteButton));
@@ -512,8 +507,6 @@ void main() {
           matching: find.text(AppStrings.spotDetailDeleteButton),
         ),
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.closeButton));
       await tester.pumpAndSettle();
 
       expect(find.byType(SpotDetailPage), findsNothing);
@@ -577,27 +570,25 @@ void main() {
       expect(find.text(AppStrings.spotDetailSaveConfirmMessage), findsNothing);
     });
 
-    // 保存確認で保存完了ダイアログが表示される
-    testWidgets('confirming save shows save complete dialog', (tester) async {
+    // 保存確認でSnackBarにメッセージが表示される
+    testWidgets('confirming save shows snackbar', (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.text(AppStrings.spotDetailSaveButton));
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.saveButton));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(find.text(AppStrings.saved), findsOneWidget);
     });
 
-    // 保存完了ダイアログの閉じるでページを離れる
-    testWidgets('closing save complete dialog leaves the page', (tester) async {
+    // 保存確認で詳細ページから離れる
+    testWidgets('confirming save leaves the page', (tester) async {
       await pumpPushedPage(tester);
 
       await tester.tap(find.text(AppStrings.spotDetailSaveButton));
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.saveButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.closeButton));
       await tester.pumpAndSettle();
 
       expect(find.byType(SpotDetailPage), findsNothing);

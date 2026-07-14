@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -23,10 +24,10 @@ void showPhotoViewer(
               child: SizedBox.expand(
                 child: InteractiveViewer(
                   child: Center(
-                    child: Image.network(
-                      path,
+                    child: CachedNetworkImage(
+                      imageUrl: path,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorWidget: (_, __, ___) => const Icon(
                         Icons.broken_image,
                         color: Colors.white54,
                         size: AppSize.iconXl,

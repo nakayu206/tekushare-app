@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -102,12 +103,10 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         message: AppStrings.spotDetailSaveConfirmMessage,
         confirmLabel: AppStrings.saveButton,
         onConfirm: () {
-          Navigator.pop(context);
           notifier.updateSpot(
             widget.spot.copyWith(title: title, category: category),
           );
-          if (!mounted) return;
-          _showResultDialog(AppStrings.saved);
+          _popWithSnackBar(AppStrings.saved);
         },
         onCancel: () => Navigator.pop(context),
       ),
@@ -126,10 +125,8 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         confirmLabel: AppStrings.spotDetailDeleteButton,
         isDestructive: true,
         onConfirm: () {
-          Navigator.pop(context);
           notifier.deleteSpot(widget.spot.id);
-          if (!mounted) return;
-          _showResultDialog(AppStrings.spotDetailDeleted);
+          _popWithSnackBar(AppStrings.spotDetailDeleted);
         },
         onCancel: () => Navigator.pop(context),
       ),
@@ -150,7 +147,6 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         confirmLabel: AppStrings.spotDetailMoveToWentButton,
         confirmColor: AppColors.listSelected,
         onConfirm: () {
-          Navigator.pop(context);
           notifier.updateSpot(
             widget.spot.copyWith(
               title: title,
@@ -158,25 +154,18 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               category: category,
             ),
           );
-          if (!mounted) return;
-          _showResultDialog(AppStrings.spotDetailMoveToWentDone);
+          _popWithSnackBar(AppStrings.spotDetailMoveToWentDone);
         },
         onCancel: () => Navigator.pop(context),
       ),
     );
   }
 
-  void _showResultDialog(String message) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _ResultDialog(
-        message: message,
-        onClose: () {
-          Navigator.pop(context);
-          Navigator.pop(context);
-        },
-      ),
-    );
+  void _popWithSnackBar(String message) {
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.pop(context); // 確認ダイアログを閉じる
+    Navigator.pop(context); // 詳細ページから戻る
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -336,12 +325,12 @@ class _LocationArea extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => onPhotoExpand?.call(path),
                       child: ClipOval(
-                        child: Image.network(
-                          path,
+                        child: CachedNetworkImage(
+                          imageUrl: path,
                           width: MapConstants.photoThumbnailSize,
                           height: MapConstants.photoThumbnailSize,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const ColoredBox(
+                          errorWidget: (_, __, ___) => const ColoredBox(
                             color: AppColors.textDisabled,
                             child: Icon(
                               Icons.photo,
@@ -431,14 +420,12 @@ class _PhotoBox extends StatelessWidget {
                 onTap: () => onExpand(path),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadius.sm),
-                  child: SizedBox(
+                  child: CachedNetworkImage(
+                    imageUrl: path,
                     width: tileW,
                     height: tileH,
-                    child: Image.network(
-                      path,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _placeholder(sizing),
-                    ),
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => _placeholder(sizing),
                   ),
                 ),
               ),
@@ -616,55 +603,6 @@ class _SaveButton extends StatelessWidget {
             fontSize: sizing.detailBtnFontSize,
             fontWeight: FontWeight.w500,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 完了ダイアログ（保存・削除共通）
-// ──────────────────────────────────────────
-
-class _ResultDialog extends StatelessWidget {
-  const _ResultDialog({required this.message, required this.onClose});
-
-  final String message;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              message,
-              style: const TextStyle(
-                fontSize: AppTextStyle.lg2,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: AppSizingTheme.of(context).dialogBtnHeight,
-              child: ElevatedButton(
-                onPressed: onClose,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(AppStrings.closeButton),
-              ),
-            ),
-          ],
         ),
       ),
     );
