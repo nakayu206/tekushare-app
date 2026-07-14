@@ -28,11 +28,16 @@ service cloud.firestore {
     }
 
     // 連携済みユーザーは相手の共有設定に応じてスポットを読み取り可
+    // status ごとに許可条件を分けることで非共有カテゴリのデータを保護する
     match /users/{uid}/spots/{spotId} {
       allow read: if isSignedIn()
         && isLinkedWith(uid)
-        && (get(/databases/$(database)/documents/users/$(uid)).data.shareWantToGo == true
-          || get(/databases/$(database)/documents/users/$(uid)).data.shareVisited == true);
+        && (
+          (resource.data.status == 'wantToGo'
+            && get(/databases/$(database)/documents/users/$(uid)).data.shareWantToGo == true)
+          || (resource.data.status == 'visited'
+            && get(/databases/$(database)/documents/users/$(uid)).data.shareVisited == true)
+        );
     }
 
     match /linkInvites/{token} {

@@ -154,7 +154,12 @@ class _FakeAccountLinkRepository implements AccountLinkRepository {
           String otherUid) async =>
       (shareWantToGo: true, shareVisited: true);
   @override
-  Future<List<Spot>> fetchSharedSpots(String otherUid) async => [];
+  Future<List<Spot>> fetchSharedSpots(
+    String otherUid, {
+    required bool shareWantToGo,
+    required bool shareVisited,
+  }) async =>
+      [];
 }
 
 final _spotOverride = spotProvider.overrideWith(

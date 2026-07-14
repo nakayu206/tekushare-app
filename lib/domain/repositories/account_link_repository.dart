@@ -44,6 +44,11 @@ abstract interface class AccountLinkRepository {
   Future<({bool shareWantToGo, bool shareVisited})> fetchShareSettings(
       String otherUid);
 
-  /// 相手ユーザーのスポット一覧を取得する
-  Future<List<Spot>> fetchSharedSpots(String otherUid);
+  /// 相手ユーザーの共有対象スポット一覧を取得する
+  /// 共有設定に応じて Firestore クエリレベルでフィルタリングする
+  Future<List<Spot>> fetchSharedSpots(
+    String otherUid, {
+    required bool shareWantToGo,
+    required bool shareVisited,
+  });
 }

@@ -149,11 +149,20 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
   }
 
   @override
-  Future<List<Spot>> fetchSharedSpots(String otherUid) async {
+  Future<List<Spot>> fetchSharedSpots(
+    String otherUid, {
+    required bool shareWantToGo,
+    required bool shareVisited,
+  }) async {
+    final statuses = [
+      if (shareWantToGo) SpotStatus.wantToGo.name,
+      if (shareVisited) SpotStatus.visited.name,
+    ];
     final snap = await _firestore
         .collection('users')
         .doc(otherUid)
         .collection('spots')
+        .where('status', whereIn: statuses)
         .get();
     return snap.docs.map((doc) {
       final d = doc.data();

@@ -52,9 +52,11 @@ void main() {
       when(mockRepo.fetchShareSettings('uid-other')).thenAnswer(
         (_) async => (shareWantToGo: true, shareVisited: true),
       );
-      when(mockRepo.fetchSharedSpots('uid-other')).thenAnswer(
-        (_) async => [wantToGoSpot, visitedSpot],
-      );
+      when(mockRepo.fetchSharedSpots(
+        'uid-other',
+        shareWantToGo: true,
+        shareVisited: true,
+      )).thenAnswer((_) async => [wantToGoSpot, visitedSpot]);
 
       final container = buildContainer();
       addTearDown(container.dispose);
@@ -66,13 +68,17 @@ void main() {
       expect(result.visitedSpots, [visitedSpot]);
     });
 
-    test('shareWantToGo=false のとき wantToGoSpots は空', () async {
+    test(
+        'shareWantToGo=false のとき fetchSharedSpots はvisitedのみで呼ばれ wantToGoSpots は空',
+        () async {
       when(mockRepo.fetchShareSettings('uid-other')).thenAnswer(
         (_) async => (shareWantToGo: false, shareVisited: true),
       );
-      when(mockRepo.fetchSharedSpots('uid-other')).thenAnswer(
-        (_) async => [wantToGoSpot, visitedSpot],
-      );
+      when(mockRepo.fetchSharedSpots(
+        'uid-other',
+        shareWantToGo: false,
+        shareVisited: true,
+      )).thenAnswer((_) async => [visitedSpot]);
 
       final container = buildContainer();
       addTearDown(container.dispose);
@@ -84,13 +90,17 @@ void main() {
       expect(result.visitedSpots, [visitedSpot]);
     });
 
-    test('shareVisited=false のとき visitedSpots は空', () async {
+    test(
+        'shareVisited=false のとき fetchSharedSpots はwantToGoのみで呼ばれ visitedSpots は空',
+        () async {
       when(mockRepo.fetchShareSettings('uid-other')).thenAnswer(
         (_) async => (shareWantToGo: true, shareVisited: false),
       );
-      when(mockRepo.fetchSharedSpots('uid-other')).thenAnswer(
-        (_) async => [wantToGoSpot, visitedSpot],
-      );
+      when(mockRepo.fetchSharedSpots(
+        'uid-other',
+        shareWantToGo: true,
+        shareVisited: false,
+      )).thenAnswer((_) async => [wantToGoSpot]);
 
       final container = buildContainer();
       addTearDown(container.dispose);
@@ -113,7 +123,11 @@ void main() {
       final result =
           await container.read(linkedAccountSpotsProvider('uid-other').future);
 
-      verifyNever(mockRepo.fetchSharedSpots(any));
+      verifyNever(mockRepo.fetchSharedSpots(
+        any,
+        shareWantToGo: anyNamed('shareWantToGo'),
+        shareVisited: anyNamed('shareVisited'),
+      ));
       expect(result.wantToGoSpots, isEmpty);
       expect(result.visitedSpots, isEmpty);
     });

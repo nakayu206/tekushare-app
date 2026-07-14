@@ -21,13 +21,13 @@ final linkedAccountSpotsProvider =
     return const LinkedAccountSpots(wantToGoSpots: [], visitedSpots: []);
   }
 
-  final allSpots = await repo.fetchSharedSpots(otherUid);
+  final spots = await repo.fetchSharedSpots(
+    otherUid,
+    shareWantToGo: settings.shareWantToGo,
+    shareVisited: settings.shareVisited,
+  );
   return LinkedAccountSpots(
-    wantToGoSpots: settings.shareWantToGo
-        ? allSpots.where((s) => s.status == SpotStatus.wantToGo).toList()
-        : [],
-    visitedSpots: settings.shareVisited
-        ? allSpots.where((s) => s.status == SpotStatus.visited).toList()
-        : [],
+    wantToGoSpots: spots.where((s) => s.status == SpotStatus.wantToGo).toList(),
+    visitedSpots: spots.where((s) => s.status == SpotStatus.visited).toList(),
   );
 });
