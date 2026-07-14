@@ -159,14 +159,15 @@ class _CategoryChip extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.chipUnselected,
+        color: AppColors.primary.withValues(alpha: 0.08),
+        border: Border.all(color: AppColors.primary),
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: Text(
         category,
         style: const TextStyle(
           fontSize: AppTextStyle.sm,
-          color: AppColors.textPrimary,
+          color: AppColors.primary,
         ),
       ),
     );
