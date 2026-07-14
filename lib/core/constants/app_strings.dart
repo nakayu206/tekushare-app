@@ -93,6 +93,7 @@ abstract class AppStrings {
   static const spotDetailSaveButton = '上書き保存';
   static const spotDetailDeleteButton = '削除する';
   static const spotDetailMoveToWentButton = '行った！に保存';
+  static const spotDetailMoveToWentConfirmLabel = '行った！';
   static const spotDetailSaveConfirmMessage = '上書き保存しますか？';
   static const spotDetailDeleteConfirmMessage = '削除しますか？';
   static const spotDetailMoveToWentConfirmMessage = '「行った！」に保存しますか？';

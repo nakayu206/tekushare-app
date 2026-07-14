@@ -144,7 +144,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
       builder: (_) => AppConfirmDialog(
         title: title,
         message: AppStrings.spotDetailMoveToWentConfirmMessage,
-        confirmLabel: AppStrings.spotDetailMoveToWentButton,
+        confirmLabel: AppStrings.spotDetailMoveToWentConfirmLabel,
         confirmColor: AppColors.listSelected,
         onConfirm: () => _runWithLoading(
           () => notifier.updateSpot(
@@ -345,6 +345,19 @@ class _LocationArea extends StatelessWidget {
                           width: MapConstants.photoThumbnailSize,
                           height: MapConstants.photoThumbnailSize,
                           fit: BoxFit.cover,
+                          placeholder: (_, __) => const ColoredBox(
+                            color: AppColors.chipUnselected,
+                            child: Center(
+                              child: SizedBox(
+                                width: AppSize.iconSm,
+                                height: AppSize.iconSm,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
                           errorWidget: (_, __, ___) => const ColoredBox(
                             color: AppColors.textDisabled,
                             child: Icon(
@@ -440,6 +453,10 @@ class _PhotoBox extends StatelessWidget {
                     width: tileW,
                     height: tileH,
                     fit: BoxFit.cover,
+                    placeholder: (_, __) => const ColoredBox(
+                      color: AppColors.chipUnselected,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
                     errorWidget: (_, __, ___) => _placeholder(sizing),
                   ),
                 ),

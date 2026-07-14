@@ -104,11 +104,16 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
           }
           ref.read(pendingPhotoProvider.notifier).state = [];
           if (!mounted) return;
-          final messenger = ScaffoldMessenger.of(context);
           Navigator.pop(context); // ローディングを閉じる
-          Navigator.pop(context); // 行きたいリストへ戻る
-          messenger.showSnackBar(
-            const SnackBar(content: Text(AppStrings.saved)),
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => _SavedDialog(
+              onClose: () {
+                Navigator.pop(context); // ダイアログを閉じる
+                Navigator.popUntil(context, (route) => route.isFirst);
+              },
+            ),
           );
         },
         onCancel: () => Navigator.pop(context),
@@ -463,6 +468,63 @@ class _SaveButton extends StatelessWidget {
             fontSize: sizing.detailBtnFontSize,
             fontWeight: FontWeight.w500,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 保存完了ダイアログ
+// ──────────────────────────────────────────
+
+class _SavedDialog extends StatelessWidget {
+  const _SavedDialog({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x2l,
+        vertical: AppSpacing.x2l,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          28,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              AppStrings.saved,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onClose,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(AppStrings.closeButton),
+              ),
+            ),
+          ],
         ),
       ),
     );

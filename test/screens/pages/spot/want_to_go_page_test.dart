@@ -312,21 +312,27 @@ void main() {
       expect(find.text(AppStrings.wantToGoConfirmMessage), findsNothing);
     });
 
-    // 確認ダイアログの保存でSnackBarにメッセージが表示される
-    testWidgets('confirming save shows snackbar', (tester) async {
+    // 確認ダイアログの保存で保存完了ダイアログが表示される
+    testWidgets('confirming save shows saved dialog', (tester) async {
       await pumpPage(tester);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.saveButton));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.saved), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(AppStrings.saved),
+        ),
+        findsOneWidget,
+      );
     });
 
-    // 確認ダイアログの保存で保存後にページを離れる
-    testWidgets('confirming save leaves the page', (tester) async {
+    // 保存完了ダイアログを閉じるとホームに戻る
+    testWidgets('closing saved dialog leaves the page', (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -376,6 +382,8 @@ void main() {
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.saveButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.closeButton));
       await tester.pumpAndSettle();
 
       expect(find.byType(WantToGoPage), findsNothing);
