@@ -16,15 +16,7 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/accountLinks/$(linkId));
     }
 
-    function isValidInviteFor(uids, inviteToken) {
-      let invite = get(/databases/$(database)/documents/linkInvites/$(inviteToken)).data;
-      return invite.fromUid != request.auth.uid
-        && invite.fromUid in uids
-        && invite.used == false
-        && invite.expiresAt > request.time;
-    }
-
-    // users/{uid}: 連携相手の表示名を引けるよう読み取りはログイン済み全員に許可
+    // users/{uid}: 連携相手の表示名・共有設定を引けるよう読み取りはログイン済み全員に許可
     match /users/{uid} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == uid;
@@ -66,7 +58,9 @@ service cloud.firestore {
         && request.auth.uid in request.resource.data.uids
         && request.resource.data.uids.size() == 2
         && exists(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken))
-        && isValidInviteFor(request.resource.data.uids, request.resource.data.inviteToken);
+        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.fromUid != request.auth.uid
+        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.fromUid in request.resource.data.uids
+        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.used == false;
 
       allow update: if false;
 
