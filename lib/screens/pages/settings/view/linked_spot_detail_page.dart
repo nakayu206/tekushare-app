@@ -1,0 +1,200 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/core/constants/app_spacing.dart';
+import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/core/constants/map_constants.dart';
+import 'package:tekushare/core/theme/app_sizing_theme.dart';
+import 'package:tekushare/domain/entities/spot.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+/// 連携アカウントのスポット詳細（読み取り専用）
+class LinkedSpotDetailPage extends StatelessWidget {
+  const LinkedSpotDetailPage({super.key, required this.spot});
+
+  final Spot spot;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = AppSizingTheme.of(context);
+    final point = LatLng(spot.latitude, spot.longitude);
+    final isWantToGo = spot.status == SpotStatus.wantToGo;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        title: Text(
+            isWantToGo ? AppStrings.wantToGoPageTitle : AppStrings.listWentTab),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _MapArea(
+                  point: point,
+                  latitude: spot.latitude,
+                  longitude: spot.longitude,
+                  height: sizing.locationAreaHeight),
+              SizedBox(height: sizing.sectionSpacing),
+              _StatusChip(isWantToGo: isWantToGo),
+              SizedBox(height: sizing.sectionSpacing),
+              _TitleText(title: spot.title),
+              if (spot.category != null && spot.category!.isNotEmpty) ...[
+                SizedBox(height: sizing.sectionSpacing),
+                _CategoryChip(category: spot.category!),
+              ],
+              SizedBox(height: sizing.sectionSpacing),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MapArea extends StatelessWidget {
+  const _MapArea({
+    required this.point,
+    required this.latitude,
+    required this.longitude,
+    required this.height,
+  });
+
+  final LatLng point;
+  final double latitude;
+  final double longitude;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: point,
+            initialZoom: MapConstants.defaultZoom,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
+            onTap: (_, __) async {
+              final uri = Uri.parse(
+                'https://www.google.com/maps/dir/?api=1'
+                '&destination=$latitude,$longitude',
+              );
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.tekushare',
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: point,
+                  width: AppSize.iconLg,
+                  height: AppSize.iconLg,
+                  child: const Icon(
+                    Icons.location_on,
+                    color: AppColors.primary,
+                    size: AppSize.iconLg,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.isWantToGo});
+
+  final bool isWantToGo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        border: Border.all(color: AppColors.primary),
+        borderRadius: BorderRadius.circular(AppRadius.full),
+      ),
+      child: Text(
+        isWantToGo ? AppStrings.wantToGo : AppStrings.listWentTab,
+        style: const TextStyle(
+          fontSize: AppTextStyle.sm,
+          color: AppColors.primary,
+          fontWeight: AppTextStyle.medium,
+        ),
+      ),
+    );
+  }
+}
+
+class _TitleText extends StatelessWidget {
+  const _TitleText({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title == AppStrings.noTitle ? '' : title,
+      style: const TextStyle(
+        fontSize: AppTextStyle.lg2,
+        fontWeight: AppTextStyle.semiBold,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.category});
+
+  final String category;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.chipUnselected,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+      ),
+      child: Text(
+        category,
+        style: const TextStyle(
+          fontSize: AppTextStyle.sm,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+}

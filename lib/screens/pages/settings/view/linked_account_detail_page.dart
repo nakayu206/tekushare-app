@@ -5,12 +5,9 @@ import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/domain/entities/linked_account.dart';
+import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/screens/pages/settings/view/linked_spot_detail_page.dart';
 import 'package:tekushare/screens/providers/linked_account_spots_provider.dart';
-
-const _mockRoutes = [
-  (name: '駅まわりコース', distance: '1.2km', time: '25分'),
-  (name: '公園ぐるりコース', distance: '3.5km', time: '52分'),
-];
 
 /// 連携アカウント詳細画面
 /// そのユーザーが共有している行きたい場所・散歩ルートを表示する。
@@ -55,11 +52,7 @@ class LinkedAccountDetailPage extends ConsumerWidget {
                 for (final spot in spots.wantToGoSpots)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _SpotCard(
-                      title: spot.title,
-                      category: spot.category ?? '',
-                      isWantToGo: true,
-                    ),
+                    child: _SpotCard(spot: spot),
                   ),
               const SizedBox(height: AppSpacing.x2lp),
               const _SectionHeader(label: AppStrings.listWentTab),
@@ -70,26 +63,7 @@ class LinkedAccountDetailPage extends ConsumerWidget {
                 for (final spot in spots.visitedSpots)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _SpotCard(
-                      title: spot.title,
-                      category: spot.category ?? '',
-                      isWantToGo: false,
-                    ),
-                  ),
-              const SizedBox(height: AppSpacing.x2lp),
-              const _SectionHeader(label: AppStrings.walkRoutePageTitle),
-              const SizedBox(height: AppSpacing.sm),
-              if (_mockRoutes.isEmpty)
-                const _EmptyState(message: AppStrings.linkedAccountRoutesEmpty)
-              else
-                for (final route in _mockRoutes)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _RouteCard(
-                      name: route.name,
-                      distance: route.distance,
-                      time: route.time,
-                    ),
+                    child: _SpotCard(spot: spot),
                   ),
               const SizedBox(height: AppSpacing.lg),
             ],
@@ -176,140 +150,86 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _SpotCard extends StatelessWidget {
-  const _SpotCard({
-    required this.title,
-    required this.category,
-    required this.isWantToGo,
-  });
+  const _SpotCard({required this.spot});
 
-  final String title;
-  final String category;
-  final bool isWantToGo;
+  final Spot spot;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
+    final isWantToGo = spot.status == SpotStatus.wantToGo;
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LinkedSpotDetailPage(spot: spot),
+        ),
       ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.chipUnselected),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: AppSpacing.xs,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: AppTextStyle.md2,
-                    fontWeight: AppTextStyle.medium,
-                    color: AppColors.textPrimary,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: AppColors.chipUnselected),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: AppSpacing.xs,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    spot.title,
+                    style: const TextStyle(
+                      fontSize: AppTextStyle.md2,
+                      fontWeight: AppTextStyle.medium,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  category,
-                  style: const TextStyle(
-                    fontSize: AppTextStyle.sm,
-                    color: AppColors.textDisabled,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: 2,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              border: Border.all(color: AppColors.primary),
-              borderRadius: BorderRadius.circular(AppRadius.full),
-            ),
-            child: Text(
-              isWantToGo ? AppStrings.wantToGo : AppStrings.listWentTab,
-              style: const TextStyle(
-                fontSize: AppTextStyle.xs,
-                color: AppColors.primary,
+                  if (spot.category != null && spot.category!.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      spot.category!,
+                      style: const TextStyle(
+                        fontSize: AppTextStyle.sm,
+                        color: AppColors.textDisabled,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RouteCard extends StatelessWidget {
-  const _RouteCard({
-    required this.name,
-    required this.distance,
-    required this.time,
-  });
-
-  final String name;
-  final String distance;
-  final String time;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.chipUnselected),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: AppSpacing.xs,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.route_outlined,
-            color: AppColors.primary,
-            size: AppSize.iconMd,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                fontSize: AppTextStyle.md2,
-                fontWeight: AppTextStyle.medium,
-                color: AppColors.textPrimary,
+            const SizedBox(width: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                border: Border.all(color: AppColors.primary),
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+              child: Text(
+                isWantToGo ? AppStrings.wantToGo : AppStrings.listWentTab,
+                style: const TextStyle(
+                  fontSize: AppTextStyle.xs,
+                  color: AppColors.primary,
+                ),
               ),
             ),
-          ),
-          Text(
-            '$distance · $time',
-            style: const TextStyle(
-              fontSize: AppTextStyle.sm,
-              color: AppColors.textDisabled,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

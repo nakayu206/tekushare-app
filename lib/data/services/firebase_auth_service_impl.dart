@@ -12,9 +12,14 @@ class FirebaseAuthServiceImpl implements AuthService {
   /// 付随的な処理なので失敗してもAuth側の成功を巻き込まない。
   Future<void> _syncUserDoc(String uid, String displayName) async {
     try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      final data = doc.data();
       await _firestore.collection('users').doc(uid).set({
         'displayName': displayName,
         'updatedAt': Timestamp.now(),
+        // 未設定のときだけデフォルト値を書き込む（既存の設定を上書きしない）
+        if (data?['shareWantToGo'] == null) 'shareWantToGo': true,
+        if (data?['shareVisited'] == null) 'shareVisited': true,
       }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('users/$uid の同期に失敗しました: $e');
