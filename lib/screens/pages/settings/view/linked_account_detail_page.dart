@@ -1,33 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/domain/entities/linked_account.dart';
+import 'package:tekushare/screens/providers/linked_account_spots_provider.dart';
+
+const _mockRoutes = [
+  (name: '駅まわりコース', distance: '1.2km', time: '25分'),
+  (name: '公園ぐるりコース', distance: '3.5km', time: '52分'),
+];
 
 /// 連携アカウント詳細画面
 /// そのユーザーが共有している行きたい場所・散歩ルートを表示する。
-class LinkedAccountDetailPage extends StatelessWidget {
+class LinkedAccountDetailPage extends ConsumerWidget {
   const LinkedAccountDetailPage({super.key, required this.account});
 
   final LinkedAccount account;
 
-  static const _mockWantToGoSpots = [
-    (title: 'お気に入り公園', category: '公園'),
-    (title: '商店街の和食屋', category: 'ランチ'),
-  ];
-
-  static const _mockVisitedSpots = [
-    (title: '駅前カフェ', category: 'カフェ'),
-  ];
-
-  static const _mockRoutes = [
-    (name: '駅まわりコース', distance: '1.2km', time: '25分'),
-    (name: '公園ぐるりコース', distance: '3.5km', time: '52分'),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final spotsAsync = ref.watch(linkedAccountSpotsProvider(account.uid));
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -37,59 +32,68 @@ class LinkedAccountDetailPage extends StatelessWidget {
         centerTitle: true,
         elevation: 0,
       ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          children: [
-            _AccountHeader(name: account.displayName),
-            const SizedBox(height: AppSpacing.x2lp),
-            const _SectionHeader(label: AppStrings.wantToGo),
-            const SizedBox(height: AppSpacing.sm),
-            if (_mockWantToGoSpots.isEmpty)
-              const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
-            else
-              for (final spot in _mockWantToGoSpots)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: _SpotCard(
-                    title: spot.title,
-                    category: spot.category,
-                    isWantToGo: true,
+      body: spotsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => const Center(
+          child: Text(
+            AppStrings.linkedAccountLoadError,
+            style: TextStyle(color: AppColors.textDisabled),
+          ),
+        ),
+        data: (spots) => SafeArea(
+          top: false,
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            children: [
+              _AccountHeader(name: account.displayName),
+              const SizedBox(height: AppSpacing.x2lp),
+              const _SectionHeader(label: AppStrings.wantToGo),
+              const SizedBox(height: AppSpacing.sm),
+              if (spots.wantToGoSpots.isEmpty)
+                const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
+              else
+                for (final spot in spots.wantToGoSpots)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _SpotCard(
+                      title: spot.title,
+                      category: spot.category ?? '',
+                      isWantToGo: true,
+                    ),
                   ),
-                ),
-            const SizedBox(height: AppSpacing.x2lp),
-            const _SectionHeader(label: AppStrings.listWentTab),
-            const SizedBox(height: AppSpacing.sm),
-            if (_mockVisitedSpots.isEmpty)
-              const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
-            else
-              for (final spot in _mockVisitedSpots)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: _SpotCard(
-                    title: spot.title,
-                    category: spot.category,
-                    isWantToGo: false,
+              const SizedBox(height: AppSpacing.x2lp),
+              const _SectionHeader(label: AppStrings.listWentTab),
+              const SizedBox(height: AppSpacing.sm),
+              if (spots.visitedSpots.isEmpty)
+                const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
+              else
+                for (final spot in spots.visitedSpots)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _SpotCard(
+                      title: spot.title,
+                      category: spot.category ?? '',
+                      isWantToGo: false,
+                    ),
                   ),
-                ),
-            const SizedBox(height: AppSpacing.x2lp),
-            const _SectionHeader(label: AppStrings.walkRoutePageTitle),
-            const SizedBox(height: AppSpacing.sm),
-            if (_mockRoutes.isEmpty)
-              const _EmptyState(message: AppStrings.linkedAccountRoutesEmpty)
-            else
-              for (final route in _mockRoutes)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: _RouteCard(
-                    name: route.name,
-                    distance: route.distance,
-                    time: route.time,
+              const SizedBox(height: AppSpacing.x2lp),
+              const _SectionHeader(label: AppStrings.walkRoutePageTitle),
+              const SizedBox(height: AppSpacing.sm),
+              if (_mockRoutes.isEmpty)
+                const _EmptyState(message: AppStrings.linkedAccountRoutesEmpty)
+              else
+                for (final route in _mockRoutes)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _RouteCard(
+                      name: route.name,
+                      distance: route.distance,
+                      time: route.time,
+                    ),
                   ),
-                ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
+              const SizedBox(height: AppSpacing.lg),
+            ],
+          ),
         ),
       ),
     );

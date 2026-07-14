@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tekushare/domain/entities/linked_account.dart';
+import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/repositories/account_link_repository.dart';
 
 const _inviteValidDuration = Duration(days: 7);
@@ -123,5 +124,53 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
   Future<void> unlink(String otherUid) async {
     final linkId = _linkIdOf(_myUid, otherUid);
     await _firestore.collection('accountLinks').doc(linkId).delete();
+  }
+
+  @override
+  Future<void> updateShareSettings({
+    required bool shareWantToGo,
+    required bool shareVisited,
+  }) async {
+    await _firestore.collection('users').doc(_myUid).set({
+      'shareWantToGo': shareWantToGo,
+      'shareVisited': shareVisited,
+    }, SetOptions(merge: true));
+  }
+
+  @override
+  Future<({bool shareWantToGo, bool shareVisited})> fetchShareSettings(
+      String otherUid) async {
+    final doc = await _firestore.collection('users').doc(otherUid).get();
+    final data = doc.data() ?? {};
+    return (
+      shareWantToGo: data['shareWantToGo'] as bool? ?? true,
+      shareVisited: data['shareVisited'] as bool? ?? true,
+    );
+  }
+
+  @override
+  Future<List<Spot>> fetchSharedSpots(String otherUid) async {
+    final snap = await _firestore
+        .collection('users')
+        .doc(otherUid)
+        .collection('spots')
+        .get();
+    return snap.docs.map((doc) {
+      final d = doc.data();
+      return Spot(
+        id: doc.id,
+        title: d['title'] as String? ?? '',
+        latitude: (d['latitude'] as num?)?.toDouble() ?? 0.0,
+        longitude: (d['longitude'] as num?)?.toDouble() ?? 0.0,
+        status: SpotStatus.values.firstWhere(
+          (s) => s.name == (d['status'] as String? ?? ''),
+          orElse: () => SpotStatus.wantToGo,
+        ),
+        memo: d['memo'] as String?,
+        category: d['category'] as String?,
+        photoPaths: (d['photoPaths'] as List<dynamic>?)?.cast<String>() ?? [],
+        createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      );
+    }).toList();
   }
 }

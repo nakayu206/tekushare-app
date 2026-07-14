@@ -1,4 +1,5 @@
 import 'package:tekushare/domain/entities/linked_account.dart';
+import 'package:tekushare/domain/entities/spot.dart';
 
 /// 招待リンクが存在しない、または既に使用済み・期限切れの場合
 class InviteInvalidException implements Exception {
@@ -31,4 +32,18 @@ abstract interface class AccountLinkRepository {
 
   /// 指定した相手との連携を解除する
   Future<void> unlink(String otherUid);
+
+  /// 自分の共有設定を Firestore に保存する
+  Future<void> updateShareSettings({
+    required bool shareWantToGo,
+    required bool shareVisited,
+  });
+
+  /// 相手ユーザーの共有設定を取得する
+  /// フィールドが未設定の場合はデフォルト値（true）を返す
+  Future<({bool shareWantToGo, bool shareVisited})> fetchShareSettings(
+      String otherUid);
+
+  /// 相手ユーザーのスポット一覧を取得する
+  Future<List<Spot>> fetchSharedSpots(String otherUid);
 }

@@ -166,6 +166,7 @@ abstract class AppStrings {
   static const accountLinkViewSpots = 'スポットを見る';
   static const linkedAccountSpotsEmpty = '共有されたスポットがありません';
   static const linkedAccountRoutesEmpty = '共有されたルートがありません';
+  static const linkedAccountLoadError = '読み込みに失敗しました';
 
   // SNSシェア
   static const shareInviteText = 'てくしぇあで散歩記録をシェアしませんか？';

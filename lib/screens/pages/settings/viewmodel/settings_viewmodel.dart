@@ -121,11 +121,19 @@ class SettingsViewModel extends Notifier<SettingsState> {
   void setShareWantToGo(bool v) {
     _prefs.setBool(_kShareWantToGo, v);
     state = state.copyWith(shareWantToGo: v);
+    ref.read(accountLinkRepositoryProvider).updateShareSettings(
+          shareWantToGo: v,
+          shareVisited: state.shareVisited,
+        );
   }
 
   void setShareVisited(bool v) {
     _prefs.setBool(_kShareVisited, v);
     state = state.copyWith(shareVisited: v);
+    ref.read(accountLinkRepositoryProvider).updateShareSettings(
+          shareWantToGo: state.shareWantToGo,
+          shareVisited: v,
+        );
   }
 
   void toggleEditSharedAccounts() => state = state.copyWith(
