@@ -42,8 +42,6 @@ class LinkedAccountDetailPage extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              _AccountHeader(name: account.displayName),
-              const SizedBox(height: AppSpacing.x2lp),
               const _SectionHeader(label: AppStrings.wantToGo),
               const SizedBox(height: AppSpacing.sm),
               if (spots.wantToGoSpots.isEmpty)
@@ -70,41 +68,6 @@ class LinkedAccountDetailPage extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _AccountHeader extends StatelessWidget {
-  const _AccountHeader({required this.name});
-
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-          child: Text(
-            name.isNotEmpty ? name[0] : '?',
-            style: const TextStyle(
-              fontSize: AppTextStyle.xl,
-              fontWeight: AppTextStyle.semiBold,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Text(
-          name,
-          style: const TextStyle(
-            fontSize: AppTextStyle.lg2,
-            fontWeight: AppTextStyle.semiBold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
     );
   }
 }
