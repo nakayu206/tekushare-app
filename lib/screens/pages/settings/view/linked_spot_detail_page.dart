@@ -60,6 +60,12 @@ class LinkedSpotDetailPage extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 _CategoryChip(category: spot.category!),
               ],
+              if (spot.photoPaths.isNotEmpty) ...[
+                SizedBox(height: sizing.sectionSpacing),
+                const _SectionLabel(label: AppStrings.linkedSpotLabelPhoto),
+                const SizedBox(height: AppSpacing.xs),
+                _PhotoGrid(photoPaths: spot.photoPaths),
+              ],
               SizedBox(height: sizing.sectionSpacing),
             ],
           ),
@@ -192,6 +198,41 @@ class _CategoryChip extends StatelessWidget {
           color: AppColors.primary,
         ),
       ),
+    );
+  }
+}
+
+class _PhotoGrid extends StatelessWidget {
+  const _PhotoGrid({required this.photoPaths});
+
+  final List<String> photoPaths;
+
+  @override
+  Widget build(BuildContext context) {
+    final tileSize =
+        (MediaQuery.sizeOf(context).width - AppSpacing.lg * 2 - AppSpacing.sm) /
+            2;
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        for (final path in photoPaths)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: SizedBox(
+              width: tileSize,
+              height: tileSize,
+              child: Image.network(
+                path,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const ColoredBox(
+                  color: AppColors.chipUnselected,
+                  child: Icon(Icons.photo, color: AppColors.textDisabled),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
