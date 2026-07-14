@@ -28,14 +28,49 @@ class _AcceptInvitePageState extends ConsumerState<AcceptInvitePage> {
       if (!mounted) return;
       await showDialog<void>(
         context: context,
-        builder: (_) => AlertDialog(
-          content: const Text(AppStrings.acceptInviteSuccessMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(AppStrings.closeButton),
+        builder: (_) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.x2l,
+              AppSpacing.x3l,
+              AppSpacing.x2l,
+              AppSpacing.x2l,
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  AppStrings.acceptInviteSuccessMessage,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: AppTextStyle.lg2,
+                    fontWeight: AppTextStyle.semiBold,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.x2l),
+                SizedBox(
+                  width: double.infinity,
+                  height: AppSpacing.x5l,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: const Text(AppStrings.closeButton),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
       if (!mounted) return;
