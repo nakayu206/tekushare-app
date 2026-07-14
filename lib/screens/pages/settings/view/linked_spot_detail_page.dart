@@ -38,7 +38,7 @@ class LinkedSpotDetailPage extends StatelessWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
-            AppSpacing.x2l,
+            AppSpacing.x4l,
             AppSpacing.lg,
             AppSpacing.lg,
           ),
