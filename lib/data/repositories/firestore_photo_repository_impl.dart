@@ -21,17 +21,23 @@ class FirestorePhotoRepositoryImpl implements PhotoRepository {
     final ref = _storage.ref('users/$_uid/spots/$spotId/$fileName');
     await ref.putFile(File(imagePath));
     final url = await ref.getDownloadURL();
-    await _collection.doc(spotId).update({
-      'photoPaths': FieldValue.arrayUnion([url]),
-    });
+    await _collection.doc(spotId).set(
+      {
+        'photoPaths': FieldValue.arrayUnion([url])
+      },
+      SetOptions(merge: true),
+    );
     return url;
   }
 
   @override
   Future<void> removePhoto(String spotId, String imagePath) async {
-    await _collection.doc(spotId).update({
-      'photoPaths': FieldValue.arrayRemove([imagePath]),
-    });
+    await _collection.doc(spotId).set(
+      {
+        'photoPaths': FieldValue.arrayRemove([imagePath])
+      },
+      SetOptions(merge: true),
+    );
     if (imagePath.startsWith('https://')) {
       try {
         await _storage.refFromURL(imagePath).delete();

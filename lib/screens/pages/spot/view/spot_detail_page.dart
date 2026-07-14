@@ -70,14 +70,16 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   Future<void> _onPhotoTap() async {
     final path = await ref.read(cameraServiceProvider).takePhoto();
     if (path == null || !mounted) return;
-    final url =
-        await ref.read(spotProvider.notifier).attachPhoto(widget.spot.id, path);
+    final notifier = ref.read(spotProvider.notifier);
+    final url = await notifier.attachPhoto(widget.spot.id, path);
     if (!mounted) return;
     setState(() => _photoPaths = [..._photoPaths, url]);
   }
 
   Future<void> _onPhotoDelete(String path) async {
-    await ref.read(spotProvider.notifier).removePhoto(widget.spot.id, path);
+    if (!mounted) return;
+    final notifier = ref.read(spotProvider.notifier);
+    await notifier.removePhoto(widget.spot.id, path);
     if (!mounted) return;
     setState(() => _photoPaths = _photoPaths.where((p) => p != path).toList());
   }

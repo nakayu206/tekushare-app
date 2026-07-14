@@ -26,7 +26,10 @@ class FirestoreSpotRepositoryImpl implements SpotRepository {
 
   @override
   Future<void> updateSpotStatus(String id, SpotStatus status) async {
-    await _collection.doc(id).update({'status': status.name});
+    await _collection.doc(id).set(
+      {'status': status.name},
+      SetOptions(merge: true),
+    );
   }
 
   @override
