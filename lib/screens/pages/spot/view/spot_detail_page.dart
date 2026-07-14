@@ -124,10 +124,30 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         message: AppStrings.spotDetailDeleteConfirmMessage,
         confirmLabel: AppStrings.spotDetailDeleteButton,
         isDestructive: true,
-        onConfirm: () => _runWithLoading(
-          () => notifier.deleteSpot(widget.spot.id),
-          AppStrings.spotDetailDeleted,
-        ),
+        onConfirm: () async {
+          Navigator.pop(context); // 確認ダイアログを閉じる
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const PopScope(
+              canPop: false,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          );
+          await notifier.deleteSpot(widget.spot.id);
+          if (!mounted) return;
+          Navigator.pop(context); // ローディングを閉じる
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => _DeletedDialog(
+              onClose: () {
+                Navigator.pop(context); // ダイアログを閉じる
+                Navigator.pop(context); // リストへ戻る
+              },
+            ),
+          );
+        },
         onCancel: () => Navigator.pop(context),
       ),
     );
@@ -635,6 +655,63 @@ class _SaveButton extends StatelessWidget {
             fontSize: sizing.detailBtnFontSize,
             fontWeight: FontWeight.w500,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 削除完了ダイアログ
+// ──────────────────────────────────────────
+
+class _DeletedDialog extends StatelessWidget {
+  const _DeletedDialog({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x2l,
+        vertical: AppSpacing.x2l,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          28,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              AppStrings.spotDetailDeleted,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onClose,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(AppStrings.closeButton),
+              ),
+            ),
+          ],
         ),
       ),
     );
