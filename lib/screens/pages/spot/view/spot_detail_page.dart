@@ -68,9 +68,10 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   }
 
   Future<void> _onPhotoTap() async {
-    final path = await ref.read(cameraServiceProvider).takePhoto();
-    if (path == null || !mounted) return;
+    final camera = ref.read(cameraServiceProvider);
     final notifier = ref.read(spotProvider.notifier);
+    final path = await camera.takePhoto();
+    if (path == null || !mounted) return;
     final url = await notifier.attachPhoto(widget.spot.id, path);
     if (!mounted) return;
     setState(() => _photoPaths = [..._photoPaths, url]);
@@ -93,6 +94,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         ? AppStrings.noTitle
         : _titleController.text;
     final category = ref.read(spotDetailViewModelProvider).selectedCategory;
+    final notifier = ref.read(spotProvider.notifier);
     showDialog<void>(
       context: context,
       builder: (_) => AppConfirmDialog(
@@ -101,9 +103,9 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         confirmLabel: AppStrings.saveButton,
         onConfirm: () async {
           Navigator.pop(context);
-          await ref.read(spotProvider.notifier).updateSpot(
-                widget.spot.copyWith(title: title, category: category),
-              );
+          await notifier.updateSpot(
+            widget.spot.copyWith(title: title, category: category),
+          );
           if (!mounted) return;
           _showResultDialog(AppStrings.saved);
         },
@@ -113,6 +115,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   }
 
   void _onDeletePressed() {
+    final notifier = ref.read(spotProvider.notifier);
     showDialog<void>(
       context: context,
       builder: (_) => AppConfirmDialog(
@@ -124,7 +127,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         isDestructive: true,
         onConfirm: () async {
           Navigator.pop(context);
-          await ref.read(spotProvider.notifier).deleteSpot(widget.spot.id);
+          await notifier.deleteSpot(widget.spot.id);
           if (!mounted) return;
           _showResultDialog(AppStrings.spotDetailDeleted);
         },
@@ -138,6 +141,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         ? AppStrings.noTitle
         : _titleController.text;
     final category = ref.read(spotDetailViewModelProvider).selectedCategory;
+    final notifier = ref.read(spotProvider.notifier);
     showDialog<void>(
       context: context,
       builder: (_) => AppConfirmDialog(
@@ -147,13 +151,13 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         confirmColor: AppColors.listSelected,
         onConfirm: () async {
           Navigator.pop(context);
-          await ref.read(spotProvider.notifier).updateSpot(
-                widget.spot.copyWith(
-                  title: title,
-                  status: SpotStatus.visited,
-                  category: category,
-                ),
-              );
+          await notifier.updateSpot(
+            widget.spot.copyWith(
+              title: title,
+              status: SpotStatus.visited,
+              category: category,
+            ),
+          );
           if (!mounted) return;
           _showResultDialog(AppStrings.spotDetailMoveToWentDone);
         },
