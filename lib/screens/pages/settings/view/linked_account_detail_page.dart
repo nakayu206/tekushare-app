@@ -39,32 +39,37 @@ class LinkedAccountDetailPage extends ConsumerWidget {
         ),
         data: (spots) => SafeArea(
           top: false,
-          child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            children: [
-              const _SectionHeader(label: AppStrings.wantToGo),
-              const SizedBox(height: AppSpacing.sm),
-              if (spots.wantToGoSpots.isEmpty)
-                const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
-              else
-                for (final spot in spots.wantToGoSpots)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _SpotCard(spot: spot, otherUid: account.uid),
-                  ),
-              const SizedBox(height: AppSpacing.x2lp),
-              const _SectionHeader(label: AppStrings.listWentTab),
-              const SizedBox(height: AppSpacing.sm),
-              if (spots.visitedSpots.isEmpty)
-                const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
-              else
-                for (final spot in spots.visitedSpots)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _SpotCard(spot: spot, otherUid: account.uid),
-                  ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
+          child: RefreshIndicator(
+            onRefresh: () async =>
+                ref.refresh(linkedAccountSpotsProvider(account.uid).future),
+            color: AppColors.primary,
+            child: ListView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              children: [
+                const _SectionHeader(label: AppStrings.wantToGo),
+                const SizedBox(height: AppSpacing.sm),
+                if (spots.wantToGoSpots.isEmpty)
+                  const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
+                else
+                  for (final spot in spots.wantToGoSpots)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: _SpotCard(spot: spot),
+                    ),
+                const SizedBox(height: AppSpacing.x2lp),
+                const _SectionHeader(label: AppStrings.listWentTab),
+                const SizedBox(height: AppSpacing.sm),
+                if (spots.visitedSpots.isEmpty)
+                  const _EmptyState(message: AppStrings.linkedAccountSpotsEmpty)
+                else
+                  for (final spot in spots.visitedSpots)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: _SpotCard(spot: spot),
+                    ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+            ),
           ),
         ),
       ),
@@ -113,10 +118,9 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _SpotCard extends StatelessWidget {
-  const _SpotCard({required this.spot, required this.otherUid});
+  const _SpotCard({required this.spot});
 
   final Spot spot;
-  final String otherUid;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +130,7 @@ class _SpotCard extends StatelessWidget {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => LinkedSpotDetailPage(spot: spot, otherUid: otherUid),
+          builder: (_) => LinkedSpotDetailPage(spot: spot),
         ),
       ),
       child: Container(
