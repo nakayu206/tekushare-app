@@ -504,7 +504,7 @@ class _SavedDialog extends StatelessWidget {
             const Text(
               AppStrings.saved,
               style: TextStyle(
-                color: AppColors.primary,
+                color: AppColors.textPrimary,
                 fontSize: AppTextStyle.lg2,
                 fontWeight: FontWeight.w600,
               ),

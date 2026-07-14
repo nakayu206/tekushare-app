@@ -50,7 +50,7 @@ class LinkedAccountDetailPage extends ConsumerWidget {
                 for (final spot in spots.wantToGoSpots)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _SpotCard(spot: spot),
+                    child: _SpotCard(spot: spot, otherUid: account.uid),
                   ),
               const SizedBox(height: AppSpacing.x2lp),
               const _SectionHeader(label: AppStrings.listWentTab),
@@ -61,7 +61,7 @@ class LinkedAccountDetailPage extends ConsumerWidget {
                 for (final spot in spots.visitedSpots)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _SpotCard(spot: spot),
+                    child: _SpotCard(spot: spot, otherUid: account.uid),
                   ),
               const SizedBox(height: AppSpacing.lg),
             ],
@@ -113,9 +113,10 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _SpotCard extends StatelessWidget {
-  const _SpotCard({required this.spot});
+  const _SpotCard({required this.spot, required this.otherUid});
 
   final Spot spot;
+  final String otherUid;
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +126,7 @@ class _SpotCard extends StatelessWidget {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => LinkedSpotDetailPage(spot: spot),
+          builder: (_) => LinkedSpotDetailPage(spot: spot, otherUid: otherUid),
         ),
       ),
       child: Container(

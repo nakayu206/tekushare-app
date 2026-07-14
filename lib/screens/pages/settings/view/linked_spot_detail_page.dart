@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
@@ -9,20 +10,50 @@ import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/screens/providers/linked_account_spots_provider.dart';
 import 'package:tekushare/screens/widgets/common/photo_viewer_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// 連携アカウントのスポット詳細（読み取り専用）
-class LinkedSpotDetailPage extends StatelessWidget {
-  const LinkedSpotDetailPage({super.key, required this.spot});
+class LinkedSpotDetailPage extends ConsumerStatefulWidget {
+  const LinkedSpotDetailPage({
+    super.key,
+    required this.spot,
+    required this.otherUid,
+  });
 
   final Spot spot;
+  final String otherUid;
+
+  @override
+  ConsumerState<LinkedSpotDetailPage> createState() =>
+      _LinkedSpotDetailPageState();
+}
+
+class _LinkedSpotDetailPageState extends ConsumerState<LinkedSpotDetailPage> {
+  late Spot _spot;
+
+  @override
+  void initState() {
+    super.initState();
+    _spot = widget.spot;
+  }
+
+  Future<void> _onRefresh() async {
+    final data =
+        await ref.refresh(linkedAccountSpotsProvider(widget.otherUid).future);
+    final allSpots = [...data.wantToGoSpots, ...data.visitedSpots];
+    final updated = allSpots.where((s) => s.id == _spot.id).firstOrNull;
+    if (updated != null && mounted) {
+      setState(() => _spot = updated);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final sizing = AppSizingTheme.of(context);
-    final point = LatLng(spot.latitude, spot.longitude);
-    final isWantToGo = spot.status == SpotStatus.wantToGo;
+    final point = LatLng(_spot.latitude, _spot.longitude);
+    final isWantToGo = _spot.status == SpotStatus.wantToGo;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -37,40 +68,45 @@ class LinkedSpotDetailPage extends StatelessWidget {
       body: SafeArea(
         top: false,
         bottom: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.x4l,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _MapArea(
-                  point: point,
-                  latitude: spot.latitude,
-                  longitude: spot.longitude,
-                  photoPaths: spot.photoPaths,
-                  height: sizing.locationAreaHeight * 1.4),
-              SizedBox(height: sizing.sectionSpacing),
-              const _SectionLabel(label: AppStrings.linkedSpotLabelTitle),
-              const SizedBox(height: AppSpacing.xs),
-              _TitleText(title: spot.title),
-              if (spot.category != null && spot.category!.isNotEmpty) ...[
+        child: RefreshIndicator(
+          onRefresh: _onRefresh,
+          color: AppColors.primary,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.x4l,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _MapArea(
+                    point: point,
+                    latitude: _spot.latitude,
+                    longitude: _spot.longitude,
+                    photoPaths: _spot.photoPaths,
+                    height: sizing.locationAreaHeight * 1.4),
                 SizedBox(height: sizing.sectionSpacing),
-                const _SectionLabel(label: AppStrings.linkedSpotLabelTag),
+                const _SectionLabel(label: AppStrings.linkedSpotLabelTitle),
                 const SizedBox(height: AppSpacing.xs),
-                _CategoryChip(category: spot.category!),
-              ],
-              if (spot.photoPaths.isNotEmpty) ...[
+                _TitleText(title: _spot.title),
+                if (_spot.category != null && _spot.category!.isNotEmpty) ...[
+                  SizedBox(height: sizing.sectionSpacing),
+                  const _SectionLabel(label: AppStrings.linkedSpotLabelTag),
+                  const SizedBox(height: AppSpacing.xs),
+                  _CategoryChip(category: _spot.category!),
+                ],
+                if (_spot.photoPaths.isNotEmpty) ...[
+                  SizedBox(height: sizing.sectionSpacing),
+                  const _SectionLabel(label: AppStrings.linkedSpotLabelPhoto),
+                  const SizedBox(height: AppSpacing.xs),
+                  _PhotoGrid(photoPaths: _spot.photoPaths),
+                ],
                 SizedBox(height: sizing.sectionSpacing),
-                const _SectionLabel(label: AppStrings.linkedSpotLabelPhoto),
-                const SizedBox(height: AppSpacing.xs),
-                _PhotoGrid(photoPaths: spot.photoPaths),
               ],
-              SizedBox(height: sizing.sectionSpacing),
-            ],
+            ),
           ),
         ),
       ),
