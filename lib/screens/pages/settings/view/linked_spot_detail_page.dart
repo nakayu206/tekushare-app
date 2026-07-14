@@ -51,9 +51,13 @@ class LinkedSpotDetailPage extends StatelessWidget {
                   longitude: spot.longitude,
                   height: sizing.locationAreaHeight * 1.4),
               SizedBox(height: sizing.sectionSpacing),
+              const _SectionLabel(label: AppStrings.linkedSpotLabelTitle),
+              const SizedBox(height: AppSpacing.xs),
               _TitleText(title: spot.title),
               if (spot.category != null && spot.category!.isNotEmpty) ...[
                 SizedBox(height: sizing.sectionSpacing),
+                const _SectionLabel(label: AppStrings.linkedSpotLabelTag),
+                const SizedBox(height: AppSpacing.xs),
                 _CategoryChip(category: spot.category!),
               ],
               SizedBox(height: sizing.sectionSpacing),
@@ -123,6 +127,24 @@ class _MapArea extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: AppTextStyle.sm,
+        fontWeight: AppTextStyle.semiBold,
+        color: AppColors.textDisabled,
       ),
     );
   }
