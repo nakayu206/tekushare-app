@@ -82,34 +82,36 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
       builder: (_) => _ConfirmDialog(
         title: title,
         onConfirm: () async {
-          Navigator.pop(context);
-          final spotId = await ref.read(spotProvider.notifier).saveSpot(
-                title: title,
-                latitude: location.latitude,
-                longitude: location.longitude,
-                category: category,
-              );
+          final notifier = ref.read(spotProvider.notifier);
+          Navigator.pop(context); // 確認ダイアログを閉じる
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const PopScope(
+              canPop: false,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          );
+          final spotId = await notifier.saveSpot(
+            title: title,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            category: category,
+          );
           final photos = ref.read(pendingPhotoProvider);
           for (final photo in photos) {
-            await ref.read(spotProvider.notifier).attachPhoto(spotId, photo);
+            await notifier.attachPhoto(spotId, photo);
           }
           ref.read(pendingPhotoProvider.notifier).state = [];
           if (!mounted) return;
-          _showSavedDialog();
+          final messenger = ScaffoldMessenger.of(context);
+          Navigator.pop(context); // ローディングを閉じる
+          Navigator.pop(context); // 行きたいリストへ戻る
+          messenger.showSnackBar(
+            const SnackBar(content: Text(AppStrings.saved)),
+          );
         },
         onCancel: () => Navigator.pop(context),
-      ),
-    );
-  }
-
-  void _showSavedDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _SavedDialog(
-        onClose: () {
-          Navigator.pop(context); // ダイアログを閉じる
-          Navigator.pop(context); // 行きたいリストへ戻る
-        },
       ),
     );
   }
@@ -548,52 +550,6 @@ class _ConfirmDialog extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────
-// 保存完了ダイアログ
-// ──────────────────────────────────────────
-
-class _SavedDialog extends StatelessWidget {
-  const _SavedDialog({required this.onClose});
-
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              AppStrings.saved,
-              style: TextStyle(
-                  fontSize: AppTextStyle.lg2, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: AppSizingTheme.of(context).dialogBtnHeight,
-              child: ElevatedButton(
-                onPressed: onClose,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(AppStrings.closeButton),
-              ),
             ),
           ],
         ),

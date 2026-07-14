@@ -312,22 +312,21 @@ void main() {
       expect(find.text(AppStrings.wantToGoConfirmMessage), findsNothing);
     });
 
-    // 確認ダイアログの保存でスポットが保存されて完了ダイアログが表示される
-    testWidgets('confirming save stores spot and shows save complete dialog',
-        (tester) async {
+    // 確認ダイアログの保存でSnackBarにメッセージが表示される
+    testWidgets('confirming save shows snackbar', (tester) async {
       await pumpPage(tester);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.saveButton));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(find.text(AppStrings.saved), findsOneWidget);
     });
 
-    // 保存完了ダイアログの閉じるでページを離れる
-    testWidgets('closing save complete dialog leaves the page', (tester) async {
+    // 確認ダイアログの保存で保存後にページを離れる
+    testWidgets('confirming save leaves the page', (tester) async {
       tester.view.physicalSize = const Size(1170, 3000);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -377,8 +376,6 @@ void main() {
       await tester.tap(find.text(AppStrings.wantToGoSave));
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.saveButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.closeButton));
       await tester.pumpAndSettle();
 
       expect(find.byType(WantToGoPage), findsNothing);
