@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -25,8 +23,8 @@ void showPhotoViewer(
               child: SizedBox.expand(
                 child: InteractiveViewer(
                   child: Center(
-                    child: Image.file(
-                      File(path),
+                    child: Image.network(
+                      path,
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const Icon(
                         Icons.broken_image,

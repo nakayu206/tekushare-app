@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -72,9 +70,10 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   Future<void> _onPhotoTap() async {
     final path = await ref.read(cameraServiceProvider).takePhoto();
     if (path == null || !mounted) return;
-    await ref.read(spotProvider.notifier).attachPhoto(widget.spot.id, path);
+    final url =
+        await ref.read(spotProvider.notifier).attachPhoto(widget.spot.id, path);
     if (!mounted) return;
-    setState(() => _photoPaths = [..._photoPaths, path]);
+    setState(() => _photoPaths = [..._photoPaths, url]);
   }
 
   Future<void> _onPhotoDelete(String path) async {
@@ -326,8 +325,8 @@ class _LocationArea extends StatelessWidget {
                     width: MapConstants.photoThumbnailSize,
                     height: MapConstants.photoThumbnailSize,
                     child: ClipOval(
-                      child: Image.file(
-                        File(path),
+                      child: Image.network(
+                        path,
                         width: MapConstants.photoThumbnailSize,
                         height: MapConstants.photoThumbnailSize,
                         fit: BoxFit.cover,
@@ -423,8 +422,8 @@ class _PhotoBox extends StatelessWidget {
                   child: SizedBox(
                     width: tileW,
                     height: tileH,
-                    child: Image.file(
-                      File(path),
+                    child: Image.network(
+                      path,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _placeholder(sizing),
                     ),

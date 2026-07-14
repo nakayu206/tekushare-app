@@ -5,7 +5,7 @@ class AttachPhotoToSpot {
 
   final PhotoRepository _repository;
 
-  Future<void> call(String spotId, String imagePath) {
+  Future<String> call(String spotId, String imagePath) {
     return _repository.attachPhoto(spotId, imagePath);
   }
 }
