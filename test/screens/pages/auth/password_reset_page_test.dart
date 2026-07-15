@@ -40,6 +40,12 @@ class _FakeAuthService implements AuthService {
 
   @override
   Future<void> reloadCurrentUser() async {}
+
+  @override
+  Future<String> verifyPasswordResetCode(String code) async => 'test@example.com';
+
+  @override
+  Future<void> confirmPasswordReset(String code, String newPassword) async {}
 }
 
 Widget _buildPage(_FakeAuthService service) {

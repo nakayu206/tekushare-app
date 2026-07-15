@@ -10,6 +10,7 @@ import 'package:tekushare/screens/pages/account_link/view/accept_invite_page.dar
 import 'package:tekushare/screens/pages/auth/view/display_name_page.dart';
 import 'package:tekushare/screens/pages/auth/view/email_auth_page.dart';
 import 'package:tekushare/screens/pages/auth/view/email_verification_page.dart';
+import 'package:tekushare/screens/pages/auth/view/password_set_page.dart';
 import 'package:tekushare/screens/pages/home/view/home_page.dart';
 import 'package:tekushare/screens/providers/account_link_provider.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
@@ -42,12 +43,21 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
     _appLinks.uriLinkStream.listen(_handleUri);
   }
 
-  /// 招待リンクを受け取り、ログイン済みなら即座に承認画面へ、
-  /// 未ログインなら pendingInviteTokenProvider に保持してログイン完了後に開く。
+  /// ディープリンクを受け取り、種別に応じて画面遷移する。
   /// 対応スキーム:
+  ///   - https://tekushare.web.app/__/auth/action?mode=resetPassword&oobCode=...
   ///   - tekushare://link/<token>
   ///   - https://tekushare.web.app/link/<token>
   void _handleUri(Uri uri) {
+    if (_isPasswordResetAction(uri)) {
+      final oobCode = uri.queryParameters['oobCode']!;
+      if (!_handledTokens.add('reset:$oobCode')) return;
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => PasswordSetPage(oobCode: oobCode)),
+      );
+      return;
+    }
+
     final token = _extractToken(uri);
     if (token == null) return;
     if (!_handledTokens.add(token)) return;
@@ -60,6 +70,14 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
     } else {
       ref.read(pendingInviteTokenProvider.notifier).state = token;
     }
+  }
+
+  bool _isPasswordResetAction(Uri uri) {
+    return uri.scheme == 'https' &&
+        uri.host == 'tekushare.web.app' &&
+        uri.path.startsWith('/__/auth/action') &&
+        uri.queryParameters['mode'] == 'resetPassword' &&
+        uri.queryParameters['oobCode'] != null;
   }
 
   String? _extractToken(Uri uri) {

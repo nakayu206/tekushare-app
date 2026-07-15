@@ -36,7 +36,10 @@ class _FakeAuthService implements AuthService {
   Future<void> deleteUser() async {}
 
   @override
-  Future<void> sendPasswordResetEmail(String email) async {
+  Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<void> sendEmailVerification() async {
     if (resendShouldThrow) {
       throw AuthException(resendErrorCode ?? 'unknown');
     }
@@ -44,12 +47,15 @@ class _FakeAuthService implements AuthService {
   }
 
   @override
-  Future<void> sendEmailVerification() async {}
-
-  @override
   Future<void> reloadCurrentUser() async {
     reloadCalled = true;
   }
+
+  @override
+  Future<String> verifyPasswordResetCode(String code) async => 'test@example.com';
+
+  @override
+  Future<void> confirmPasswordReset(String code, String newPassword) async {}
 }
 
 Widget _buildPage(_FakeAuthService service) {
@@ -69,7 +75,7 @@ void main() {
       expect(find.text(AppStrings.emailVerificationPageTitle), findsOneWidget);
     });
 
-    // 送信済みメッセージが表示される
+    // 送信済みメッセージが表示される（確認メール）
     testWidgets('shows sent message', (tester) async {
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       expect(
@@ -99,7 +105,7 @@ void main() {
           find.text(AppStrings.emailVerificationResendButton), findsOneWidget);
     });
 
-    // 再送信ボタンを押すと sendEmailVerification が呼ばれる
+    // 再送信ボタンを押すと sendEmailVerification が呼ばれる（パスワードリセットではなくメール確認）
     testWidgets('calls sendEmailVerification on resend tap', (tester) async {
       final service = _FakeAuthService();
       await tester.pumpWidget(_buildPage(service));

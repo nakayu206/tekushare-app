@@ -45,15 +45,13 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
   }
 
   Future<void> _onResend() async {
-    final user = ref.read(authStateProvider).valueOrNull;
-    final email = user?.email ?? '';
     setState(() {
       _isSending = true;
       _resendSuccess = false;
       _error = null;
     });
     try {
-      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+      await ref.read(authServiceProvider).sendEmailVerification();
       if (!mounted) return;
       setState(() {
         _isSending = false;

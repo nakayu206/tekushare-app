@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
 class FirebaseAuthServiceImpl implements AuthService {
@@ -61,8 +62,7 @@ class FirebaseAuthServiceImpl implements AuthService {
       await credential.user?.reload();
       final uid = credential.user?.uid;
       if (uid != null) await _syncUserDoc(uid, displayName);
-      // パスワード設定リンクをメール送信（Firebase がメール確認も兼ねる）
-      await _auth.sendPasswordResetEmail(email: email);
+      await credential.user?.sendEmailVerification();
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }
@@ -110,7 +110,15 @@ class FirebaseAuthServiceImpl implements AuthService {
   @override
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
+      final settings = ActionCodeSettings(
+        url: 'https://tekushare.web.app',
+        handleCodeInApp: true,
+        androidPackageName: AppConfig.packageName,
+        androidInstallApp: true,
+        iOSBundleId: AppConfig.packageName,
+      );
+      await _auth.sendPasswordResetEmail(
+          email: email, actionCodeSettings: settings);
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }
@@ -129,6 +137,24 @@ class FirebaseAuthServiceImpl implements AuthService {
   Future<void> reloadCurrentUser() async {
     try {
       await _auth.currentUser?.reload();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<String> verifyPasswordResetCode(String code) async {
+    try {
+      return await _auth.verifyPasswordResetCode(code);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> confirmPasswordReset(String code, String newPassword) async {
+    try {
+      await _auth.confirmPasswordReset(code: code, newPassword: newPassword);
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }
