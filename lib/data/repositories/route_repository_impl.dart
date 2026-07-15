@@ -25,10 +25,8 @@ class RouteRepositoryImpl implements RouteRepository {
 
   @override
   Future<List<WalkRoute>> getAllRoutes() async {
-    final models = await _isar.walkRouteModels
-        .filter()
-        .userUidEqualTo(_userUid)
-        .findAll();
+    final models =
+        await _isar.walkRouteModels.filter().userUidEqualTo(_userUid).findAll();
     return models.map((m) => m.toEntity()).toList();
   }
 }
