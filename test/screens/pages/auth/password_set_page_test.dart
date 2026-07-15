@@ -77,7 +77,7 @@ void main() {
     testWidgets('shows page title after code verification', (tester) async {
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       await tester.pump();
-      expect(find.text(AppStrings.passwordSetPageTitle), findsWidgets);
+      expect(find.text(AppStrings.passwordSetPageTitle), findsNWidgets(2));
     });
 
     // コード検証中はローディングが表示される

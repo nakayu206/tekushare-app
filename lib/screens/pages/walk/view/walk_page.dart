@@ -183,13 +183,13 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text(AppStrings.gpsTimeoutTitle),
         content: const Text(AppStrings.gpsTimeoutMessage),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               ref.read(notificationServiceProvider).cancelAll();
               ref.read(walkTimerProvider.notifier).reset();
               ref.read(walkSessionProvider.notifier).resetWalk();
@@ -198,7 +198,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
             child: const Text(AppStrings.gpsTimeoutRetry),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text(AppStrings.gpsTimeoutContinue),
           ),
         ],

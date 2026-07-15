@@ -29,6 +29,7 @@ class WalkSessionRepositoryImpl implements WalkSessionRepository {
   @override
   Future<WalkSession?> getSessionById(String id) async {
     final model = await _isar.walkSessionModels.getByUid(id);
-    return model?.toEntity();
+    if (model == null || model.userUid != _userUid) return null;
+    return model.toEntity();
   }
 }

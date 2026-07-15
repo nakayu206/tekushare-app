@@ -30,6 +30,8 @@ class SavedRouteRepositoryImpl implements SavedRouteRepository {
   @override
   Future<void> delete(int id) async {
     await _isar.writeTxn(() async {
+      final model = await _isar.savedRouteModels.get(id);
+      if (model == null || model.userUid != _userUid) return;
       await _isar.savedRouteModels.delete(id);
     });
   }

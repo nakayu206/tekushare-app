@@ -101,8 +101,8 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: 'パスワード（6文字以上）',
-                  hintText: '6文字以上',
+                  labelText: AppStrings.emailAuthPasswordLabel,
+                  hintText: AppStrings.emailAuthPasswordHint,
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
@@ -124,7 +124,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
-                    labelText: 'パスワード（確認）',
+                    labelText: AppStrings.passwordSetConfirmLabel,
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -218,13 +218,13 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
               ),
               const SizedBox(height: AppSpacing.x3l),
               const Text(
-                '確認メールを送りました',
+                AppStrings.emailVerificationSentMessage,
                 textAlign: TextAlign.center,
                 style: AppTextStyle.titleLarge,
               ),
               const SizedBox(height: AppSpacing.sm),
               const Text(
-                'ご登録のメールアドレスに確認メールをお送りしました。\nメール内のリンクをクリックして確認を完了してから、ログインしてください。',
+                AppStrings.emailAuthRegisteredDescription,
                 textAlign: TextAlign.center,
                 style: AppTextStyle.bodyMedium,
               ),
@@ -243,7 +243,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
                   ),
-                  child: const Text('ログインへ'),
+                  child: const Text(AppStrings.emailAuthLoginButton),
                 ),
               ),
             ],

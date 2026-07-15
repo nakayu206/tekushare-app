@@ -122,9 +122,10 @@ class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
 
   void resetTurn(int minutes) {
     final s = state;
+    final totalSeconds = minutes * 60;
     state = WalkTimerState(
-      turnSecondsLeft: minutes * 60,
-      midpointSeconds: s.midpointSeconds,
+      turnSecondsLeft: totalSeconds,
+      midpointSeconds: s.midpointSeconds != null ? totalSeconds ~/ 2 : null,
       inactSecondsLeft: s.inactSecondsLeft,
       turnFired: false,
       midpointFired: false,

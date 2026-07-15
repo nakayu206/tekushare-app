@@ -71,14 +71,23 @@ Widget _buildPage(_FakeAuthService service) {
 
 void main() {
   group('EmailVerificationPage', () {
+    void setDisplaySize(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    }
+
     // ページタイトルが表示される
     testWidgets('shows page title', (tester) async {
+      setDisplaySize(tester);
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       expect(find.text(AppStrings.emailVerificationPageTitle), findsOneWidget);
     });
 
     // 送信済みメッセージが表示される（確認メール）
     testWidgets('shows sent message', (tester) async {
+      setDisplaySize(tester);
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       expect(
           find.text(AppStrings.emailVerificationSentMessage), findsOneWidget);
@@ -86,6 +95,7 @@ void main() {
 
     // メールアドレスが表示される
     testWidgets('shows email address in description', (tester) async {
+      setDisplaySize(tester);
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       await tester.pump();
       expect(
@@ -96,12 +106,14 @@ void main() {
 
     // 確認中インジケーターが表示される
     testWidgets('shows checking indicator', (tester) async {
+      setDisplaySize(tester);
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       expect(find.text(AppStrings.emailVerificationChecking), findsOneWidget);
     });
 
     // 再送信ボタンが表示される
     testWidgets('shows resend button', (tester) async {
+      setDisplaySize(tester);
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       expect(
           find.text(AppStrings.emailVerificationResendButton), findsOneWidget);
@@ -109,6 +121,7 @@ void main() {
 
     // 再送信ボタンを押すと sendEmailVerification が呼ばれる（パスワードリセットではなくメール確認）
     testWidgets('calls sendEmailVerification on resend tap', (tester) async {
+      setDisplaySize(tester);
       final service = _FakeAuthService();
       await tester.pumpWidget(_buildPage(service));
       await tester.tap(find.text(AppStrings.emailVerificationResendButton));
@@ -118,6 +131,7 @@ void main() {
 
     // 再送信成功後に完了メッセージが表示される
     testWidgets('shows resend success message after resend', (tester) async {
+      setDisplaySize(tester);
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       await tester.tap(find.text(AppStrings.emailVerificationResendButton));
       await tester.pump();
@@ -127,6 +141,7 @@ void main() {
 
     // too-many-requests エラー時にエラーメッセージが表示される
     testWidgets('shows error message on too-many-requests', (tester) async {
+      setDisplaySize(tester);
       final service = _FakeAuthService()
         ..resendShouldThrow = true
         ..resendErrorCode = 'too-many-requests';
@@ -138,6 +153,7 @@ void main() {
 
     // その他エラー時に汎用メッセージが表示される
     testWidgets('shows generic error message on unknown error', (tester) async {
+      setDisplaySize(tester);
       final service = _FakeAuthService()
         ..resendShouldThrow = true
         ..resendErrorCode = 'unknown';
@@ -149,6 +165,7 @@ void main() {
 
     // ログアウトボタンが表示される
     testWidgets('shows logout button', (tester) async {
+      setDisplaySize(tester);
       await tester.pumpWidget(_buildPage(_FakeAuthService()));
       expect(find.text(AppStrings.settingsLogout), findsOneWidget);
     });

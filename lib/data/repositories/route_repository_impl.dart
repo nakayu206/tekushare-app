@@ -20,7 +20,8 @@ class RouteRepositoryImpl implements RouteRepository {
   @override
   Future<WalkRoute?> getRouteBySessionId(String sessionId) async {
     final model = await _isar.walkRouteModels.getByWalkSessionId(sessionId);
-    return model?.toEntity();
+    if (model == null || model.userUid != _userUid) return null;
+    return model.toEntity();
   }
 
   @override

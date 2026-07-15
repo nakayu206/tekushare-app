@@ -65,7 +65,7 @@ class NotificationService {
     await _plugin.show(
       id: _idTurnaround,
       title: AppStrings.timerFinishedTitle,
-      body: '設定した時間になりました。',
+      body: AppStrings.timerFinishedMessage,
       notificationDetails: _notificationDetails(),
     );
   }

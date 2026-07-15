@@ -9,6 +9,7 @@ import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/screens/pages/account_link/view/accept_invite_page.dart';
 import 'package:tekushare/screens/pages/auth/view/display_name_page.dart';
 import 'package:tekushare/screens/pages/auth/view/email_auth_page.dart';
+import 'package:tekushare/screens/pages/auth/view/email_verification_page.dart';
 import 'package:tekushare/screens/pages/auth/view/password_set_page.dart';
 import 'package:tekushare/screens/pages/home/view/home_page.dart';
 import 'package:tekushare/screens/providers/account_link_provider.dart';
@@ -142,9 +143,8 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
                 body: Center(child: CircularProgressIndicator())),
             error: (e, _) => Scaffold(body: Center(child: Text('認証エラー: $e'))),
             data: (user) {
-              if (user == null || !user.emailVerified) {
-                return const EmailAuthPage();
-              }
+              if (user == null) return const EmailAuthPage();
+              if (!user.emailVerified) return const EmailVerificationPage();
               final name = user.displayName;
               // null は Firebase がプロフィールを同期中の一時状態。
               // ローディングを挟み DisplayNamePage が誤表示されるのを防ぐ。
