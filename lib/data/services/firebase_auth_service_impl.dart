@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -44,33 +42,19 @@ class FirebaseAuthServiceImpl implements AuthService {
     });
   }
 
-  static String _generateTempPassword() {
-    const chars =
-        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = Random.secure();
-    return List.generate(24, (_) => chars[random.nextInt(chars.length)]).join();
-  }
-
   @override
-  Future<void> registerWithEmail(String email, String displayName) async {
+  Future<void> registerWithEmail(
+      String email, String displayName, String password) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
-        password: _generateTempPassword(),
+        password: password,
       );
       await credential.user?.updateDisplayName(displayName);
       await credential.user?.reload();
       final uid = credential.user?.uid;
       if (uid != null) await _syncUserDoc(uid, displayName);
-      final settings = ActionCodeSettings(
-        url: 'https://tekushare.web.app',
-        handleCodeInApp: true,
-        androidPackageName: AppConfig.packageName,
-        androidInstallApp: true,
-        iOSBundleId: AppConfig.packageName,
-      );
-      await _auth.sendPasswordResetEmail(
-          email: email, actionCodeSettings: settings);
+      await credential.user?.sendEmailVerification();
       await _auth.signOut();
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
@@ -85,9 +69,16 @@ class FirebaseAuthServiceImpl implements AuthService {
         password: password,
       );
       final user = credential.user;
-      final name = user?.displayName;
-      if (user != null && name != null && name.isNotEmpty) {
-        await _syncUserDoc(user.uid, name);
+      if (user == null) return;
+      await user.reload();
+      final reloaded = _auth.currentUser;
+      if (reloaded == null || !reloaded.emailVerified) {
+        await _auth.signOut();
+        throw const AuthException('email-not-verified');
+      }
+      final name = reloaded.displayName;
+      if (name != null && name.isNotEmpty) {
+        await _syncUserDoc(reloaded.uid, name);
       }
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);

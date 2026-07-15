@@ -96,7 +96,6 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   Widget build(BuildContext context) {
     final ready = ref.watch(appReadyProvider);
     final authState = ref.watch(authStateProvider);
-    final emailAuthState = ref.watch(emailAuthProvider);
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (previous, next) {
       final user = next.valueOrNull;
@@ -143,14 +142,6 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
                 body: Center(child: CircularProgressIndicator())),
             error: (e, _) => Scaffold(body: Center(child: Text('認証エラー: $e'))),
             data: (user) {
-              // 登録処理中にアカウントが一時的に作成されてもホーム画面へのフラッシュを防ぐ。
-              // user == null のときはスピナーに差し替えず EmailAuthPage を生かし続けることで
-              // エラー時に _isRegisterMode などのローカル状態が失われるのを防ぐ。
-              if (emailAuthState is EmailAuthLoading && user != null) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
               if (user == null) return const EmailAuthPage();
               final name = user.displayName;
               // null は Firebase がプロフィールを同期中の一時状態。

@@ -66,12 +66,6 @@ abstract class AppStrings {
   static const passwordSetInvalidCode = 'このリンクは無効か期限切れです。パスワードリセットを再度お試しください。';
   static const passwordMismatch = 'パスワードが一致しません';
 
-  // パスワード設定メール送信後（登録フロー）
-  static const emailAuthRegisteredMessage = 'パスワード設定メールをお送りしました';
-  static const emailAuthRegisteredDescription =
-      'にパスワード設定用のメールをお送りしました。\nメール内のリンクをタップしてパスワードを設定してください。\n設定後、メールアドレスとパスワードでログインできます。';
-  static const emailAuthRegisteredButton = 'ログインへ戻る';
-
   // パスワードリセット
   static const passwordResetPageTitle = 'パスワードリセット';
   static const passwordResetDescription = '登録したメールアドレスにリセット用のメールを送信します。';

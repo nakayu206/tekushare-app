@@ -34,6 +34,7 @@ void main() {
         mockAuthService.registerWithEmail(
           argThat(isA<String>()),
           argThat(isA<String>()),
+          argThat(isA<String>()),
         ),
       ).thenAnswer((_) async => Future<void>.value());
 
@@ -42,7 +43,7 @@ void main() {
 
       await container
           .read(emailAuthProvider.notifier)
-          .register('test@example.com', 'テストユーザー');
+          .register('test@example.com', 'テストユーザー', 'password123');
 
       expect(container.read(emailAuthProvider), isNot(isA<EmailAuthError>()));
     });
@@ -50,6 +51,7 @@ void main() {
     test('register でメールが重複すると EmailAuthError に遷移する', () async {
       when(
         mockAuthService.registerWithEmail(
+          argThat(isA<String>()),
           argThat(isA<String>()),
           argThat(isA<String>()),
         ),
@@ -60,7 +62,7 @@ void main() {
 
       await container
           .read(emailAuthProvider.notifier)
-          .register('existing@example.com', 'テストユーザー');
+          .register('existing@example.com', 'テストユーザー', 'password123');
 
       final state = container.read(emailAuthProvider);
       expect(state, isA<EmailAuthError>());

@@ -46,15 +46,15 @@ class EmailAuthError extends EmailAuthState {
 }
 
 class EmailAuthRegistered extends EmailAuthState {
-  const EmailAuthRegistered({required this.email});
-  final String email;
+  const EmailAuthRegistered();
 }
 
 // ── Auth service interface ────────────────────────────────────────────────────
 
 abstract interface class AuthService {
   Stream<AuthUser?> watchAuthState();
-  Future<void> registerWithEmail(String email, String displayName);
+  Future<void> registerWithEmail(
+      String email, String displayName, String password);
   Future<void> signInWithEmail(String email, String password);
   Future<void> setDisplayName(String name);
   Future<void> signOut();
@@ -86,6 +86,8 @@ String _mapErrorCode(String code) {
     'invalid-credential' => 'メールアドレスまたはパスワードが間違っています',
     'too-many-requests' => 'しばらく時間をおいてから再度お試しください',
     'network-request-failed' => 'ネットワークエラーが発生しました。接続を確認してください',
+    'email-not-verified' =>
+      'メールアドレスの確認が完了していません。\nお届けしたメール内のリンクをクリックしてからログインしてください。',
     _ => '認証エラーが発生しました（$code）',
   };
 }
@@ -95,11 +97,12 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
 
   final AuthService _service;
 
-  Future<void> register(String email, String displayName) async {
+  Future<void> register(
+      String email, String displayName, String password) async {
     state = const EmailAuthLoading();
     try {
-      await _service.registerWithEmail(email, displayName);
-      state = EmailAuthRegistered(email: email);
+      await _service.registerWithEmail(email, displayName, password);
+      state = const EmailAuthRegistered();
     } on AuthException catch (e) {
       state = EmailAuthError(_mapErrorCode(e.code));
     } catch (_) {

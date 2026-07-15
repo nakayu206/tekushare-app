@@ -18,14 +18,17 @@ class EmailAuthPage extends ConsumerStatefulWidget {
 class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   bool _isRegisterMode = false;
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -35,7 +38,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
     final authState = ref.watch(emailAuthProvider);
 
     if (authState is EmailAuthRegistered) {
-      return _buildRegisteredScaffold(authState.email);
+      return _buildRegisteredScaffold();
     }
 
     final isLoading = authState is EmailAuthLoading;
@@ -61,7 +64,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 _isRegisterMode
-                    ? 'メールアドレスを入力してください。\nパスワード設定用のリンクをメールでお送りします。'
+                    ? 'メールアドレスとパスワードを入力してください。\n登録完了メールをお送りします。'
                     : 'メールアドレスとパスワードを入力してください',
                 style: AppTextStyle.bodyMedium
                     .copyWith(color: AppColors.textDisabled),
@@ -91,29 +94,45 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.mail_outline),
                 ),
-                textInputAction: _isRegisterMode
-                    ? TextInputAction.done
-                    : TextInputAction.next,
-                onSubmitted: _isRegisterMode ? (_) => _submit() : null,
+                textInputAction: TextInputAction.next,
               ),
-              if (!_isRegisterMode) ...[
+              const SizedBox(height: AppSpacing.lg),
+              TextField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'パスワード（6文字以上）',
+                  hintText: '6文字以上',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+                textInputAction: _isRegisterMode
+                    ? TextInputAction.next
+                    : TextInputAction.done,
+                onSubmitted: _isRegisterMode ? null : (_) => _submit(),
+              ),
+              if (_isRegisterMode) ...[
                 const SizedBox(height: AppSpacing.lg),
                 TextField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
+                  controller: _confirmPasswordController,
+                  obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
-                    labelText: 'パスワード',
-                    hintText: '6文字以上',
+                    labelText: 'パスワード（確認）',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(_obscureConfirmPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () => setState(() =>
+                          _obscureConfirmPassword = !_obscureConfirmPassword),
                     ),
                   ),
                   textInputAction: TextInputAction.done,
@@ -178,6 +197,62 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
     );
   }
 
+  Widget _buildRegisteredScaffold() {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: _buildAppBar(),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.x3l,
+            vertical: AppSpacing.x4l,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Icon(
+                Icons.mark_email_unread_outlined,
+                size: 64,
+                color: AppColors.primary,
+              ),
+              const SizedBox(height: AppSpacing.x3l),
+              const Text(
+                '確認メールを送りました',
+                textAlign: TextAlign.center,
+                style: AppTextStyle.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                'ご登録のメールアドレスに確認メールをお送りしました。\nメール内のリンクをクリックして確認を完了してから、ログインしてください。',
+                textAlign: TextAlign.center,
+                style: AppTextStyle.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.x4l),
+              SizedBox(
+                height: AppSize.buttonHeight,
+                child: FilledButton(
+                  onPressed: () {
+                    ref.read(emailAuthProvider.notifier).reset();
+                    setState(() => _isRegisterMode = false);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.textOnPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                    ),
+                  ),
+                  child: const Text('ログインへ'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: AppColors.primary,
@@ -206,69 +281,13 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
     );
   }
 
-  Widget _buildRegisteredScaffold(String email) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.x3l,
-            vertical: AppSpacing.x4l,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(
-                Icons.mark_email_unread_outlined,
-                size: 64,
-                color: AppColors.primary,
-              ),
-              const SizedBox(height: AppSpacing.x3l),
-              const Text(
-                AppStrings.emailAuthRegisteredMessage,
-                textAlign: TextAlign.center,
-                style: AppTextStyle.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                '$email${AppStrings.emailAuthRegisteredDescription}',
-                textAlign: TextAlign.center,
-                style: AppTextStyle.bodyMedium
-                    .copyWith(color: AppColors.textDisabled),
-              ),
-              const SizedBox(height: AppSpacing.x4l),
-              SizedBox(
-                height: AppSize.buttonHeight,
-                child: FilledButton(
-                  onPressed: () {
-                    ref.read(emailAuthProvider.notifier).reset();
-                    setState(() => _isRegisterMode = false);
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.textOnPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
-                  ),
-                  child: const Text(AppStrings.emailAuthRegisteredButton),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _toggleMode() {
     ref.read(emailAuthProvider.notifier).reset();
     setState(() {
       _isRegisterMode = !_isRegisterMode;
       _emailController.clear();
       _passwordController.clear();
+      _confirmPasswordController.clear();
       _nameController.clear();
     });
   }
@@ -276,6 +295,24 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
   void _submit() {
     FocusScope.of(context).unfocus();
     final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty) {
+      _showSnack('メールアドレスを入力してください');
+      return;
+    }
+    if (!_isValidEmail(email)) {
+      _showSnack('メールアドレスの形式が正しくありません');
+      return;
+    }
+    if (password.isEmpty) {
+      _showSnack('パスワードを入力してください');
+      return;
+    }
+    if (password.length < 6) {
+      _showSnack('パスワードは6文字以上で入力してください');
+      return;
+    }
 
     if (_isRegisterMode) {
       final name = _nameController.text.trim();
@@ -283,33 +320,13 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
         _showSnack('ニックネームを入力してください');
         return;
       }
-      if (email.isEmpty) {
-        _showSnack('メールアドレスを入力してください');
+      final confirm = _confirmPasswordController.text;
+      if (password != confirm) {
+        _showSnack('パスワードが一致しません');
         return;
       }
-      if (!_isValidEmail(email)) {
-        _showSnack('メールアドレスの形式が正しくありません');
-        return;
-      }
-      ref.read(emailAuthProvider.notifier).register(email, name);
+      ref.read(emailAuthProvider.notifier).register(email, name, password);
     } else {
-      final password = _passwordController.text;
-      if (email.isEmpty) {
-        _showSnack('メールアドレスを入力してください');
-        return;
-      }
-      if (!_isValidEmail(email)) {
-        _showSnack('メールアドレスの形式が正しくありません');
-        return;
-      }
-      if (password.isEmpty) {
-        _showSnack('パスワードを入力してください');
-        return;
-      }
-      if (password.length < 6) {
-        _showSnack('パスワードは6文字以上で入力してください');
-        return;
-      }
       ref.read(emailAuthProvider.notifier).signIn(email, password);
     }
   }
