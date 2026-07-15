@@ -21,8 +21,7 @@ class _FakeAuthService implements AuthService {
       );
 
   @override
-  Future<void> registerWithEmail(
-      String email, String password, String displayName) async {}
+  Future<void> registerWithEmail(String email, String displayName) async {}
 
   @override
   Future<void> signInWithEmail(String email, String password) async {}
@@ -37,15 +36,15 @@ class _FakeAuthService implements AuthService {
   Future<void> deleteUser() async {}
 
   @override
-  Future<void> sendPasswordResetEmail(String email) async {}
-
-  @override
-  Future<void> sendEmailVerification() async {
+  Future<void> sendPasswordResetEmail(String email) async {
     if (resendShouldThrow) {
       throw AuthException(resendErrorCode ?? 'unknown');
     }
     resendCalled = true;
   }
+
+  @override
+  Future<void> sendEmailVerification() async {}
 
   @override
   Future<void> reloadCurrentUser() async {

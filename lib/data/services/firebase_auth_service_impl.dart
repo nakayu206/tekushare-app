@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -39,19 +41,26 @@ class FirebaseAuthServiceImpl implements AuthService {
     });
   }
 
+  static String _generateTempPassword() {
+    const chars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random.secure();
+    return List.generate(24, (_) => chars[random.nextInt(chars.length)]).join();
+  }
+
   @override
-  Future<void> registerWithEmail(
-      String email, String password, String displayName) async {
+  Future<void> registerWithEmail(String email, String displayName) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
-        password: password,
+        password: _generateTempPassword(),
       );
       await credential.user?.updateDisplayName(displayName);
-      await credential.user?.sendEmailVerification();
       await credential.user?.reload();
       final uid = credential.user?.uid;
       if (uid != null) await _syncUserDoc(uid, displayName);
+      // パスワード設定リンクをメール送信（Firebase がメール確認も兼ねる）
+      await _auth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }

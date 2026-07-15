@@ -47,14 +47,14 @@ abstract class AppStrings {
   static const removePhoto = '写真を削除';
   static const titleHint = 'タイトルを設定する';
 
-  // メールアドレス確認
-  static const emailVerificationPageTitle = 'メールアドレスの確認';
-  static const emailVerificationSentMessage = '確認メールを送りました';
+  // メールアドレス確認 / パスワード設定
+  static const emailVerificationPageTitle = 'メールをご確認ください';
+  static const emailVerificationSentMessage = 'パスワード設定メールを送りました';
   static const emailVerificationDescription =
-      'に確認メールを送りました。\nメール内のリンクをタップしてください。';
-  static const emailVerificationResendButton = '確認メールを再送信';
+      'にパスワード設定用のメールを送りました。\nメール内のリンクをタップしてパスワードを設定してください。';
+  static const emailVerificationResendButton = 'パスワード設定メールを再送信';
   static const emailVerificationResendSuccess = '再送信しました';
-  static const emailVerificationChecking = 'メールを確認しています...';
+  static const emailVerificationChecking = '確認しています...';
 
   // パスワードリセット
   static const passwordResetPageTitle = 'パスワードリセット';

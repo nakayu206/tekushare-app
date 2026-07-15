@@ -80,7 +80,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 _isRegisterMode
-                    ? 'メールアドレスとパスワードを設定してください'
+                    ? 'メールアドレスを入力してください。\nパスワード設定用のリンクをメールでお送りします。'
                     : 'メールアドレスとパスワードを入力してください',
                 style: AppTextStyle.bodyMedium
                     .copyWith(color: AppColors.textDisabled),
@@ -110,30 +110,35 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.mail_outline),
                 ),
-                textInputAction: TextInputAction.next,
+                textInputAction: _isRegisterMode
+                    ? TextInputAction.done
+                    : TextInputAction.next,
+                onSubmitted: _isRegisterMode ? (_) => _submit() : null,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: 'パスワード',
-                  hintText: '6文字以上',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+              if (!_isRegisterMode) ...[
+                const SizedBox(height: AppSpacing.lg),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'パスワード',
+                    hintText: '6文字以上',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _submit(),
                 ),
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
-              ),
+              ],
               const SizedBox(height: AppSpacing.x3l),
               SizedBox(
                 height: AppSize.buttonHeight,
@@ -205,7 +210,6 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
   void _submit() {
     FocusScope.of(context).unfocus();
     final email = _emailController.text.trim();
-    final password = _passwordController.text;
 
     if (_isRegisterMode) {
       final name = _nameController.text.trim();
@@ -221,17 +225,9 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
         _showSnack('メールアドレスの形式が正しくありません');
         return;
       }
-      if (password.length < 6) {
-        _showSnack('パスワードは6文字以上で入力してください');
-        return;
-      }
-      if (!password.contains(RegExp(r'[a-zA-Z]')) ||
-          !password.contains(RegExp(r'[0-9]'))) {
-        _showSnack('パスワードは英字と数字をどちらも含めてください');
-        return;
-      }
-      ref.read(emailAuthProvider.notifier).register(email, password, name);
+      ref.read(emailAuthProvider.notifier).register(email, name);
     } else {
+      final password = _passwordController.text;
       if (email.isEmpty) {
         _showSnack('メールアドレスを入力してください');
         return;

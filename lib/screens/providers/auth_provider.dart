@@ -49,8 +49,7 @@ class EmailAuthError extends EmailAuthState {
 
 abstract interface class AuthService {
   Stream<AuthUser?> watchAuthState();
-  Future<void> registerWithEmail(
-      String email, String password, String displayName);
+  Future<void> registerWithEmail(String email, String displayName);
   Future<void> signInWithEmail(String email, String password);
   Future<void> setDisplayName(String name);
   Future<void> signOut();
@@ -89,11 +88,10 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
 
   final AuthService _service;
 
-  Future<void> register(
-      String email, String password, String displayName) async {
+  Future<void> register(String email, String displayName) async {
     state = const EmailAuthLoading();
     try {
-      await _service.registerWithEmail(email, password, displayName);
+      await _service.registerWithEmail(email, displayName);
       state = const EmailAuthIdle();
     } on AuthException catch (e) {
       state = EmailAuthError(_mapErrorCode(e.code));
