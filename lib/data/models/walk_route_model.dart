@@ -16,6 +16,9 @@ class WalkRouteModel {
   @Index(unique: true)
   late String walkSessionId;
 
+  @Index()
+  String userUid = '';
+
   // List<LatLng> を JSON 文字列として保存
   late String pointsJson;
 
@@ -38,7 +41,7 @@ class WalkRouteModel {
     );
   }
 
-  static WalkRouteModel fromEntity(WalkRoute route) {
+  static WalkRouteModel fromEntity(WalkRoute route, String userUid) {
     final pointsJson = jsonEncode(
       route.points.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList(),
     );
@@ -46,6 +49,7 @@ class WalkRouteModel {
     return WalkRouteModel()
       ..uid = route.id
       ..walkSessionId = route.walkSessionId
+      ..userUid = userUid
       ..pointsJson = pointsJson
       ..createdAt = route.createdAt;
   }

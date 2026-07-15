@@ -16,7 +16,7 @@ void main() {
   setUp(() async {
     final dir = Directory.systemTemp.createTempSync('isar_route_');
     isar = await Isar.open([WalkRouteModelSchema], directory: dir.path);
-    repo = RouteRepositoryImpl(isar);
+    repo = RouteRepositoryImpl(isar, 'user-1');
   });
 
   tearDown(() async {

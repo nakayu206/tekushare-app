@@ -6,7 +6,7 @@ void main() {
   group('WalkSessionModel', () {
     test('fromEntity で idle セッションを変換できる', () {
       const session = WalkSession(id: 'session-1', status: WalkStatus.idle);
-      final model = WalkSessionModel.fromEntity(session);
+      final model = WalkSessionModel.fromEntity(session, 'user-1');
 
       expect(model.uid, 'session-1');
       expect(model.status, WalkStatus.idle);
@@ -25,7 +25,7 @@ void main() {
         finishedAt: finishedAt,
         elapsedSeconds: 1800,
       );
-      final model = WalkSessionModel.fromEntity(session);
+      final model = WalkSessionModel.fromEntity(session, 'user-1');
 
       expect(model.status, WalkStatus.finished);
       expect(model.startedAt, startedAt);
@@ -41,7 +41,7 @@ void main() {
         startedAt: startedAt,
         elapsedSeconds: 300,
       );
-      final model = WalkSessionModel.fromEntity(session);
+      final model = WalkSessionModel.fromEntity(session, 'user-1');
       final restored = model.toEntity();
 
       expect(restored.id, 'session-1');

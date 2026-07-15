@@ -32,8 +32,13 @@ const WalkRouteModelSchema = CollectionSchema(
       name: r'uid',
       type: IsarType.string,
     ),
-    r'walkSessionId': PropertySchema(
+    r'userUid': PropertySchema(
       id: 3,
+      name: r'userUid',
+      type: IsarType.string,
+    ),
+    r'walkSessionId': PropertySchema(
+      id: 4,
       name: r'walkSessionId',
       type: IsarType.string,
     )
@@ -69,6 +74,19 @@ const WalkRouteModelSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'userUid': IndexSchema(
+      id: 7924673654387171457,
+      name: r'userUid',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'userUid',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -87,6 +105,7 @@ int _walkRouteModelEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.pointsJson.length * 3;
   bytesCount += 3 + object.uid.length * 3;
+  bytesCount += 3 + object.userUid.length * 3;
   bytesCount += 3 + object.walkSessionId.length * 3;
   return bytesCount;
 }
@@ -100,7 +119,8 @@ void _walkRouteModelSerialize(
   writer.writeDateTime(offsets[0], object.createdAt);
   writer.writeString(offsets[1], object.pointsJson);
   writer.writeString(offsets[2], object.uid);
-  writer.writeString(offsets[3], object.walkSessionId);
+  writer.writeString(offsets[3], object.userUid);
+  writer.writeString(offsets[4], object.walkSessionId);
 }
 
 WalkRouteModel _walkRouteModelDeserialize(
@@ -114,7 +134,8 @@ WalkRouteModel _walkRouteModelDeserialize(
   object.id = id;
   object.pointsJson = reader.readString(offsets[1]);
   object.uid = reader.readString(offsets[2]);
-  object.walkSessionId = reader.readString(offsets[3]);
+  object.userUid = reader.readString(offsets[3]);
+  object.walkSessionId = reader.readString(offsets[4]);
   return object;
 }
 
@@ -132,6 +153,8 @@ P _walkRouteModelDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -425,6 +448,51 @@ extension WalkRouteModelQueryWhere
               indexName: r'walkSessionId',
               lower: [],
               upper: [walkSessionId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterWhereClause>
+      userUidEqualTo(String userUid) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'userUid',
+        value: [userUid],
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterWhereClause>
+      userUidNotEqualTo(String userUid) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'userUid',
+              lower: [],
+              upper: [userUid],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'userUid',
+              lower: [userUid],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'userUid',
+              lower: [userUid],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'userUid',
+              lower: [],
+              upper: [userUid],
               includeUpper: false,
             ));
       }
@@ -818,6 +886,142 @@ extension WalkRouteModelQueryFilter
   }
 
   QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'userUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'userUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'userUid',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'userUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'userUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'userUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'userUid',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userUid',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
+      userUidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'userUid',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterFilterCondition>
       walkSessionIdEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1001,6 +1205,19 @@ extension WalkRouteModelQuerySortBy
     });
   }
 
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterSortBy> sortByUserUid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userUid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterSortBy>
+      sortByUserUidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userUid', Sort.desc);
+    });
+  }
+
   QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterSortBy>
       sortByWalkSessionId() {
     return QueryBuilder.apply(this, (query) {
@@ -1069,6 +1286,19 @@ extension WalkRouteModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterSortBy> thenByUserUid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userUid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterSortBy>
+      thenByUserUidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userUid', Sort.desc);
+    });
+  }
+
   QueryBuilder<WalkRouteModel, WalkRouteModel, QAfterSortBy>
       thenByWalkSessionId() {
     return QueryBuilder.apply(this, (query) {
@@ -1107,6 +1337,13 @@ extension WalkRouteModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<WalkRouteModel, WalkRouteModel, QDistinct> distinctByUserUid(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'userUid', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<WalkRouteModel, WalkRouteModel, QDistinct>
       distinctByWalkSessionId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1139,6 +1376,12 @@ extension WalkRouteModelQueryProperty
   QueryBuilder<WalkRouteModel, String, QQueryOperations> uidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'uid');
+    });
+  }
+
+  QueryBuilder<WalkRouteModel, String, QQueryOperations> userUidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'userUid');
     });
   }
 
