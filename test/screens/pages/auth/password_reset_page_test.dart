@@ -35,6 +35,12 @@ class _FakeAuthService implements AuthService {
     sendCalled = true;
     sentEmail = email;
   }
+
+  @override
+  Future<void> sendEmailVerification() async {}
+
+  @override
+  Future<void> reloadCurrentUser() async {}
 }
 
 Widget _buildPage(_FakeAuthService service) {

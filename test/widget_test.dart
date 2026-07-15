@@ -46,6 +46,12 @@ class _FakeAuthService implements AuthService {
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<void> sendEmailVerification() async {}
+
+  @override
+  Future<void> reloadCurrentUser() async {}
 }
 
 class _FakePhotoRepository implements PhotoRepository {

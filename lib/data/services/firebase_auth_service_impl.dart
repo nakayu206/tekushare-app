@@ -30,7 +30,12 @@ class FirebaseAuthServiceImpl implements AuthService {
   Stream<AuthUser?> watchAuthState() {
     return _auth.userChanges().map((user) {
       if (user == null) return null;
-      return AuthUser(uid: user.uid, displayName: user.displayName);
+      return AuthUser(
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+        emailVerified: user.emailVerified,
+      );
     });
   }
 
@@ -43,6 +48,7 @@ class FirebaseAuthServiceImpl implements AuthService {
         password: password,
       );
       await credential.user?.updateDisplayName(displayName);
+      await credential.user?.sendEmailVerification();
       await credential.user?.reload();
       final uid = credential.user?.uid;
       if (uid != null) await _syncUserDoc(uid, displayName);
@@ -94,6 +100,24 @@ class FirebaseAuthServiceImpl implements AuthService {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> sendEmailVerification() async {
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> reloadCurrentUser() async {
+    try {
+      await _auth.currentUser?.reload();
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }

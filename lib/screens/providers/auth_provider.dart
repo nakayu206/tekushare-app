@@ -3,9 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ── ドメイン型 ─────────────────────────────────────────────────────────────────
 
 class AuthUser {
-  const AuthUser({required this.uid, this.displayName});
+  const AuthUser({
+    required this.uid,
+    this.displayName,
+    this.email,
+    this.emailVerified = false,
+  });
   final String uid;
   final String? displayName;
+  final String? email;
+  final bool emailVerified;
 }
 
 class AuthException implements Exception {
@@ -49,6 +56,8 @@ abstract interface class AuthService {
   Future<void> signOut();
   Future<void> deleteUser();
   Future<void> sendPasswordResetEmail(String email);
+  Future<void> sendEmailVerification();
+  Future<void> reloadCurrentUser();
 }
 
 // ── Provider declaration ──────────────────────────────────────────────────────
