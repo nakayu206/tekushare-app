@@ -2,6 +2,10 @@
   "firestore": {
     "rules": "firestore.rules"
   },
+  "storage": {
+    "bucket": "tekushare.firebasestorage.app",
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": "public",
     "ignore": ["firebase.json", "**/.*"],

@@ -1,17 +1,17 @@
-import 'dart:io';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/core/constants/map_constants.dart';
 
-/// 写真をフルスクリーンで表示し、削除も行えるビューアーを開く
+/// 写真をフルスクリーンで表示するビューアーを開く。
+/// [onDelete] を渡すと削除ボタンを表示する。
 void showPhotoViewer(
   BuildContext context,
-  String path,
-  void Function() onDelete,
-) {
+  String path, {
+  void Function()? onDelete,
+}) {
   showDialog<void>(
     context: context,
     barrierColor: Colors.black87,
@@ -25,10 +25,13 @@ void showPhotoViewer(
               child: SizedBox.expand(
                 child: InteractiveViewer(
                   child: Center(
-                    child: Image.file(
-                      File(path),
+                    child: CachedNetworkImage(
+                      imageUrl: path,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      placeholder: (_, __) => const Center(
+                        child: CircularProgressIndicator(color: Colors.white54),
+                      ),
+                      errorWidget: (_, __, ___) => const Icon(
                         Icons.broken_image,
                         color: Colors.white54,
                         size: AppSize.iconXl,
@@ -64,31 +67,32 @@ void showPhotoViewer(
                 ),
               ),
             ),
-            Positioned(
-              bottom: AppSpacing.x2l,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: TextButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    onDelete();
-                  },
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.white,
-                    size: AppSize.iconMd,
-                  ),
-                  label: const Text(
-                    AppStrings.removePhoto,
-                    style: TextStyle(
+            if (onDelete != null)
+              Positioned(
+                bottom: AppSpacing.x2l,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      onDelete();
+                    },
+                    icon: const Icon(
+                      Icons.delete_outline,
                       color: Colors.white,
-                      fontSize: AppTextStyle.md2,
+                      size: AppSize.iconMd,
+                    ),
+                    label: const Text(
+                      AppStrings.removePhoto,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: AppTextStyle.md2,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

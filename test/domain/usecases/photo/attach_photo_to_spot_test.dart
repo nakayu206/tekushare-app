@@ -15,7 +15,7 @@ void main() {
     mockRepo = MockPhotoRepository();
     usecase = AttachPhotoToSpot(mockRepo);
     when(mockRepo.attachPhoto(any, any))
-        .thenAnswer((_) => Future<void>.value());
+        .thenAnswer((_) => Future<String>.value(''));
   });
 
   group('AttachPhotoToSpot', () {

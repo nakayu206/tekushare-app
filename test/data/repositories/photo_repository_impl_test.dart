@@ -53,10 +53,10 @@ void main() {
           result.first.photoPaths, ['/photos/first.jpg', '/photos/second.jpg']);
     });
 
-    test('attachPhoto で存在しない spotId を指定しても例外にならない', () async {
+    test('attachPhoto で存在しない spotId を指定すると StateError が発生する', () async {
       await expectLater(
         repo.attachPhoto('no-such-id', '/photos/test.jpg'),
-        completes,
+        throwsA(isA<StateError>()),
       );
     });
 

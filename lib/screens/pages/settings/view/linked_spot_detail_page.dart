@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,6 +9,7 @@ import 'package:tekushare/core/constants/app_text_style.dart';
 import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/screens/widgets/common/photo_viewer_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// 連携アカウントのスポット詳細（読み取り専用）
@@ -49,6 +51,7 @@ class LinkedSpotDetailPage extends StatelessWidget {
                   point: point,
                   latitude: spot.latitude,
                   longitude: spot.longitude,
+                  photoPaths: spot.photoPaths,
                   height: sizing.locationAreaHeight * 1.4),
               SizedBox(height: sizing.sectionSpacing),
               const _SectionLabel(label: AppStrings.linkedSpotLabelTitle),
@@ -80,12 +83,14 @@ class _MapArea extends StatelessWidget {
     required this.point,
     required this.latitude,
     required this.longitude,
+    required this.photoPaths,
     required this.height,
   });
 
   final LatLng point;
   final double latitude;
   final double longitude;
+  final List<String> photoPaths;
   final double height;
 
   @override
@@ -119,16 +124,55 @@ class _MapArea extends StatelessWidget {
             ),
             MarkerLayer(
               markers: [
-                Marker(
-                  point: point,
-                  width: AppSize.iconLg,
-                  height: AppSize.iconLg,
-                  child: const Icon(
-                    Icons.location_on,
-                    color: AppColors.primary,
-                    size: AppSize.iconLg,
+                if (photoPaths.isEmpty)
+                  Marker(
+                    point: point,
+                    width: AppSize.iconLg,
+                    height: AppSize.iconLg,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: AppSize.iconLg,
+                    ),
                   ),
-                ),
+                for (final path in photoPaths)
+                  Marker(
+                    point: point,
+                    width: MapConstants.photoThumbnailSize,
+                    height: MapConstants.photoThumbnailSize,
+                    child: GestureDetector(
+                      onTap: () => showPhotoViewer(context, path),
+                      child: ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: path,
+                          width: MapConstants.photoThumbnailSize,
+                          height: MapConstants.photoThumbnailSize,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => const ColoredBox(
+                            color: AppColors.chipUnselected,
+                            child: Center(
+                              child: SizedBox(
+                                width: AppSize.iconSm,
+                                height: AppSize.iconSm,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => const ColoredBox(
+                            color: AppColors.textDisabled,
+                            child: Icon(
+                              Icons.photo,
+                              color: Colors.white,
+                              size: AppSize.iconSm,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ],
@@ -217,15 +261,20 @@ class _PhotoGrid extends StatelessWidget {
       runSpacing: AppSpacing.md,
       children: [
         for (final path in photoPaths)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            child: SizedBox(
-              width: tileW,
-              height: tileH,
-              child: Image.network(
-                path,
+          GestureDetector(
+            onTap: () => showPhotoViewer(context, path),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: CachedNetworkImage(
+                imageUrl: path,
+                width: tileW,
+                height: tileH,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const ColoredBox(
+                placeholder: (_, __) => const ColoredBox(
+                  color: AppColors.chipUnselected,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (_, __, ___) => const ColoredBox(
                   color: AppColors.chipUnselected,
                   child: Icon(Icons.photo, color: AppColors.textDisabled),
                 ),

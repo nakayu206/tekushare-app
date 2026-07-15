@@ -64,7 +64,7 @@ class SpotNotifier extends StateNotifier<List<Spot>> {
     return _updateSpotStatus.call(spotId, status);
   }
 
-  Future<void> attachPhoto(String spotId, String imagePath) {
+  Future<String> attachPhoto(String spotId, String imagePath) {
     return _attachPhotoToSpot.call(spotId, imagePath);
   }
 

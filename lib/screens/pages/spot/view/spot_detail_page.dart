@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -70,21 +69,25 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   }
 
   Future<void> _onPhotoTap() async {
-    final path = await ref.read(cameraServiceProvider).takePhoto();
+    final camera = ref.read(cameraServiceProvider);
+    final notifier = ref.read(spotProvider.notifier);
+    final path = await camera.takePhoto();
     if (path == null || !mounted) return;
-    await ref.read(spotProvider.notifier).attachPhoto(widget.spot.id, path);
+    final url = await notifier.attachPhoto(widget.spot.id, path);
     if (!mounted) return;
-    setState(() => _photoPaths = [..._photoPaths, path]);
+    setState(() => _photoPaths = [..._photoPaths, url]);
   }
 
   Future<void> _onPhotoDelete(String path) async {
-    await ref.read(spotProvider.notifier).removePhoto(widget.spot.id, path);
+    if (!mounted) return;
+    final notifier = ref.read(spotProvider.notifier);
+    await notifier.removePhoto(widget.spot.id, path);
     if (!mounted) return;
     setState(() => _photoPaths = _photoPaths.where((p) => p != path).toList());
   }
 
   void _onPhotoExpand(String path) {
-    showPhotoViewer(context, path, () => _onPhotoDelete(path));
+    showPhotoViewer(context, path, onDelete: () => _onPhotoDelete(path));
   }
 
   void _onSavePressed() {
@@ -92,26 +95,26 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         ? AppStrings.noTitle
         : _titleController.text;
     final category = ref.read(spotDetailViewModelProvider).selectedCategory;
+    final notifier = ref.read(spotProvider.notifier);
     showDialog<void>(
       context: context,
       builder: (_) => AppConfirmDialog(
         title: title,
         message: AppStrings.spotDetailSaveConfirmMessage,
         confirmLabel: AppStrings.saveButton,
-        onConfirm: () async {
-          Navigator.pop(context);
-          await ref.read(spotProvider.notifier).updateSpot(
-                widget.spot.copyWith(title: title, category: category),
-              );
-          if (!mounted) return;
-          _showResultDialog(AppStrings.saved);
-        },
+        onConfirm: () => _runWithLoading(
+          () => notifier.updateSpot(
+            widget.spot.copyWith(title: title, category: category),
+          ),
+          AppStrings.saved,
+        ),
         onCancel: () => Navigator.pop(context),
       ),
     );
   }
 
   void _onDeletePressed() {
+    final notifier = ref.read(spotProvider.notifier);
     showDialog<void>(
       context: context,
       builder: (_) => AppConfirmDialog(
@@ -122,10 +125,37 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         confirmLabel: AppStrings.spotDetailDeleteButton,
         isDestructive: true,
         onConfirm: () async {
-          Navigator.pop(context);
-          await ref.read(spotProvider.notifier).deleteSpot(widget.spot.id);
+          Navigator.pop(context); // 確認ダイアログを閉じる
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const PopScope(
+              canPop: false,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          );
+          try {
+            await notifier.deleteSpot(widget.spot.id);
+          } catch (_) {
+            if (!mounted) return;
+            Navigator.pop(context); // ローディングを閉じる
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text(AppStrings.operationError)),
+            );
+            return;
+          }
           if (!mounted) return;
-          _showResultDialog(AppStrings.spotDetailDeleted);
+          Navigator.pop(context); // ローディングを閉じる
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => _DeletedDialog(
+              onClose: () {
+                Navigator.pop(context); // ダイアログを閉じる
+                Navigator.pop(context); // リストへ戻る
+              },
+            ),
+          );
         },
         onCancel: () => Navigator.pop(context),
       ),
@@ -137,41 +167,58 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         ? AppStrings.noTitle
         : _titleController.text;
     final category = ref.read(spotDetailViewModelProvider).selectedCategory;
+    final notifier = ref.read(spotProvider.notifier);
     showDialog<void>(
       context: context,
       builder: (_) => AppConfirmDialog(
         title: title,
         message: AppStrings.spotDetailMoveToWentConfirmMessage,
-        confirmLabel: AppStrings.spotDetailMoveToWentButton,
+        confirmLabel: AppStrings.spotDetailMoveToWentConfirmLabel,
         confirmColor: AppColors.listSelected,
-        onConfirm: () async {
-          Navigator.pop(context);
-          await ref.read(spotProvider.notifier).updateSpot(
-                widget.spot.copyWith(
-                  title: title,
-                  status: SpotStatus.visited,
-                  category: category,
-                ),
-              );
-          if (!mounted) return;
-          _showResultDialog(AppStrings.spotDetailMoveToWentDone);
-        },
+        onConfirm: () => _runWithLoading(
+          () => notifier.updateSpot(
+            widget.spot.copyWith(
+              title: title,
+              status: SpotStatus.visited,
+              category: category,
+            ),
+          ),
+          AppStrings.spotDetailMoveToWentDone,
+        ),
         onCancel: () => Navigator.pop(context),
       ),
     );
   }
 
-  void _showResultDialog(String message) {
+  /// 確認ダイアログを閉じ→ローディング表示→操作完了→ページバック+SnackBar
+  Future<void> _runWithLoading(
+    Future<void> Function() operation,
+    String message,
+  ) async {
+    Navigator.pop(context); // 確認ダイアログを閉じる
     showDialog<void>(
       context: context,
-      builder: (_) => _ResultDialog(
-        message: message,
-        onClose: () {
-          Navigator.pop(context);
-          Navigator.pop(context);
-        },
+      barrierDismissible: false,
+      builder: (_) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
       ),
     );
+    try {
+      await operation();
+    } catch (_) {
+      if (!mounted) return;
+      Navigator.pop(context); // ローディングを閉じる
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.operationError)),
+      );
+      return;
+    }
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.pop(context); // ローディングを閉じる
+    Navigator.pop(context); // 詳細ページから戻る
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -203,7 +250,8 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               _LocationArea(
                 latitude: widget.spot.latitude,
                 longitude: widget.spot.longitude,
-                photoPaths: widget.spot.photoPaths,
+                photoPaths: _photoPaths,
+                onPhotoExpand: _onPhotoExpand,
               ),
               SizedBox(height: AppSizingTheme.of(context).sectionSpacing),
               CategoryChipGroup(
@@ -269,11 +317,13 @@ class _LocationArea extends StatelessWidget {
     required this.latitude,
     required this.longitude,
     required this.photoPaths,
+    this.onPhotoExpand,
   });
 
   final double latitude;
   final double longitude;
   final List<String> photoPaths;
+  final void Function(String path)? onPhotoExpand;
 
   @override
   Widget build(BuildContext context) {
@@ -325,18 +375,34 @@ class _LocationArea extends StatelessWidget {
                     point: point,
                     width: MapConstants.photoThumbnailSize,
                     height: MapConstants.photoThumbnailSize,
-                    child: ClipOval(
-                      child: Image.file(
-                        File(path),
-                        width: MapConstants.photoThumbnailSize,
-                        height: MapConstants.photoThumbnailSize,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const ColoredBox(
-                          color: AppColors.textDisabled,
-                          child: Icon(
-                            Icons.photo,
-                            color: Colors.white,
-                            size: AppSize.iconSm,
+                    child: GestureDetector(
+                      onTap: () => onPhotoExpand?.call(path),
+                      child: ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: path,
+                          width: MapConstants.photoThumbnailSize,
+                          height: MapConstants.photoThumbnailSize,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => const ColoredBox(
+                            color: AppColors.chipUnselected,
+                            child: Center(
+                              child: SizedBox(
+                                width: AppSize.iconSm,
+                                height: AppSize.iconSm,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => const ColoredBox(
+                            color: AppColors.textDisabled,
+                            child: Icon(
+                              Icons.photo,
+                              color: Colors.white,
+                              size: AppSize.iconSm,
+                            ),
                           ),
                         ),
                       ),
@@ -420,14 +486,16 @@ class _PhotoBox extends StatelessWidget {
                 onTap: () => onExpand(path),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadius.sm),
-                  child: SizedBox(
+                  child: CachedNetworkImage(
+                    imageUrl: path,
                     width: tileW,
                     height: tileH,
-                    child: Image.file(
-                      File(path),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _placeholder(sizing),
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => const ColoredBox(
+                      color: AppColors.chipUnselected,
+                      child: Center(child: CircularProgressIndicator()),
                     ),
+                    errorWidget: (_, __, ___) => _placeholder(sizing),
                   ),
                 ),
               ),
@@ -612,35 +680,43 @@ class _SaveButton extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────
-// 完了ダイアログ（保存・削除共通）
+// 削除完了ダイアログ
 // ──────────────────────────────────────────
 
-class _ResultDialog extends StatelessWidget {
-  const _ResultDialog({required this.message, required this.onClose});
+class _DeletedDialog extends StatelessWidget {
+  const _DeletedDialog({required this.onClose});
 
-  final String message;
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x2l,
+        vertical: AppSpacing.x2l,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          28,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              message,
-              style: const TextStyle(
+            const Text(
+              AppStrings.spotDetailDeleted,
+              style: TextStyle(
+                color: AppColors.textPrimary,
                 fontSize: AppTextStyle.lg2,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              height: AppSizingTheme.of(context).dialogBtnHeight,
               child: ElevatedButton(
                 onPressed: onClose,
                 style: ElevatedButton.styleFrom(
