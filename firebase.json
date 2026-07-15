@@ -8,7 +8,7 @@
   },
   "hosting": {
     "public": "public",
-    "ignore": ["firebase.json", "**/.*"],
+    "ignore": ["firebase.json", "**/.*", "!**/.well-known/**"],
     "rewrites": [
       {
         "source": "/link/**",
