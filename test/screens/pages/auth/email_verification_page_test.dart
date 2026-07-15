@@ -21,7 +21,8 @@ class _FakeAuthService implements AuthService {
       );
 
   @override
-  Future<void> registerWithEmail(String email, String displayName, String password) async {}
+  Future<void> registerWithEmail(
+      String email, String displayName, String password) async {}
 
   @override
   Future<void> signInWithEmail(String email, String password) async {}
@@ -52,7 +53,8 @@ class _FakeAuthService implements AuthService {
   }
 
   @override
-  Future<String> verifyPasswordResetCode(String code) async => 'test@example.com';
+  Future<String> verifyPasswordResetCode(String code) async =>
+      'test@example.com';
 
   @override
   Future<void> confirmPasswordReset(String code, String newPassword) async {}
