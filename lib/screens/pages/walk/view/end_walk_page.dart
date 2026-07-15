@@ -203,7 +203,7 @@ class _ConfirmCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.x2l),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.x4l),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.x2l,
         AppSpacing.x3l,
