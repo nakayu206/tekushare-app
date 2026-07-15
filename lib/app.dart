@@ -142,7 +142,9 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
                 body: Center(child: CircularProgressIndicator())),
             error: (e, _) => Scaffold(body: Center(child: Text('認証エラー: $e'))),
             data: (user) {
-              if (user == null) return const EmailAuthPage();
+              if (user == null || !user.emailVerified) {
+                return const EmailAuthPage();
+              }
               final name = user.displayName;
               // null は Firebase がプロフィールを同期中の一時状態。
               // ローディングを挟み DisplayNamePage が誤表示されるのを防ぐ。

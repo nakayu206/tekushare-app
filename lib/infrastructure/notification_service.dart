@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:tekushare/core/constants/app_strings.dart';
 
 class NotificationService {
   NotificationService._(this._plugin);
@@ -18,8 +19,9 @@ class NotificationService {
   static const _channelId = 'tekushare_walk';
   static const _channelName = '散歩通知';
 
-  static const _idInactivity = 1; // 10分無動作の安否確認通知
-  static const _idTurnaround = 2; // 15分折返し通知
+  static const _idInactivity = 1;
+  static const _idTurnaround = 2;
+  static const _idRoundTrip = 3;
 
   Future<void> initialize() async {
     const androidSettings =
@@ -48,11 +50,21 @@ class NotificationService {
     );
   }
 
-  /// タイマー通知を表示する
+  /// 往復タイマーの折り返し通知を表示する
+  Future<void> showRoundTripNotification() async {
+    await _plugin.show(
+      id: _idRoundTrip,
+      title: AppStrings.timerRoundTripNotificationTitle,
+      body: AppStrings.timerRoundTripNotificationBody,
+      notificationDetails: _notificationDetails(),
+    );
+  }
+
+  /// タイマー終了通知を表示する
   Future<void> showTurnaroundNotification() async {
     await _plugin.show(
       id: _idTurnaround,
-      title: 'タイマー終了',
+      title: AppStrings.timerFinishedTitle,
       body: '設定した時間になりました。',
       notificationDetails: _notificationDetails(),
     );

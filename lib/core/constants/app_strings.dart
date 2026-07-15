@@ -30,6 +30,13 @@ abstract class AppStrings {
   static const timerReset = 'リセット';
   static const timerFinishedTitle = '散歩タイマー';
   static const timerFinishedMessage = '設定した時間になりました。';
+  static const timerRoundTripNotificationTitle = '折り返しの時間です';
+  static const timerRoundTripNotificationBody = 'そろそろ折り返しましょう！';
+  static const gpsTimeoutTitle = 'GPS を取得できません';
+  static const gpsTimeoutMessage =
+      '30秒経過してもGPSが取得できませんでした。\n散歩をやり直す場合はリトライしてください。';
+  static const gpsTimeoutRetry = 'やり直す';
+  static const gpsTimeoutContinue = 'このまま続ける';
   static const safetyOk = '元気です';
   static const safetyConfirmTitle = '大丈夫ですか？';
   static const smsSendError = 'SMS送信に失敗しました';
@@ -46,6 +53,15 @@ abstract class AppStrings {
   static const addPhoto = '写真を追加';
   static const removePhoto = '写真を削除';
   static const titleHint = 'タイトルを設定する';
+
+  // ニックネーム設定（表示名）
+  static const displayNameTitle = 'ニックネームを設定';
+  static const displayNameSubtitle = 'アプリ内で表示される名前を入力してください';
+  static const displayNameSubmit = 'はじめる';
+  static const displayNameError = 'エラーが発生しました';
+  static const nicknameLabel = 'ニックネーム';
+  static const nicknameHint = '例：やまだたろう';
+  static const nicknameRequired = 'ニックネームを入力してください';
 
   // メールアドレス確認
   static const emailVerificationPageTitle = 'メールをご確認ください';

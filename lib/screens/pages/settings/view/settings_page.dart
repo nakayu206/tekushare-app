@@ -528,7 +528,7 @@ class _InactivityCard extends StatelessWidget {
                     Text(
                       AppStrings.settingsInactivitySubtitle,
                       style: TextStyle(
-                        fontSize: AppTextStyle.xs,
+                        fontSize: AppTextStyle.xxs,
                         color: AppColors.textDisabled,
                       ),
                     ),

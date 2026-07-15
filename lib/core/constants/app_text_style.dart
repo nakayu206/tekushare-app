@@ -6,6 +6,7 @@ abstract class AppTextStyle {
   // サイズ定数
   static const double xxs = 9.0;
   static const double xs = 11.0;
+  static const double xs2 = 12.0;
   static const double sm = 13.0;
   static const double sm2 = 14.0;
   static const double md = 15.0;

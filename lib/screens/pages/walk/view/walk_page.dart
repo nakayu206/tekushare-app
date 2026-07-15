@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:latlong2/latlong.dart';
-import 'package:tekushare/domain/entities/lat_lng.dart' as domain;
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -23,14 +22,18 @@ import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
 import 'package:tekushare/screens/providers/walk_timer_provider.dart';
+import 'package:tekushare/screens/providers/walk_track_points_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 import 'package:tekushare/screens/widgets/common/primary_button.dart';
+
+const _gpsTimeoutSeconds = 30;
 
 /// 散歩モード画面
 class WalkPage extends ConsumerStatefulWidget {
@@ -42,7 +45,6 @@ class WalkPage extends ConsumerStatefulWidget {
 
 class _WalkPageState extends ConsumerState<WalkPage> {
   final _mapController = MapController();
-  final _trackPoints = <LatLng>[];
   final _photoMarkers = <({LatLng point, String imagePath})>[];
   LatLng? _currentPosition;
   LatLng? _lastMovedPosition;
@@ -50,6 +52,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
   bool _mapControllerAttached = false;
 
   Timer? _tickTimer;
+  Timer? _gpsTimeoutTimer;
 
   @override
   void initState() {
@@ -60,14 +63,17 @@ class _WalkPageState extends ConsumerState<WalkPage> {
       final settings = ref.read(settingsViewModelProvider);
       ref.read(walkTimerProvider.notifier).initializeIfNeeded(
             timerEnabled: settings.timerEnabled,
-            timerMinutes: settings.timerRoundTrip
-                ? settings.timerMinutes ~/ 2
-                : settings.timerMinutes,
+            timerMinutes: settings.timerMinutes,
+            timerRoundTrip: settings.timerRoundTrip,
             inactivityEnabled: settings.inactivityEnabled,
             inactivityMinutes: settings.inactivityMinutes,
           );
     });
     _tickTimer = Timer.periodic(const Duration(seconds: 1), _onTick);
+    _gpsTimeoutTimer = Timer(
+      const Duration(seconds: _gpsTimeoutSeconds),
+      _onGpsTimeout,
+    );
   }
 
   void _onTick(Timer _) {
@@ -79,6 +85,14 @@ class _WalkPageState extends ConsumerState<WalkPage> {
   Future<void> _fireNotificationsIfNeeded() async {
     final svc = ref.read(notificationServiceProvider);
     final ts = ref.read(walkTimerProvider);
+    // 往復タイマーの折り返し通知（全体の半分の時間になったとき）
+    final midpoint = ts.midpointSeconds;
+    if (midpoint != null &&
+        ts.turnSecondsLeft == midpoint &&
+        !ts.midpointFired) {
+      ref.read(walkTimerProvider.notifier).markMidpointFired();
+      await svc.showRoundTripNotification();
+    }
     if (ts.turnSecondsLeft == 0 && !ts.turnFired) {
       ref.read(walkTimerProvider.notifier).markTurnFired();
       await svc.showTurnaroundNotification();
@@ -159,8 +173,37 @@ class _WalkPageState extends ConsumerState<WalkPage> {
   @override
   void dispose() {
     _tickTimer?.cancel();
+    _gpsTimeoutTimer?.cancel();
     _mapController.dispose();
     super.dispose();
+  }
+
+  void _onGpsTimeout() {
+    if (!mounted || _currentPosition != null) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text(AppStrings.gpsTimeoutTitle),
+        content: const Text(AppStrings.gpsTimeoutMessage),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(notificationServiceProvider).cancelAll();
+              ref.read(walkTimerProvider.notifier).reset();
+              ref.read(walkSessionProvider.notifier).resetWalk();
+              Navigator.popUntil(context, (route) => route.isFirst);
+            },
+            child: const Text(AppStrings.gpsTimeoutRetry),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(AppStrings.gpsTimeoutContinue),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _onTakePhotoPressed(
@@ -198,10 +241,11 @@ class _WalkPageState extends ConsumerState<WalkPage> {
     // エラー時は _GpsStatusIndicator（ref.watch 側）がフィードバックを担う
     ref.listen<AsyncValue<Position>>(locationProvider, (_, next) {
       next.whenData((pos) {
+        _gpsTimeoutTimer?.cancel();
+        _gpsTimeoutTimer = null;
         final point = LatLng(pos.latitude, pos.longitude);
         setState(() {
           _currentPosition = point;
-          _trackPoints.add(point);
           // heading < 0 は「取得不可」を示すので最後の有効値を維持する
           if (pos.heading >= 0) _currentHeading = pos.heading;
         });
@@ -291,17 +335,23 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                 userAgentPackageName: 'com.example.tekushare',
                               ),
-                              if (_trackPoints.length >= 2)
-                                PolylineLayer(
+                              Builder(builder: (context) {
+                                final pts = ref
+                                    .watch(walkTrackPointsProvider)
+                                    .map((p) => LatLng(p.latitude, p.longitude))
+                                    .toList();
+                                if (pts.length < 2) return const SizedBox();
+                                return PolylineLayer(
                                   polylines: [
                                     Polyline(
-                                      points: _trackPoints,
+                                      points: pts,
                                       color: AppColors.primary,
                                       strokeWidth:
                                           MapConstants.polylineStrokeWidth,
                                     ),
                                   ],
-                                ),
+                                );
+                              }),
                               MarkerLayer(
                                 markers: [
                                   Marker(
@@ -476,13 +526,10 @@ class _WalkPageState extends ConsumerState<WalkPage> {
                   height: sizing.largeBtnHeight,
                   onPressed: () {
                     ref.read(notificationServiceProvider).cancelAll();
-                    final domainPoints = _trackPoints
-                        .map((p) => domain.LatLng(p.latitude, p.longitude))
-                        .toList();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => EndWalkPage(trackPoints: domainPoints),
+                        builder: (_) => const EndWalkPage(),
                       ),
                     );
                   },

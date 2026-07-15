@@ -48,6 +48,7 @@ abstract class AppSize {
   static const double timerChipLabelFontSize = 11.0;
   static const double timerChipCountFontSize = 13.0;
   static const double appBarHeight = 56.0;
+  static const double appBarHeightTall = 72.0;
   static const double mapPinSize = 36.0;
   static const double cardElevation = 2.0;
   static const double photoGridItem = 80.0;

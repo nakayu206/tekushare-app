@@ -74,8 +74,8 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                 TextField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: 'ニックネーム',
-                    hintText: '例：やまだたろう',
+                    labelText: AppStrings.nicknameLabel,
+                    hintText: AppStrings.nicknameHint,
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person_outline),
                   ),
@@ -260,21 +260,21 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
       automaticallyImplyLeading: false,
       centerTitle: true,
       elevation: 0,
-      toolbarHeight: 72,
+      toolbarHeight: AppSize.appBarHeightTall,
       title: const Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             AppStrings.appTitle,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: AppTextStyle.xl,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
           Text(
             AppStrings.appTagline,
-            style: TextStyle(fontSize: 12, color: Colors.white),
+            style: TextStyle(fontSize: AppTextStyle.xs2, color: Colors.white),
           ),
         ],
       ),
@@ -317,7 +317,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
     if (_isRegisterMode) {
       final name = _nameController.text.trim();
       if (name.isEmpty) {
-        _showSnack('ニックネームを入力してください');
+        _showSnack(AppStrings.nicknameRequired);
         return;
       }
       final confirm = _confirmPasswordController.text;

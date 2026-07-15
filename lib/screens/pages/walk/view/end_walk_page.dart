@@ -6,7 +6,6 @@ import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/theme/app_sizing_theme.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
-import 'package:tekushare/domain/entities/lat_lng.dart' as domain;
 import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/settings_page.dart';
@@ -14,15 +13,14 @@ import 'package:tekushare/screens/providers/walk_history_provider.dart';
 import 'package:tekushare/screens/providers/walk_routes_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/providers/walk_timer_provider.dart';
+import 'package:tekushare/screens/providers/walk_track_points_provider.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 
 /// 散歩終了確認ページ
 class EndWalkPage extends ConsumerStatefulWidget {
-  const EndWalkPage({super.key, this.trackPoints = const []});
-
-  final List<domain.LatLng> trackPoints;
+  const EndWalkPage({super.key});
 
   @override
   ConsumerState<EndWalkPage> createState() => _EndWalkPageState();
@@ -81,10 +79,11 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
     if (_isProcessing) return;
     _isProcessing = true;
     final session = ref.read(walkSessionProvider);
+    final trackPoints = ref.read(walkTrackPointsProvider);
     final route = WalkRoute(
       id: session.id,
       walkSessionId: session.id,
-      points: widget.trackPoints,
+      points: trackPoints,
       createdAt: DateTime.now(),
     );
     await ref.read(walkSessionProvider.notifier).endWalk(route);
