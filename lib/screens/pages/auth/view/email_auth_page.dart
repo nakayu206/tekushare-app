@@ -217,8 +217,17 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
         _showSnack('メールアドレスを入力してください');
         return;
       }
+      if (!_isValidEmail(email)) {
+        _showSnack('メールアドレスの形式が正しくありません');
+        return;
+      }
       if (password.length < 6) {
         _showSnack('パスワードは6文字以上で入力してください');
+        return;
+      }
+      if (!password.contains(RegExp(r'[a-zA-Z]')) ||
+          !password.contains(RegExp(r'[0-9]'))) {
+        _showSnack('パスワードは英字と数字をどちらも含めてください');
         return;
       }
       ref.read(emailAuthProvider.notifier).register(email, password, name);
@@ -227,13 +236,24 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
         _showSnack('メールアドレスを入力してください');
         return;
       }
+      if (!_isValidEmail(email)) {
+        _showSnack('メールアドレスの形式が正しくありません');
+        return;
+      }
       if (password.isEmpty) {
         _showSnack('パスワードを入力してください');
+        return;
+      }
+      if (password.length < 6) {
+        _showSnack('パスワードは6文字以上で入力してください');
         return;
       }
       ref.read(emailAuthProvider.notifier).signIn(email, password);
     }
   }
+
+  bool _isValidEmail(String email) =>
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
 
   void _showSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

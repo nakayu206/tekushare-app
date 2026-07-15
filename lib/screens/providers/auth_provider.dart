@@ -79,6 +79,7 @@ String _mapErrorCode(String code) {
     'wrong-password' => 'パスワードが間違っています',
     'invalid-credential' => 'メールアドレスまたはパスワードが間違っています',
     'too-many-requests' => 'しばらく時間をおいてから再度お試しください',
+    'network-request-failed' => 'ネットワークエラーが発生しました。接続を確認してください',
     _ => '認証エラーが発生しました（$code）',
   };
 }
