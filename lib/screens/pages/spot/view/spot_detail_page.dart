@@ -190,7 +190,7 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     );
   }
 
-  /// 確認ダイアログを閉じ→ローディング表示→操作完了→ページバック+SnackBar
+  /// 確認ダイアログを閉じ→ローディング表示→操作完了→保存完了ダイアログ表示→ページバック
   Future<void> _runWithLoading(
     Future<void> Function() operation,
     String message,
@@ -215,10 +215,18 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
       return;
     }
     if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context); // ローディングを閉じる
-    Navigator.pop(context); // 詳細ページから戻る
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _SavedDialog(
+        message: message,
+        onClose: () {
+          Navigator.pop(context); // 完了ダイアログを閉じる
+          Navigator.pop(context); // 詳細ページから戻る
+        },
+      ),
+    );
   }
 
   @override
@@ -673,6 +681,67 @@ class _SaveButton extends StatelessWidget {
             fontSize: sizing.detailBtnFontSize,
             fontWeight: FontWeight.w500,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────
+// 保存完了ダイアログ
+// ──────────────────────────────────────────
+
+class _SavedDialog extends StatelessWidget {
+  const _SavedDialog({required this.message, required this.onClose});
+
+  final String message;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x4l,
+        vertical: AppSpacing.x2l,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          28,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: AppTextStyle.lg2,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.x2l),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onClose,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                ),
+                child: const Text(AppStrings.closeButton),
+              ),
+            ),
+          ],
         ),
       ),
     );

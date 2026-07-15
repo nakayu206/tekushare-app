@@ -369,8 +369,8 @@ void main() {
           findsOneWidget);
     });
 
-    // 行った！確認でSnackBarにメッセージが表示される
-    testWidgets('confirming move to went shows snackbar', (tester) async {
+    // 行った！確認で保存完了ダイアログが表示される
+    testWidgets('confirming move to went shows saved dialog', (tester) async {
       await pumpPage(tester, isWantToGo: true);
 
       await tester.tap(find.text(AppStrings.spotDetailMoveToWentButton));
@@ -381,12 +381,18 @@ void main() {
           matching: find.text(AppStrings.spotDetailMoveToWentConfirmLabel),
         ),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.spotDetailMoveToWentDone), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(AppStrings.spotDetailMoveToWentDone),
+        ),
+        findsOneWidget,
+      );
     });
 
-    // 行った！確認で詳細ページから離れる
+    // 行った！保存完了ダイアログを閉じると詳細ページから離れる
     testWidgets('confirming move to went leaves the page', (tester) async {
       await pumpPushedPage(tester, isWantToGo: true);
 
@@ -398,6 +404,8 @@ void main() {
           matching: find.text(AppStrings.spotDetailMoveToWentConfirmLabel),
         ),
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.closeButton));
       await tester.pumpAndSettle();
 
       expect(find.byType(SpotDetailPage), findsNothing);
@@ -578,25 +586,33 @@ void main() {
       expect(find.text(AppStrings.spotDetailSaveConfirmMessage), findsNothing);
     });
 
-    // 保存確認でSnackBarにメッセージが表示される
-    testWidgets('confirming save shows snackbar', (tester) async {
+    // 保存確認で保存完了ダイアログが表示される
+    testWidgets('confirming save shows saved dialog', (tester) async {
       await pumpPage(tester);
 
       await tester.tap(find.text(AppStrings.spotDetailSaveButton));
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.saveButton));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.saved), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(AppStrings.saved),
+        ),
+        findsOneWidget,
+      );
     });
 
-    // 保存確認で詳細ページから離れる
+    // 保存完了ダイアログを閉じると詳細ページから離れる
     testWidgets('confirming save leaves the page', (tester) async {
       await pumpPushedPage(tester);
 
       await tester.tap(find.text(AppStrings.spotDetailSaveButton));
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.saveButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.closeButton));
       await tester.pumpAndSettle();
 
       expect(find.byType(SpotDetailPage), findsNothing);
