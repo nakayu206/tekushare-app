@@ -1,0 +1,117 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:tekushare/core/constants/app_strings.dart';
+import 'package:tekushare/screens/pages/auth/view/password_reset_page.dart';
+import 'package:tekushare/screens/providers/auth_provider.dart';
+
+class _FakeAuthService implements AuthService {
+  bool sendCalled = false;
+  String? sentEmail;
+  bool shouldThrow = false;
+
+  @override
+  Stream<AuthUser?> watchAuthState() => const Stream.empty();
+
+  @override
+  Future<void> registerWithEmail(
+      String email, String password, String displayName) async {}
+
+  @override
+  Future<void> signInWithEmail(String email, String password) async {}
+
+  @override
+  Future<void> setDisplayName(String name) async {}
+
+  @override
+  Future<void> signOut() async {}
+
+  @override
+  Future<void> deleteUser() async {}
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    if (shouldThrow) throw const AuthException('user-not-found');
+    sendCalled = true;
+    sentEmail = email;
+  }
+}
+
+Widget _buildPage(_FakeAuthService service) {
+  return ProviderScope(
+    overrides: [
+      authServiceProvider.overrideWithValue(service),
+    ],
+    child: const MaterialApp(home: PasswordResetPage()),
+  );
+}
+
+void main() {
+  group('PasswordResetPage', () {
+    // ページタイトルが表示される
+    testWidgets('shows page title', (tester) async {
+      await tester.pumpWidget(_buildPage(_FakeAuthService()));
+      expect(find.text(AppStrings.passwordResetPageTitle), findsOneWidget);
+    });
+
+    // 説明文が表示される
+    testWidgets('shows description', (tester) async {
+      await tester.pumpWidget(_buildPage(_FakeAuthService()));
+      expect(find.text(AppStrings.passwordResetDescription), findsOneWidget);
+    });
+
+    // 送信ボタンが表示される
+    testWidgets('shows send button', (tester) async {
+      await tester.pumpWidget(_buildPage(_FakeAuthService()));
+      expect(find.text(AppStrings.passwordResetSendButton), findsOneWidget);
+    });
+
+    // メール未入力で送信するとSnackBarが表示される
+    testWidgets('shows snackbar when email is empty', (tester) async {
+      await tester.pumpWidget(_buildPage(_FakeAuthService()));
+      await tester.tap(find.text(AppStrings.passwordResetSendButton));
+      await tester.pump();
+      expect(find.text('メールアドレスを入力してください'), findsOneWidget);
+    });
+
+    // メールを入力して送信すると sendPasswordResetEmail が呼ばれる
+    testWidgets('calls sendPasswordResetEmail with entered email',
+        (tester) async {
+      final service = _FakeAuthService();
+      await tester.pumpWidget(_buildPage(service));
+      await tester.enterText(find.byType(TextField), 'test@example.com');
+      await tester.tap(find.text(AppStrings.passwordResetSendButton));
+      await tester.pumpAndSettle();
+      expect(service.sendCalled, isTrue);
+      expect(service.sentEmail, 'test@example.com');
+    });
+
+    // 送信成功後に完了メッセージが表示される
+    testWidgets('shows success message after send', (tester) async {
+      await tester.pumpWidget(_buildPage(_FakeAuthService()));
+      await tester.enterText(find.byType(TextField), 'test@example.com');
+      await tester.tap(find.text(AppStrings.passwordResetSendButton));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.passwordResetSuccessMessage), findsOneWidget);
+    });
+
+    // 送信成功後は送信ボタンが非表示になる
+    testWidgets('hides send button after success', (tester) async {
+      await tester.pumpWidget(_buildPage(_FakeAuthService()));
+      await tester.enterText(find.byType(TextField), 'test@example.com');
+      await tester.tap(find.text(AppStrings.passwordResetSendButton));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.passwordResetSendButton), findsNothing);
+    });
+
+    // エラー時にエラーメッセージが表示される
+    testWidgets('shows error message on failure', (tester) async {
+      final service = _FakeAuthService()..shouldThrow = true;
+      await tester.pumpWidget(_buildPage(service));
+      await tester.enterText(find.byType(TextField), 'notfound@example.com');
+      await tester.tap(find.text(AppStrings.passwordResetSendButton));
+      await tester.pumpAndSettle();
+      expect(find.text('このメールアドレスは登録されていません'), findsOneWidget);
+    });
+  });
+}

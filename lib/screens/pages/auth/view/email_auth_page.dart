@@ -4,6 +4,7 @@ import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
+import 'package:tekushare/screens/pages/auth/view/password_reset_page.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
 /// メールアドレス認証画面（ログイン / 新規登録）
@@ -169,6 +170,21 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                   style: const TextStyle(color: AppColors.primary),
                 ),
               ),
+              if (!_isRegisterMode)
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PasswordResetPage(),
+                            ),
+                          ),
+                  child: const Text(
+                    AppStrings.passwordResetLinkLabel,
+                    style: TextStyle(color: AppColors.textDisabled),
+                  ),
+                ),
             ],
           ),
         ),

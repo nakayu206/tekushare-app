@@ -47,6 +47,14 @@ abstract class AppStrings {
   static const removePhoto = '写真を削除';
   static const titleHint = 'タイトルを設定する';
 
+  // パスワードリセット
+  static const passwordResetPageTitle = 'パスワードリセット';
+  static const passwordResetDescription = '登録したメールアドレスにリセット用のメールを送信します。';
+  static const passwordResetEmailLabel = 'メールアドレス';
+  static const passwordResetSendButton = 'リセットメールを送信';
+  static const passwordResetSuccessMessage = 'リセット用メールを送信しました。\nメールをご確認ください。';
+  static const passwordResetLinkLabel = 'パスワードを忘れた方はこちら';
+
   // 共通
   static const noTitle = '（タイトルなし）';
   static const saved = '保存しました！';

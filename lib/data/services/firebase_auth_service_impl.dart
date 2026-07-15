@@ -89,4 +89,13 @@ class FirebaseAuthServiceImpl implements AuthService {
     if (user == null) return;
     await user.delete();
   }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
 }

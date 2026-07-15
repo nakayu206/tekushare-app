@@ -48,6 +48,7 @@ abstract interface class AuthService {
   Future<void> setDisplayName(String name);
   Future<void> signOut();
   Future<void> deleteUser();
+  Future<void> sendPasswordResetEmail(String email);
 }
 
 // ── Provider declaration ──────────────────────────────────────────────────────
@@ -109,6 +110,54 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
 final emailAuthProvider =
     StateNotifierProvider<EmailAuthNotifier, EmailAuthState>((ref) {
   return EmailAuthNotifier(ref.watch(authServiceProvider));
+});
+
+// ── Password reset notifier ───────────────────────────────────────────────────
+
+sealed class PasswordResetState {
+  const PasswordResetState();
+}
+
+class PasswordResetIdle extends PasswordResetState {
+  const PasswordResetIdle();
+}
+
+class PasswordResetLoading extends PasswordResetState {
+  const PasswordResetLoading();
+}
+
+class PasswordResetSuccess extends PasswordResetState {
+  const PasswordResetSuccess();
+}
+
+class PasswordResetError extends PasswordResetState {
+  const PasswordResetError(this.message);
+  final String message;
+}
+
+class PasswordResetNotifier extends StateNotifier<PasswordResetState> {
+  PasswordResetNotifier(this._service) : super(const PasswordResetIdle());
+
+  final AuthService _service;
+
+  Future<void> send(String email) async {
+    state = const PasswordResetLoading();
+    try {
+      await _service.sendPasswordResetEmail(email);
+      state = const PasswordResetSuccess();
+    } on AuthException catch (e) {
+      state = PasswordResetError(_mapErrorCode(e.code));
+    } catch (_) {
+      state = const PasswordResetError('エラーが発生しました');
+    }
+  }
+
+  void reset() => state = const PasswordResetIdle();
+}
+
+final passwordResetProvider =
+    StateNotifierProvider<PasswordResetNotifier, PasswordResetState>((ref) {
+  return PasswordResetNotifier(ref.watch(authServiceProvider));
 });
 
 // ── Display name notifier ─────────────────────────────────────────────────────

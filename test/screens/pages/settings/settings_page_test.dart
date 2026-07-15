@@ -53,6 +53,9 @@ class _FakeAuthService implements AuthService {
 
   @override
   Future<void> deleteUser() async => deletedUser = true;
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {}
 }
 
 class _FakeWalkSessionRepository implements WalkSessionRepository {
