@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
 class FirebaseAuthServiceImpl implements AuthService {
-  FirebaseAuthServiceImpl(this._auth, this._firestore);
+  FirebaseAuthServiceImpl(this._auth, this._firestore) {
+    _auth.setLanguageCode('ja');
+  }
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
 
