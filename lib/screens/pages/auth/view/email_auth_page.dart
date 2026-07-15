@@ -33,36 +33,17 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(emailAuthProvider);
+
+    if (authState is EmailAuthRegistered) {
+      return _buildRegisteredScaffold();
+    }
+
     final isLoading = authState is EmailAuthLoading;
     final error = authState is EmailAuthError ? authState.message : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-        centerTitle: true,
-        elevation: 0,
-        toolbarHeight: 72,
-        title: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.appTitle,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              AppStrings.appTagline,
-              style: TextStyle(fontSize: 12, color: Colors.white),
-            ),
-          ],
-        ),
-      ),
+      appBar: _buildAppBar(),
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -190,6 +171,89 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                     style: TextStyle(color: AppColors.textDisabled),
                   ),
                 ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      automaticallyImplyLeading: false,
+      centerTitle: true,
+      elevation: 0,
+      toolbarHeight: 72,
+      title: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppStrings.appTitle,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            AppStrings.appTagline,
+            style: TextStyle(fontSize: 12, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegisteredScaffold() {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: _buildAppBar(),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.x3l,
+            vertical: AppSpacing.x4l,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Icon(
+                Icons.mark_email_unread_outlined,
+                size: 64,
+                color: AppColors.primary,
+              ),
+              const SizedBox(height: AppSpacing.x3l),
+              const Text(
+                AppStrings.emailAuthRegisteredMessage,
+                textAlign: TextAlign.center,
+                style: AppTextStyle.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                AppStrings.emailAuthRegisteredDescription,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.x4l),
+              SizedBox(
+                height: AppSize.buttonHeight,
+                child: FilledButton(
+                  onPressed: () {
+                    ref.read(emailAuthProvider.notifier).reset();
+                    setState(() => _isRegisterMode = false);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.textOnPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                    ),
+                  ),
+                  child: const Text(AppStrings.emailAuthRegisteredButton),
+                ),
+              ),
             ],
           ),
         ),

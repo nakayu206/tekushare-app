@@ -62,7 +62,16 @@ class FirebaseAuthServiceImpl implements AuthService {
       await credential.user?.reload();
       final uid = credential.user?.uid;
       if (uid != null) await _syncUserDoc(uid, displayName);
-      await credential.user?.sendEmailVerification();
+      final settings = ActionCodeSettings(
+        url: 'https://tekushare.web.app',
+        handleCodeInApp: true,
+        androidPackageName: AppConfig.packageName,
+        androidInstallApp: true,
+        iOSBundleId: AppConfig.packageName,
+      );
+      await _auth.sendPasswordResetEmail(
+          email: email, actionCodeSettings: settings);
+      await _auth.signOut();
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }

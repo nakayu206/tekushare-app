@@ -45,6 +45,10 @@ class EmailAuthError extends EmailAuthState {
   final String message;
 }
 
+class EmailAuthRegistered extends EmailAuthState {
+  const EmailAuthRegistered();
+}
+
 // ── Auth service interface ────────────────────────────────────────────────────
 
 abstract interface class AuthService {
@@ -94,7 +98,7 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
     state = const EmailAuthLoading();
     try {
       await _service.registerWithEmail(email, displayName);
-      state = const EmailAuthIdle();
+      state = const EmailAuthRegistered();
     } on AuthException catch (e) {
       state = EmailAuthError(_mapErrorCode(e.code));
     } catch (_) {
