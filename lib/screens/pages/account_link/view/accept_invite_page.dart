@@ -29,6 +29,10 @@ class _AcceptInvitePageState extends ConsumerState<AcceptInvitePage> {
       await showDialog<void>(
         context: context,
         builder: (_) => Dialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.x4l,
+            vertical: AppSpacing.x2l,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.lg),
           ),

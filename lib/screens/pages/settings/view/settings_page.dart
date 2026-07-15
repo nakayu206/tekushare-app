@@ -631,6 +631,10 @@ class _ContactsListDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final remaining = _maxContacts - contacts.length;
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x4l,
+        vertical: AppSpacing.x2l,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),

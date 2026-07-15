@@ -496,7 +496,7 @@ class _SavedDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.x2l,
+        horizontal: AppSpacing.x4l,
         vertical: AppSpacing.x2l,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -559,7 +559,7 @@ class _ConfirmDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.x2l,
+        horizontal: AppSpacing.x4l,
         vertical: AppSpacing.x2l,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
