@@ -1,9 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tekushare/domain/entities/linked_account.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/auth_provider.dart';
 
 /// 自分と連携済みのアカウント一覧
+///
+/// authStateProvider を watch することで、ログアウト・別アカウントでのログイン時に
+/// 自動的に再購読し、前ユーザーのデータが残らないようにする。
 final linkedAccountsProvider = StreamProvider<List<LinkedAccount>>((ref) {
+  final user = ref.watch(authStateProvider).valueOrNull;
+  if (user == null) return Stream.value([]);
   return ref.watch(accountLinkRepositoryProvider).watchLinkedAccounts();
 });
 
