@@ -49,15 +49,18 @@ final spotRepositoryProvider = Provider<SpotRepository>((ref) {
 });
 
 final walkSessionRepositoryProvider = Provider<WalkSessionRepository>((ref) {
-  return WalkSessionRepositoryImpl(ref.watch(isarProvider).requireValue);
+  final uid = ref.watch(authStateProvider).value?.uid ?? '';
+  return WalkSessionRepositoryImpl(ref.watch(isarProvider).requireValue, uid);
 });
 
 final routeRepositoryProvider = Provider<RouteRepository>((ref) {
-  return RouteRepositoryImpl(ref.watch(isarProvider).requireValue);
+  final uid = ref.watch(authStateProvider).value?.uid ?? '';
+  return RouteRepositoryImpl(ref.watch(isarProvider).requireValue, uid);
 });
 
 final savedRouteRepositoryProvider = Provider<SavedRouteRepository>((ref) {
-  return SavedRouteRepositoryImpl(ref.watch(isarProvider).requireValue);
+  final uid = ref.watch(authStateProvider).value?.uid ?? '';
+  return SavedRouteRepositoryImpl(ref.watch(isarProvider).requireValue, uid);
 });
 
 final photoRepositoryProvider = Provider<PhotoRepository>((ref) {

@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
 class FirebaseAuthServiceImpl implements AuthService {
-  FirebaseAuthServiceImpl(this._auth, this._firestore);
+  FirebaseAuthServiceImpl(this._auth, this._firestore) {
+    _auth.setLanguageCode('ja');
+  }
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
 
@@ -30,13 +33,18 @@ class FirebaseAuthServiceImpl implements AuthService {
   Stream<AuthUser?> watchAuthState() {
     return _auth.userChanges().map((user) {
       if (user == null) return null;
-      return AuthUser(uid: user.uid, displayName: user.displayName);
+      return AuthUser(
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+        emailVerified: user.emailVerified,
+      );
     });
   }
 
   @override
   Future<void> registerWithEmail(
-      String email, String password, String displayName) async {
+      String email, String displayName, String password) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -46,6 +54,8 @@ class FirebaseAuthServiceImpl implements AuthService {
       await credential.user?.reload();
       final uid = credential.user?.uid;
       if (uid != null) await _syncUserDoc(uid, displayName);
+      await credential.user?.sendEmailVerification();
+      await _auth.signOut();
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }
@@ -59,9 +69,16 @@ class FirebaseAuthServiceImpl implements AuthService {
         password: password,
       );
       final user = credential.user;
-      final name = user?.displayName;
-      if (user != null && name != null && name.isNotEmpty) {
-        await _syncUserDoc(user.uid, name);
+      if (user == null) return;
+      await user.reload();
+      final reloaded = _auth.currentUser;
+      if (reloaded == null || !reloaded.emailVerified) {
+        await _auth.signOut();
+        throw const AuthException('email-not-verified');
+      }
+      final name = reloaded.displayName;
+      if (name != null && name.isNotEmpty) {
+        await _syncUserDoc(reloaded.uid, name);
       }
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
@@ -88,5 +105,58 @@ class FirebaseAuthServiceImpl implements AuthService {
     final user = _auth.currentUser;
     if (user == null) return;
     await user.delete();
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      final settings = ActionCodeSettings(
+        url: 'https://tekushare.web.app',
+        handleCodeInApp: true,
+        androidPackageName: AppConfig.packageName,
+        androidInstallApp: true,
+        iOSBundleId: AppConfig.packageName,
+      );
+      await _auth.sendPasswordResetEmail(
+          email: email, actionCodeSettings: settings);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> sendEmailVerification() async {
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> reloadCurrentUser() async {
+    try {
+      await _auth.currentUser?.reload();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<String> verifyPasswordResetCode(String code) async {
+    try {
+      return await _auth.verifyPasswordResetCode(code);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> confirmPasswordReset(String code, String newPassword) async {
+    try {
+      await _auth.confirmPasswordReset(code: code, newPassword: newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
   }
 }

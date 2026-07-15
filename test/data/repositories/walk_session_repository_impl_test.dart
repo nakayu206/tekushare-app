@@ -15,7 +15,7 @@ void main() {
   setUp(() async {
     final dir = Directory.systemTemp.createTempSync('isar_session_');
     isar = await Isar.open([WalkSessionModelSchema], directory: dir.path);
-    repo = WalkSessionRepositoryImpl(isar);
+    repo = WalkSessionRepositoryImpl(isar, 'user-1');
   });
 
   tearDown(() async {

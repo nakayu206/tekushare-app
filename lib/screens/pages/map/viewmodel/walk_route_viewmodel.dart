@@ -130,7 +130,7 @@ class WalkRouteState {
       );
 }
 
-class WalkRouteViewModel extends Notifier<WalkRouteState> {
+class WalkRouteViewModel extends AutoDisposeNotifier<WalkRouteState> {
   @override
   WalkRouteState build() => const WalkRouteState();
 
@@ -176,6 +176,6 @@ class WalkRouteViewModel extends Notifier<WalkRouteState> {
 }
 
 final walkRouteViewModelProvider =
-    NotifierProvider<WalkRouteViewModel, WalkRouteState>(
+    NotifierProvider.autoDispose<WalkRouteViewModel, WalkRouteState>(
   WalkRouteViewModel.new,
 );

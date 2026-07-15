@@ -30,6 +30,13 @@ abstract class AppStrings {
   static const timerReset = 'リセット';
   static const timerFinishedTitle = '散歩タイマー';
   static const timerFinishedMessage = '設定した時間になりました。';
+  static const timerRoundTripNotificationTitle = '折り返しの時間です';
+  static const timerRoundTripNotificationBody = 'そろそろ折り返しましょう！';
+  static const gpsTimeoutTitle = 'GPS を取得できません';
+  static const gpsTimeoutMessage =
+      '30秒経過してもGPSが取得できませんでした。\n散歩をやり直す場合はリトライしてください。';
+  static const gpsTimeoutRetry = 'やり直す';
+  static const gpsTimeoutContinue = 'このまま続ける';
   static const safetyOk = '元気です';
   static const safetyConfirmTitle = '大丈夫ですか？';
   static const smsSendError = 'SMS送信に失敗しました';
@@ -46,6 +53,49 @@ abstract class AppStrings {
   static const addPhoto = '写真を追加';
   static const removePhoto = '写真を削除';
   static const titleHint = 'タイトルを設定する';
+
+  // ニックネーム設定（表示名）
+  static const displayNameTitle = 'ニックネームを設定';
+  static const displayNameSubtitle = 'アプリ内で表示される名前を入力してください';
+  static const displayNameSubmit = 'はじめる';
+  static const displayNameError = 'エラーが発生しました';
+  static const nicknameLabel = 'ニックネーム';
+  static const nicknameHint = '例：やまだたろう';
+  static const nicknameRequired = 'ニックネームを入力してください';
+
+  // メールアドレス認証フォーム
+  static const emailAuthPasswordLabel = 'パスワード（6文字以上）';
+  static const emailAuthPasswordHint = '6文字以上';
+  static const emailAuthRegisteredDescription =
+      'ご登録のメールアドレスに確認メールをお送りしました。\nメール内のリンクをクリックして確認を完了してから、ログインしてください。';
+  static const emailAuthLoginButton = 'ログインへ';
+
+  // メールアドレス確認
+  static const emailVerificationPageTitle = 'メールをご確認ください';
+  static const emailVerificationSentMessage = '確認メールを送りました';
+  static const emailVerificationDescription =
+      'にメールアドレス確認用のメールを送りました。\nメール内のリンクをタップして確認を完了してください。';
+  static const emailVerificationResendButton = '確認メールを再送信';
+  static const emailVerificationResendSuccess = '再送信しました';
+  static const emailVerificationChecking = '確認しています...';
+
+  // パスワード設定（メールリンクから遷移）
+  static const passwordSetPageTitle = 'パスワードの設定';
+  static const passwordSetDescription =
+      '新しいパスワードを設定してください。\n英字と数字を両方含む6文字以上で設定してください。';
+  static const passwordSetLabel = 'パスワード（6文字以上・英数字含む）';
+  static const passwordSetConfirmLabel = 'パスワード（確認）';
+  static const passwordSetButton = 'パスワードを設定する';
+  static const passwordSetInvalidCode = 'このリンクは無効か期限切れです。パスワードリセットを再度お試しください。';
+  static const passwordMismatch = 'パスワードが一致しません';
+
+  // パスワードリセット
+  static const passwordResetPageTitle = 'パスワードリセット';
+  static const passwordResetDescription = '登録したメールアドレスにリセット用のメールを送信します。';
+  static const passwordResetEmailLabel = 'メールアドレス';
+  static const passwordResetSendButton = 'リセットメールを送信';
+  static const passwordResetSuccessMessage = 'リセット用メールを送信しました。\nメールをご確認ください。';
+  static const passwordResetLinkLabel = 'パスワードを忘れた方はこちら';
 
   // 共通
   static const noTitle = '（タイトルなし）';

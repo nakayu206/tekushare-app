@@ -21,16 +21,17 @@ void main() {
 
   group('WalkRouteModel', () {
     test('fromEntity でエンティティからモデルに変換できる', () {
-      final model = WalkRouteModel.fromEntity(makeRoute());
+      final model = WalkRouteModel.fromEntity(makeRoute(), 'user-1');
 
       expect(model.uid, 'route-1');
       expect(model.walkSessionId, 'session-1');
+      expect(model.userUid, 'user-1');
       expect(model.createdAt, createdAt);
       expect(model.pointsJson, isNotEmpty);
     });
 
     test('toEntity でモデルからエンティティに変換できる', () {
-      final model = WalkRouteModel.fromEntity(makeRoute());
+      final model = WalkRouteModel.fromEntity(makeRoute(), 'user-1');
       final route = model.toEntity();
 
       expect(route.id, 'route-1');
@@ -39,7 +40,7 @@ void main() {
     });
 
     test('ポイントリストが正しく変換される', () {
-      final model = WalkRouteModel.fromEntity(makeRoute());
+      final model = WalkRouteModel.fromEntity(makeRoute(), 'user-1');
       final route = model.toEntity();
 
       expect(route.points.length, 2);
@@ -56,7 +57,7 @@ void main() {
         points: [],
         createdAt: createdAt,
       );
-      final model = WalkRouteModel.fromEntity(emptyRoute);
+      final model = WalkRouteModel.fromEntity(emptyRoute, 'user-1');
       final route = model.toEntity();
 
       expect(route.points, isEmpty);

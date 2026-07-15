@@ -37,6 +37,18 @@ abstract class AppConfig {
     }
   }
 
+  /// Android パッケージ名 / iOS Bundle ID
+  static String get packageName {
+    switch (_flavor) {
+      case Flavor.dev:
+        return 'com.example.tekushare.dev';
+      case Flavor.stg:
+        return 'com.example.tekushare.stg';
+      case Flavor.prod:
+        return 'com.example.tekushare';
+    }
+  }
+
   /// dev環境かどうか
   static bool get isDev => _flavor == Flavor.dev;
 

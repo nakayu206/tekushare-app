@@ -31,10 +31,7 @@ class _FakeAuthService implements AuthService {
   Stream<AuthUser?> watchAuthState() => const Stream.empty();
   @override
   Future<void> registerWithEmail(
-    String email,
-    String password,
-    String displayName,
-  ) async {}
+      String email, String displayName, String password) async {}
   @override
   Future<void> signInWithEmail(String email, String password) async {}
   @override
@@ -43,6 +40,21 @@ class _FakeAuthService implements AuthService {
   Future<void> signOut() async {}
   @override
   Future<void> deleteUser() async {}
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<void> sendEmailVerification() async {}
+
+  @override
+  Future<void> reloadCurrentUser() async {}
+
+  @override
+  Future<String> verifyPasswordResetCode(String code) async => '';
+
+  @override
+  Future<void> confirmPasswordReset(String code, String newPassword) async {}
 }
 
 class _FakePhotoRepository implements PhotoRepository {

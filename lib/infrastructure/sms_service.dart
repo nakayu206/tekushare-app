@@ -14,7 +14,7 @@ abstract interface class SmsService {
 class SmsServiceImpl implements SmsService {
   const SmsServiceImpl();
 
-  static const _messageTemplate = '【てくしぇあ】{name}さんから10分以上連絡がありません。確認してください。';
+  static const _messageTemplate = '【てくしぇあ】{name}さんから連絡がありません。確認してください。';
 
   @override
   Future<void> sendInactivityAlert({

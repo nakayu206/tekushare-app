@@ -15,6 +15,15 @@ class LocationService {
   Stream<Position> positionStream() async* {
     await _ensurePermission();
 
+    // 散歩2回目以降は distanceFilter により getPositionStream が初回位置を配信しない
+    // ため、キャッシュ済みの最終位置を先に配信してマップ・GPS インジケーターを即時更新する。
+    try {
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null && last.accuracy <= _fallbackAccuracyMeters) {
+        yield last;
+      }
+    } catch (_) {}
+
     const settings = LocationSettings(
       accuracy: LocationAccuracy.bestForNavigation,
       distanceFilter: _distanceFilterMeters,

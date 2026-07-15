@@ -43,7 +43,7 @@ void main() {
 
       await container
           .read(emailAuthProvider.notifier)
-          .register('test@example.com', 'password123', 'テストユーザー');
+          .register('test@example.com', 'テストユーザー', 'password123');
 
       expect(container.read(emailAuthProvider), isNot(isA<EmailAuthError>()));
     });
@@ -62,7 +62,7 @@ void main() {
 
       await container
           .read(emailAuthProvider.notifier)
-          .register('existing@example.com', 'password123', 'テストユーザー');
+          .register('existing@example.com', 'テストユーザー', 'password123');
 
       final state = container.read(emailAuthProvider);
       expect(state, isA<EmailAuthError>());

@@ -31,7 +31,9 @@ class _DisplayNamePageState extends ConsumerState<DisplayNamePage> {
     ref.listen<AsyncValue<void>>(displayNameProvider, (_, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('エラーが発生しました: ${next.error}')),
+          SnackBar(
+            content: Text('${AppStrings.displayNameError}: ${next.error}'),
+          ),
         );
       }
       // 成功時は authStateProvider（userChanges）が自動的にホーム画面へ遷移させる
@@ -45,21 +47,24 @@ class _DisplayNamePageState extends ConsumerState<DisplayNamePage> {
         automaticallyImplyLeading: false,
         centerTitle: true,
         elevation: 0,
-        toolbarHeight: 72,
+        toolbarHeight: AppSize.appBarHeightTall,
         title: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               AppStrings.appTitle,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: AppTextStyle.xl,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
             Text(
               AppStrings.appTagline,
-              style: TextStyle(fontSize: 12, color: Colors.white),
+              style: TextStyle(
+                fontSize: AppTextStyle.xs2,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -74,10 +79,11 @@ class _DisplayNamePageState extends ConsumerState<DisplayNamePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('ニックネームを設定', style: AppTextStyle.titleLarge),
+              const Text(AppStrings.displayNameTitle,
+                  style: AppTextStyle.titleLarge),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'アプリ内で表示される名前を入力してください',
+                AppStrings.displayNameSubtitle,
                 style: AppTextStyle.bodyMedium.copyWith(
                   color: AppColors.textDisabled,
                 ),
@@ -86,8 +92,8 @@ class _DisplayNamePageState extends ConsumerState<DisplayNamePage> {
               TextField(
                 controller: _controller,
                 decoration: const InputDecoration(
-                  labelText: 'ニックネーム',
-                  hintText: '例：やまだたろう',
+                  labelText: AppStrings.nicknameLabel,
+                  hintText: AppStrings.nicknameHint,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
@@ -116,7 +122,7 @@ class _DisplayNamePageState extends ConsumerState<DisplayNamePage> {
                           ),
                         )
                       : Text(
-                          'はじめる',
+                          AppStrings.displayNameSubmit,
                           style: AppTextStyle.titleMedium.copyWith(
                             color: AppColors.textOnPrimary,
                           ),
@@ -134,7 +140,7 @@ class _DisplayNamePageState extends ConsumerState<DisplayNamePage> {
     final name = _controller.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ニックネームを入力してください')),
+        const SnackBar(content: Text(AppStrings.nicknameRequired)),
       );
       return;
     }

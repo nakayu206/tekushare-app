@@ -22,6 +22,10 @@ import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.da
 import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
+import 'package:tekushare/domain/entities/walk_route.dart';
+import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/domain/repositories/route_repository.dart';
+import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
@@ -83,6 +87,29 @@ class _FakeDeleteSpot implements DeleteSpot {
   @override
   Future<void> call(String id) async {}
 }
+
+class _FakeWalkSessionRepository implements WalkSessionRepository {
+  @override
+  Future<void> saveSession(WalkSession session) async {}
+  @override
+  Future<List<WalkSession>> getAllSessions() async => [];
+  @override
+  Future<WalkSession?> getSessionById(String id) async => null;
+}
+
+class _FakeRouteRepository implements RouteRepository {
+  @override
+  Future<void> saveRoute(WalkRoute route) async {}
+  @override
+  Future<WalkRoute?> getRouteBySessionId(String sessionId) async => null;
+  @override
+  Future<List<WalkRoute>> getAllRoutes() async => [];
+}
+
+final _walkSessionRepoOverride = walkSessionRepositoryProvider
+    .overrideWithValue(_FakeWalkSessionRepository());
+final _routeRepoOverride =
+    routeRepositoryProvider.overrideWithValue(_FakeRouteRepository());
 
 final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
@@ -212,6 +239,8 @@ void main() {
           (ref) => locationStream ?? const Stream.empty(),
         ),
         _notificationOverride,
+        _walkSessionRepoOverride,
+        _routeRepoOverride,
         contactProvider.overrideWith((ref) => Stream.value([])),
         if (camera != null) cameraServiceProvider.overrideWith((ref) => camera),
       ];

@@ -10,6 +10,9 @@ class WalkSessionModel {
   @Index(unique: true)
   late String uid;
 
+  @Index()
+  String userUid = '';
+
   @Enumerated(EnumType.name)
   late WalkStatus status;
 
@@ -27,9 +30,10 @@ class WalkSessionModel {
     );
   }
 
-  static WalkSessionModel fromEntity(WalkSession session) {
+  static WalkSessionModel fromEntity(WalkSession session, String userUid) {
     return WalkSessionModel()
       ..uid = session.id
+      ..userUid = userUid
       ..status = session.status
       ..startedAt = session.startedAt
       ..finishedAt = session.finishedAt

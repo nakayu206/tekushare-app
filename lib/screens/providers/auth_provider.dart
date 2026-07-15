@@ -3,9 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ── ドメイン型 ─────────────────────────────────────────────────────────────────
 
 class AuthUser {
-  const AuthUser({required this.uid, this.displayName});
+  const AuthUser({
+    required this.uid,
+    this.displayName,
+    this.email,
+    this.emailVerified = false,
+  });
   final String uid;
   final String? displayName;
+  final String? email;
+  final bool emailVerified;
 }
 
 class AuthException implements Exception {
@@ -38,16 +45,25 @@ class EmailAuthError extends EmailAuthState {
   final String message;
 }
 
+class EmailAuthRegistered extends EmailAuthState {
+  const EmailAuthRegistered();
+}
+
 // ── Auth service interface ────────────────────────────────────────────────────
 
 abstract interface class AuthService {
   Stream<AuthUser?> watchAuthState();
   Future<void> registerWithEmail(
-      String email, String password, String displayName);
+      String email, String displayName, String password);
   Future<void> signInWithEmail(String email, String password);
   Future<void> setDisplayName(String name);
   Future<void> signOut();
   Future<void> deleteUser();
+  Future<void> sendPasswordResetEmail(String email);
+  Future<void> sendEmailVerification();
+  Future<void> reloadCurrentUser();
+  Future<String> verifyPasswordResetCode(String code);
+  Future<void> confirmPasswordReset(String code, String newPassword);
 }
 
 // ── Provider declaration ──────────────────────────────────────────────────────
@@ -69,6 +85,9 @@ String _mapErrorCode(String code) {
     'wrong-password' => 'パスワードが間違っています',
     'invalid-credential' => 'メールアドレスまたはパスワードが間違っています',
     'too-many-requests' => 'しばらく時間をおいてから再度お試しください',
+    'network-request-failed' => 'ネットワークエラーが発生しました。接続を確認してください',
+    'email-not-verified' =>
+      'メールアドレスの確認が完了していません。\nお届けしたメール内のリンクをクリックしてからログインしてください。',
     _ => '認証エラーが発生しました（$code）',
   };
 }
@@ -79,11 +98,11 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
   final AuthService _service;
 
   Future<void> register(
-      String email, String password, String displayName) async {
+      String email, String displayName, String password) async {
     state = const EmailAuthLoading();
     try {
-      await _service.registerWithEmail(email, password, displayName);
-      state = const EmailAuthIdle();
+      await _service.registerWithEmail(email, displayName, password);
+      state = const EmailAuthRegistered();
     } on AuthException catch (e) {
       state = EmailAuthError(_mapErrorCode(e.code));
     } catch (_) {
@@ -109,6 +128,54 @@ class EmailAuthNotifier extends StateNotifier<EmailAuthState> {
 final emailAuthProvider =
     StateNotifierProvider<EmailAuthNotifier, EmailAuthState>((ref) {
   return EmailAuthNotifier(ref.watch(authServiceProvider));
+});
+
+// ── Password reset notifier ───────────────────────────────────────────────────
+
+sealed class PasswordResetState {
+  const PasswordResetState();
+}
+
+class PasswordResetIdle extends PasswordResetState {
+  const PasswordResetIdle();
+}
+
+class PasswordResetLoading extends PasswordResetState {
+  const PasswordResetLoading();
+}
+
+class PasswordResetSuccess extends PasswordResetState {
+  const PasswordResetSuccess();
+}
+
+class PasswordResetError extends PasswordResetState {
+  const PasswordResetError(this.message);
+  final String message;
+}
+
+class PasswordResetNotifier extends StateNotifier<PasswordResetState> {
+  PasswordResetNotifier(this._service) : super(const PasswordResetIdle());
+
+  final AuthService _service;
+
+  Future<void> send(String email) async {
+    state = const PasswordResetLoading();
+    try {
+      await _service.sendPasswordResetEmail(email);
+      state = const PasswordResetSuccess();
+    } on AuthException catch (e) {
+      state = PasswordResetError(_mapErrorCode(e.code));
+    } catch (_) {
+      state = const PasswordResetError('エラーが発生しました');
+    }
+  }
+
+  void reset() => state = const PasswordResetIdle();
+}
+
+final passwordResetProvider =
+    StateNotifierProvider<PasswordResetNotifier, PasswordResetState>((ref) {
+  return PasswordResetNotifier(ref.watch(authServiceProvider));
 });
 
 // ── Display name notifier ─────────────────────────────────────────────────────
