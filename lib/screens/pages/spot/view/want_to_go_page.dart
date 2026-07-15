@@ -92,17 +92,26 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
               child: Center(child: CircularProgressIndicator()),
             ),
           );
-          final spotId = await notifier.saveSpot(
-            title: title,
-            latitude: location.latitude,
-            longitude: location.longitude,
-            category: category,
-          );
-          final photos = ref.read(pendingPhotoProvider);
-          for (final photo in photos) {
-            await notifier.attachPhoto(spotId, photo);
+          try {
+            final spotId = await notifier.saveSpot(
+              title: title,
+              latitude: location.latitude,
+              longitude: location.longitude,
+              category: category,
+            );
+            final photos = ref.read(pendingPhotoProvider);
+            for (final photo in photos) {
+              await notifier.attachPhoto(spotId, photo);
+            }
+            ref.read(pendingPhotoProvider.notifier).state = [];
+          } catch (_) {
+            if (!mounted) return;
+            Navigator.pop(context); // ローディングを閉じる
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text(AppStrings.operationError)),
+            );
+            return;
           }
-          ref.read(pendingPhotoProvider.notifier).state = [];
           if (!mounted) return;
           Navigator.pop(context); // ローディングを閉じる
           showDialog<void>(

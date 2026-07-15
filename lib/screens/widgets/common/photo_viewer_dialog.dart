@@ -28,6 +28,9 @@ void showPhotoViewer(
                     child: CachedNetworkImage(
                       imageUrl: path,
                       fit: BoxFit.contain,
+                      placeholder: (_, __) => const Center(
+                        child: CircularProgressIndicator(color: Colors.white54),
+                      ),
                       errorWidget: (_, __, ___) => const Icon(
                         Icons.broken_image,
                         color: Colors.white54,

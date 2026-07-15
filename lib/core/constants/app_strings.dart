@@ -188,4 +188,5 @@ abstract class AppStrings {
   static const acceptInviteSelfMessage = '自分自身のリンクは使用できません。';
   static const acceptInviteAlreadyLinkedMessage = 'すでに連携済みです。';
   static const acceptInviteErrorMessage = '連携に失敗しました。もう一度お試しください。';
+  static const operationError = 'エラーが発生しました。もう一度お試しください。';
 }

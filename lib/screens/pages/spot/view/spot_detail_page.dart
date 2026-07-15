@@ -134,7 +134,16 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               child: Center(child: CircularProgressIndicator()),
             ),
           );
-          await notifier.deleteSpot(widget.spot.id);
+          try {
+            await notifier.deleteSpot(widget.spot.id);
+          } catch (_) {
+            if (!mounted) return;
+            Navigator.pop(context); // ローディングを閉じる
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text(AppStrings.operationError)),
+            );
+            return;
+          }
           if (!mounted) return;
           Navigator.pop(context); // ローディングを閉じる
           showDialog<void>(
@@ -195,7 +204,16 @@ class _SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         child: Center(child: CircularProgressIndicator()),
       ),
     );
-    await operation();
+    try {
+      await operation();
+    } catch (_) {
+      if (!mounted) return;
+      Navigator.pop(context); // ローディングを閉じる
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.operationError)),
+      );
+      return;
+    }
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context); // ローディングを閉じる
