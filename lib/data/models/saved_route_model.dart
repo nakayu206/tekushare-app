@@ -7,6 +7,9 @@ part 'saved_route_model.g.dart';
 class SavedRouteModel {
   Id id = Isar.autoIncrement;
 
+  @Index()
+  String userUid = '';
+
   late String name;
   late String date;
   late String distance;
@@ -24,8 +27,9 @@ class SavedRouteModel {
         walkSessionId: walkSessionId,
       );
 
-  static SavedRouteModel fromEntity(SavedRoute route) {
+  static SavedRouteModel fromEntity(SavedRoute route, String userUid) {
     final model = SavedRouteModel()
+      ..userUid = userUid
       ..name = route.name
       ..date = route.date
       ..distance = route.distance

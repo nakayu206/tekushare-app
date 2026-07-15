@@ -59,7 +59,8 @@ final routeRepositoryProvider = Provider<RouteRepository>((ref) {
 });
 
 final savedRouteRepositoryProvider = Provider<SavedRouteRepository>((ref) {
-  return SavedRouteRepositoryImpl(ref.watch(isarProvider).requireValue);
+  final uid = ref.watch(authStateProvider).value?.uid ?? '';
+  return SavedRouteRepositoryImpl(ref.watch(isarProvider).requireValue, uid);
 });
 
 final photoRepositoryProvider = Provider<PhotoRepository>((ref) {
