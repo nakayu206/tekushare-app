@@ -35,7 +35,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
     final authState = ref.watch(emailAuthProvider);
 
     if (authState is EmailAuthRegistered) {
-      return _buildRegisteredScaffold();
+      return _buildRegisteredScaffold(authState.email);
     }
 
     final isLoading = authState is EmailAuthLoading;
@@ -206,7 +206,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
     );
   }
 
-  Widget _buildRegisteredScaffold() {
+  Widget _buildRegisteredScaffold(String email) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
@@ -232,9 +232,11 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                 style: AppTextStyle.titleLarge,
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Text(
-                AppStrings.emailAuthRegisteredDescription,
+              Text(
+                '$email${AppStrings.emailAuthRegisteredDescription}',
                 textAlign: TextAlign.center,
+                style: AppTextStyle.bodyMedium
+                    .copyWith(color: AppColors.textDisabled),
               ),
               const SizedBox(height: AppSpacing.x4l),
               SizedBox(

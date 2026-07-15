@@ -96,6 +96,7 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   Widget build(BuildContext context) {
     final ready = ref.watch(appReadyProvider);
     final authState = ref.watch(authStateProvider);
+    final emailAuthState = ref.watch(emailAuthProvider);
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (previous, next) {
       final user = next.valueOrNull;
@@ -136,24 +137,32 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
         loading: () =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),
         error: (e, _) => Scaffold(body: Center(child: Text('DB初期化エラー: $e'))),
-        data: (_) => authState.when(
-          loading: () =>
-              const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (e, _) => Scaffold(body: Center(child: Text('認証エラー: $e'))),
-          data: (user) {
-            if (user == null) return const EmailAuthPage();
-            final name = user.displayName;
-            // null は Firebase がプロフィールを同期中の一時状態。
-            // ローディングを挟み DisplayNamePage が誤表示されるのを防ぐ。
-            if (name == null) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (name.isEmpty) return const DisplayNamePage();
-            return const HomePage();
-          },
-        ),
+        data: (_) {
+          // 登録処理中はルーティングをブロックしてホームの一瞬表示を防ぐ
+          if (emailAuthState is EmailAuthLoading) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return authState.when(
+            loading: () => const Scaffold(
+                body: Center(child: CircularProgressIndicator())),
+            error: (e, _) => Scaffold(body: Center(child: Text('認証エラー: $e'))),
+            data: (user) {
+              if (user == null) return const EmailAuthPage();
+              final name = user.displayName;
+              // null は Firebase がプロフィールを同期中の一時状態。
+              // ローディングを挟み DisplayNamePage が誤表示されるのを防ぐ。
+              if (name == null) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (name.isEmpty) return const DisplayNamePage();
+              return const HomePage();
+            },
+          );
+        },
       ),
     );
   }
