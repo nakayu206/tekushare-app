@@ -45,9 +45,9 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
 
   /// ディープリンクを受け取り、種別に応じて画面遷移する。
   /// 対応スキーム:
-  ///   - https://tekushare.firebaseapp.com/__/auth/action?mode=resetPassword&oobCode=...
-  ///   - https://tekushare.firebaseapp.com/__/auth/action?mode=verifyEmail&oobCode=...
-  ///   - https://tekushare.web.app/auth/action?mode=...  (カスタムパス、将来用)
+  ///   - https://mail.tekushare.com/auth/action?mode=resetPassword&oobCode=...
+  ///   - https://mail.tekushare.com/auth/action?mode=verifyEmail&oobCode=...
+  ///   - https://tekushare.firebaseapp.com/__/auth/action?mode=...  (フォールバック)
   ///   - tekushare://link/<token>
   ///   - https://tekushare.web.app/link/<token>
   void _handleUri(Uri uri) {
@@ -87,7 +87,9 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
         ((uri.host == 'tekushare.web.app' &&
                 uri.path.startsWith('/auth/action')) ||
             (uri.host == 'tekushare.firebaseapp.com' &&
-                uri.path.startsWith('/__/auth/action')));
+                uri.path.startsWith('/__/auth/action')) ||
+            (uri.host == 'mail.tekushare.com' &&
+                uri.path.startsWith('/auth/action')));
   }
 
   bool _isPasswordResetAction(Uri uri) {

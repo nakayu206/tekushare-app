@@ -111,7 +111,7 @@ class FirebaseAuthServiceImpl implements AuthService {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       final settings = ActionCodeSettings(
-        url: 'https://tekushare.web.app',
+        url: 'https://mail.tekushare.com',
         handleCodeInApp: true,
         androidPackageName: AppConfig.packageName,
         androidInstallApp: true,
@@ -128,7 +128,7 @@ class FirebaseAuthServiceImpl implements AuthService {
   Future<void> sendEmailVerification() async {
     try {
       final settings = ActionCodeSettings(
-        url: 'https://tekushare.web.app',
+        url: 'https://mail.tekushare.com',
         handleCodeInApp: true,
         androidPackageName: AppConfig.packageName,
         androidInstallApp: true,
