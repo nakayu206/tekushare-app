@@ -76,7 +76,6 @@ jobs:
       #     firebase_auth / cloud_firestore を直接・間接 import するファイルは
       #     Linux でコンパイル不可のため除外する。
       #     Isar の FFI ランタイムを必要とする *_repository_impl_test.dart も除外する。
-      #     （phone_register_page_test → contact_provider → app_providers → Firebase も除外）
       - name: Run unit tests
         run: |
           xvfb-run flutter test -d linux --reporter expanded \
@@ -85,12 +84,16 @@ jobs:
             test/data/models/ \
             test/firebase_options_test.dart \
             test/infrastructure/ \
+            test/screens/widgets/common/app_bottom_nav_test.dart \
             test/screens/widgets/common/category_chip_group_test.dart \
             test/screens/widgets/common/dashed_border_painter_test.dart \
             test/screens/widgets/common/primary_button_test.dart \
             test/screens/providers/auth_provider_test.dart \
             test/screens/providers/inactivity_provider_test.dart \
+            test/screens/pages/history/history_page_test.dart \
+            test/screens/pages/settings/phone_register_page_test.dart \
             test/screens/pages/spot/spot_detail_viewmodel_test.dart \
+            test/screens/pages/spot/spot_list_page_test.dart \
             test/screens/pages/spot/want_to_go_viewmodel_test.dart \
             test/screens/pages/map/walk_route_viewmodel_test.dart \
             test/screens/pages/walk/walk_session_viewmodel_test.dart
