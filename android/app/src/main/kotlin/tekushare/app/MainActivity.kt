@@ -1,4 +1,4 @@
-package com.example.tekushare
+package tekushare.app
 
 import io.flutter.embedding.android.FlutterActivity
 

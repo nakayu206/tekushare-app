@@ -1,0 +1,4 @@
+storePassword=<キーストアのパスワード>
+keyPassword=<キーのパスワード>
+keyAlias=<キーのエイリアス>
+storeFile=<キーストアファイルの絶対パス（例: /Users/yourname/tekushare-release.jks）>
