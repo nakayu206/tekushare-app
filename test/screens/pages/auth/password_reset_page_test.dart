@@ -133,6 +133,11 @@ void main() {
     // ページを再度開いたとき Success 状態がリセットされる
     testWidgets('resets to idle when page is reopened after success',
         (tester) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final service = _FakeAuthService();
       // Navigator で push/pop を使い、initState が2回呼ばれることを確認する
       await tester.pumpWidget(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/screens/pages/auth/view/email_auth_page.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 
@@ -79,6 +80,11 @@ Future<void> _fillRegisterForm(
 void main() {
   group('EmailAuthPage - 新規登録バリデーション', () {
     testWidgets('数字のみのパスワードは登録できない', (tester) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final service = _FakeAuthService();
       await tester.pumpWidget(_buildPage(service));
       await _fillRegisterForm(tester, password: '123456');
@@ -86,11 +92,17 @@ void main() {
       await tester.tap(find.text('登録する'));
       await tester.pump();
 
-      expect(find.text('パスワードは英字と数字を両方含めてください'), findsOneWidget);
+      expect(find.text(AppStrings.emailAuthPasswordAlphanumericError),
+          findsOneWidget);
       expect(service.registerCalled, isFalse);
     });
 
     testWidgets('英字のみのパスワードは登録できない', (tester) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final service = _FakeAuthService();
       await tester.pumpWidget(_buildPage(service));
       await _fillRegisterForm(tester, password: 'abcdefg');
@@ -98,11 +110,17 @@ void main() {
       await tester.tap(find.text('登録する'));
       await tester.pump();
 
-      expect(find.text('パスワードは英字と数字を両方含めてください'), findsOneWidget);
+      expect(find.text(AppStrings.emailAuthPasswordAlphanumericError),
+          findsOneWidget);
       expect(service.registerCalled, isFalse);
     });
 
     testWidgets('英数字混在のパスワードは登録できる', (tester) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final service = _FakeAuthService();
       await tester.pumpWidget(_buildPage(service));
       await _fillRegisterForm(tester, password: 'abc123');
@@ -110,11 +128,17 @@ void main() {
       await tester.tap(find.text('登録する'));
       await tester.pump();
 
-      expect(find.text('パスワードは英字と数字を両方含めてください'), findsNothing);
+      expect(find.text(AppStrings.emailAuthPasswordAlphanumericError),
+          findsNothing);
       expect(service.registerCalled, isTrue);
     });
 
     testWidgets('6文字未満のパスワードは登録できない', (tester) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final service = _FakeAuthService();
       await tester.pumpWidget(_buildPage(service));
       await _fillRegisterForm(tester, password: 'ab1');

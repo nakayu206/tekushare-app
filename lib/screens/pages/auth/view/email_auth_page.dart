@@ -322,7 +322,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
       }
       if (!password.contains(RegExp(r'[a-zA-Z]')) ||
           !password.contains(RegExp(r'[0-9]'))) {
-        _showSnack('パスワードは英字と数字を両方含めてください');
+        _showSnack(AppStrings.emailAuthPasswordAlphanumericError);
         return;
       }
       final confirm = _confirmPasswordController.text;
