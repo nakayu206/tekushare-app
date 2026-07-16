@@ -18,6 +18,14 @@ class _PasswordResetPageState extends ConsumerState<PasswordResetPage> {
   final _emailController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(passwordResetProvider.notifier).reset();
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     super.dispose();

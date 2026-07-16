@@ -320,6 +320,11 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
         _showSnack(AppStrings.nicknameRequired);
         return;
       }
+      if (!password.contains(RegExp(r'[a-zA-Z]')) ||
+          !password.contains(RegExp(r'[0-9]'))) {
+        _showSnack('パスワードは英字と数字を両方含めてください');
+        return;
+      }
       final confirm = _confirmPasswordController.text;
       if (password != confirm) {
         _showSnack('パスワードが一致しません');
