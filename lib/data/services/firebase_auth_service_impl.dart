@@ -127,7 +127,23 @@ class FirebaseAuthServiceImpl implements AuthService {
   @override
   Future<void> sendEmailVerification() async {
     try {
-      await _auth.currentUser?.sendEmailVerification();
+      final settings = ActionCodeSettings(
+        url: 'https://tekushare.web.app',
+        handleCodeInApp: true,
+        androidPackageName: AppConfig.packageName,
+        androidInstallApp: true,
+        iOSBundleId: AppConfig.packageName,
+      );
+      await _auth.currentUser?.sendEmailVerification(settings);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> applyEmailVerificationCode(String oobCode) async {
+    try {
+      await _auth.applyActionCode(oobCode);
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }

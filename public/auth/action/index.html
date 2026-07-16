@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">てくしぇあ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .icon { font-size: 64px; margin-bottom: 16px; }
+    h1 { font-size: 22px; color: #1a1a1a; margin-bottom: 8px; }
+    p { font-size: 15px; color: #666; line-height: 1.6; margin-bottom: 24px; }
+    .btn {
+      display: block;
+      background: #4CAF87;
+      color: white;
+      text-decoration: none;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+    .btn-sub {
+      display: block;
+      color: #4CAF87;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      border: 1.5px solid #4CAF87;
+    }
+    .note {
+      font-size: 13px;
+      color: #999;
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon" id="icon">🚶</div>
+    <h1 id="heading">てくしぇあアプリで開いてください</h1>
+    <p id="description">このリンクは、てくしぇあアプリがインストールされているスマートフォンで開く必要があります。</p>
+    <a id="ios-link" class="btn" href="https://apps.apple.com/jp/app/id000000000">
+      App Store でインストール
+    </a>
+    <a id="android-link" class="btn-sub" href="https://play.google.com/store/apps/details?id=com.example.tekushare">
+      Google Play でインストール
+    </a>
+    <p class="note" id="note">アプリをインストール後、メール内のリンクをもう一度タップしてください。</p>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode');
+
+    if (mode === 'resetPassword') {
+      document.title = 'パスワードの再設定 - てくしぇあ';
+      document.getElementById('page-title').textContent = 'パスワードの再設定 - てくしぇあ';
+      document.getElementById('icon').textContent = '🔑';
+      document.getElementById('heading').textContent = 'パスワードの再設定';
+      document.getElementById('description').textContent =
+        'パスワードを再設定するには、てくしぇあアプリをインストールしたスマートフォンでこのリンクを開いてください。';
+    } else if (mode === 'verifyEmail') {
+      document.title = 'メールアドレスの確認 - てくしぇあ';
+      document.getElementById('page-title').textContent = 'メールアドレスの確認 - てくしぇあ';
+      document.getElementById('icon').textContent = '✉️';
+      document.getElementById('heading').textContent = 'メールアドレスの確認';
+      document.getElementById('description').textContent =
+        'メールアドレスを確認するには、てくしぇあアプリをインストールしたスマートフォンでこのリンクを開いてください。';
+    }
+
+    // iOS か Android かによってストアリンクの表示を切り替える
+    const ua = navigator.userAgent;
+    const isIOS = /iPhone|iPad|iPod/.test(ua);
+    const isAndroid = /Android/.test(ua);
+    if (isIOS) {
+      document.getElementById('android-link').style.display = 'none';
+    } else if (isAndroid) {
+      document.getElementById('ios-link').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

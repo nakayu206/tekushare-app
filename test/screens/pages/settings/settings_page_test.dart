@@ -67,6 +67,9 @@ class _FakeAuthService implements AuthService {
 
   @override
   Future<void> confirmPasswordReset(String code, String newPassword) async {}
+
+  @override
+  Future<void> applyEmailVerificationCode(String oobCode) async {}
 }
 
 class _FakeWalkSessionRepository implements WalkSessionRepository {
