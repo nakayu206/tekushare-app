@@ -45,8 +45,8 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
 
   /// ディープリンクを受け取り、種別に応じて画面遷移する。
   /// 対応スキーム:
-  ///   - https://tekushare.web.app/__/auth/action?mode=resetPassword&oobCode=...
-  ///   - https://tekushare.web.app/__/auth/action?mode=verifyEmail&oobCode=...
+  ///   - https://tekushare.web.app/auth/action?mode=resetPassword&oobCode=...
+  ///   - https://tekushare.web.app/auth/action?mode=verifyEmail&oobCode=...
   ///   - tekushare://link/<token>
   ///   - https://tekushare.web.app/link/<token>
   void _handleUri(Uri uri) {
@@ -83,7 +83,7 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   bool _isPasswordResetAction(Uri uri) {
     return uri.scheme == 'https' &&
         uri.host == 'tekushare.web.app' &&
-        uri.path.startsWith('/__/auth/action') &&
+        uri.path.startsWith('/auth/action') &&
         uri.queryParameters['mode'] == 'resetPassword' &&
         uri.queryParameters['oobCode'] != null;
   }
@@ -91,7 +91,7 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   bool _isEmailVerificationAction(Uri uri) {
     return uri.scheme == 'https' &&
         uri.host == 'tekushare.web.app' &&
-        uri.path.startsWith('/__/auth/action') &&
+        uri.path.startsWith('/auth/action') &&
         uri.queryParameters['mode'] == 'verifyEmail' &&
         uri.queryParameters['oobCode'] != null;
   }

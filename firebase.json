@@ -21,6 +21,10 @@
     ],
     "rewrites": [
       {
+        "source": "/auth/action",
+        "destination": "/auth/action/index.html"
+      },
+      {
         "source": "/link/**",
         "destination": "/link/index.html"
       }

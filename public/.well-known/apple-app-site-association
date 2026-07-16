@@ -8,7 +8,7 @@
           "REPLACE_WITH_TEAM_ID.com.example.tekushare.stg"
         ],
         "components": [
-          { "/": "/__/auth/action*", "comment": "Firebase Auth action links (password reset, email verification)" },
+          { "/": "/auth/action*", "comment": "Firebase Auth action links (password reset, email verification)" },
           { "/": "/link/*", "comment": "Invite deep links" }
         ]
       }
