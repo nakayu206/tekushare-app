@@ -46,6 +46,7 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   /// ディープリンクを受け取り、種別に応じて画面遷移する。
   /// 対応スキーム:
   ///   - https://tekushare.web.app/__/auth/action?mode=resetPassword&oobCode=...
+  ///   - https://tekushare.web.app/__/auth/action?mode=verifyEmail&oobCode=...
   ///   - tekushare://link/<token>
   ///   - https://tekushare.web.app/link/<token>
   void _handleUri(Uri uri) {
@@ -55,6 +56,13 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
       navigatorKey.currentState?.push(
         MaterialPageRoute(builder: (_) => PasswordSetPage(oobCode: oobCode)),
       );
+      return;
+    }
+
+    if (_isEmailVerificationAction(uri)) {
+      final oobCode = uri.queryParameters['oobCode']!;
+      if (!_handledTokens.add('verify:$oobCode')) return;
+      _applyEmailVerification(oobCode);
       return;
     }
 
@@ -78,6 +86,26 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
         uri.path.startsWith('/__/auth/action') &&
         uri.queryParameters['mode'] == 'resetPassword' &&
         uri.queryParameters['oobCode'] != null;
+  }
+
+  bool _isEmailVerificationAction(Uri uri) {
+    return uri.scheme == 'https' &&
+        uri.host == 'tekushare.web.app' &&
+        uri.path.startsWith('/__/auth/action') &&
+        uri.queryParameters['mode'] == 'verifyEmail' &&
+        uri.queryParameters['oobCode'] != null;
+  }
+
+  Future<void> _applyEmailVerification(String oobCode) async {
+    final authService = ref.read(authServiceProvider);
+    try {
+      await authService.applyEmailVerificationCode(oobCode);
+      // サインイン中のユーザーがいれば reload してメール確認済み状態に更新する。
+      // userChanges() ストリームが新しい状態を emit し、ホーム画面へ自動遷移する。
+      await authService.reloadCurrentUser();
+    } on Exception {
+      // コードが無効・期限切れの場合は無視する（ユーザーは再送信できる）
+    }
   }
 
   String? _extractToken(Uri uri) {

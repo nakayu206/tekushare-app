@@ -64,6 +64,7 @@ abstract interface class AuthService {
   Future<void> reloadCurrentUser();
   Future<String> verifyPasswordResetCode(String code);
   Future<void> confirmPasswordReset(String code, String newPassword);
+  Future<void> applyEmailVerificationCode(String oobCode);
 }
 
 // ── Provider declaration ──────────────────────────────────────────────────────

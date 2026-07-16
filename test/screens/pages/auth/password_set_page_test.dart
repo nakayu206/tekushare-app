@@ -60,6 +60,9 @@ class _FakeAuthService implements AuthService {
       throw AuthException(confirmErrorCode ?? 'unknown');
     }
   }
+
+  @override
+  Future<void> applyEmailVerificationCode(String oobCode) async {}
 }
 
 Widget _buildPage(_FakeAuthService service, {String oobCode = 'test-code'}) {

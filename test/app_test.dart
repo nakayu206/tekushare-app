@@ -30,6 +30,9 @@ class _FakeAuthService implements AuthService {
   Future<String> verifyPasswordResetCode(String code) async => '';
   @override
   Future<void> confirmPasswordReset(String code, String newPassword) async {}
+
+  @override
+  Future<void> applyEmailVerificationCode(String oobCode) async {}
 }
 
 void main() {
