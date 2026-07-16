@@ -143,8 +143,7 @@ void main() {
               builder: (context) => TextButton(
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const PasswordResetPage()),
+                  MaterialPageRoute(builder: (_) => const PasswordResetPage()),
                 ),
                 child: const Text('open'),
               ),
