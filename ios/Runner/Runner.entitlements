@@ -5,6 +5,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:tekushare.web.app</string>
+		<string>applinks:tekushare.firebaseapp.com</string>
 	</array>
 </dict>
 </plist>
