@@ -204,6 +204,8 @@ abstract class AppStrings {
       'アカウントを消去しますか？\nこの操作は取り消せません。';
   static const settingsLogoutConfirmButton = 'ログアウト';
   static const settingsDeleteAccountConfirmButton = '消去する';
+  static const settingsPrivacyPolicy = 'プライバシーポリシー';
+  static const privacyPolicyUrl = 'https://tekushare.web.app/privacy.html';
 
   // アカウント連携（シェアカード内）
   static const accountLinkInviteDescription =
