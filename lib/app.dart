@@ -102,11 +102,17 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
 
   Future<void> _applyEmailVerification(String oobCode) async {
     final authService = ref.read(authServiceProvider);
+    final wasSignedIn = ref.read(authStateProvider).valueOrNull != null;
     try {
       await authService.applyEmailVerificationCode(oobCode);
-      // サインイン中のユーザーがいれば reload してメール確認済み状態に更新する。
-      // userChanges() ストリームが新しい状態を emit し、ホーム画面へ自動遷移する。
-      await authService.reloadCurrentUser();
+      if (wasSignedIn) {
+        // サインイン中なら reload してメール確認済み状態に更新 → 自動でホームへ遷移
+        await authService.reloadCurrentUser();
+      } else {
+        // 未サインイン状態でリンクを開いた場合（新規登録後の通常フロー）、
+        // applyActionCode が一時的にサインインを引き起こすことがあるため即座にサインアウト
+        await authService.signOut();
+      }
     } on Exception {
       // コードが無効・期限切れの場合は無視する（ユーザーは再送信できる）
     }
