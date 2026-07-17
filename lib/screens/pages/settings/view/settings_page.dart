@@ -132,6 +132,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 onLogout: _showLogoutConfirmDialog,
                 onDeleteAccount: _showDeleteAccountConfirmDialog,
               ),
+              const SizedBox(height: AppSpacing.sm),
+              TextButton(
+                onPressed: () async {
+                  final uri = Uri.parse(AppStrings.privacyPolicyUrl);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: const Text(
+                  AppStrings.settingsPrivacyPolicy,
+                  style: TextStyle(
+                    fontSize: AppTextStyle.xs,
+                    color: AppColors.textDisabled,
+                  ),
+                ),
+              ),
               const SizedBox(height: AppSpacing.lg),
             ],
           ),
