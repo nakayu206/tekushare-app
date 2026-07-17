@@ -30,7 +30,6 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late List<Animation<double>> _footprintFades;
-  late Animation<double> _cardFade;
   bool _isProcessing = false;
 
   // 画面幅・高さに対する比率で指定（端末サイズ非依存）
@@ -60,11 +59,6 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
         curve: Interval(start, end, curve: Curves.easeOut),
       );
     });
-
-    _cardFade = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(footprintEnd, 1.0, curve: Curves.easeOut),
-    );
 
     _controller.forward();
   }
@@ -118,12 +112,9 @@ class _EndWalkPageState extends ConsumerState<EndWalkPage>
                   children: [
                     const ClockHeader(),
                     const Spacer(flex: 2),
-                    FadeTransition(
-                      opacity: _cardFade,
-                      child: _ConfirmCard(
-                        onCancel: () => Navigator.pop(context),
-                        onConfirm: () => _onConfirm(),
-                      ),
+                    _ConfirmCard(
+                      onCancel: () => Navigator.pop(context),
+                      onConfirm: () => _onConfirm(),
                     ),
                     const Spacer(flex: 3),
                   ],
