@@ -61,6 +61,63 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607979997790:android:90cc88922b5358cb5742cf",
+        "android_client_info": {
+          "package_name": "tekushare.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDevgBcZY0-9VbJxibVTLuX5z3zUjsZBDk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607979997790:android:984bda49ee8ea36d5742cf",
+        "android_client_info": {
+          "package_name": "tekushare.app.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDevgBcZY0-9VbJxibVTLuX5z3zUjsZBDk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607979997790:android:088a6f47caeb90155742cf",
+        "android_client_info": {
+          "package_name": "tekushare.app.stg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDevgBcZY0-9VbJxibVTLuX5z3zUjsZBDk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"
