@@ -84,6 +84,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                 const SizedBox(height: AppSpacing.lg),
               ],
               TextField(
+                key: const Key('email_field'),
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
@@ -98,6 +99,7 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
               ),
               const SizedBox(height: AppSpacing.lg),
               TextField(
+                key: const Key('password_field'),
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
