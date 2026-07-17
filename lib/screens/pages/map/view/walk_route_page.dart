@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' as latlong2;
 import 'package:tekushare/screens/widgets/common/app_confirm_dialog.dart';
+import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -884,7 +885,7 @@ class _SelectedRouteCardState extends ConsumerState<_SelectedRouteCard> {
                         TileLayer(
                           urlTemplate:
                               'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.example.tekushare',
+                          userAgentPackageName: AppConfig.packageName,
                         ),
                         PolylineLayer(
                           polylines: [

@@ -41,11 +41,11 @@ abstract class AppConfig {
   static String get packageName {
     switch (_flavor) {
       case Flavor.dev:
-        return 'com.example.tekushare.dev';
+        return 'tekushare.app.dev';
       case Flavor.stg:
-        return 'com.example.tekushare.stg';
+        return 'tekushare.app.stg';
       case Flavor.prod:
-        return 'com.example.tekushare';
+        return 'tekushare.app';
     }
   }
 
