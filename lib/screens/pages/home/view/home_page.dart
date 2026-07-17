@@ -28,7 +28,6 @@ class _HomePageState extends ConsumerState<HomePage>
     with SingleTickerProviderStateMixin, RouteAware {
   late AnimationController _controller;
   late List<Animation<double>> _footprintFades;
-  late Animation<double> _buttonFade;
 
   @override
   void didChangeDependencies() {
@@ -73,12 +72,6 @@ class _HomePageState extends ConsumerState<HomePage>
       );
     });
 
-    // ボタン: 全足あとが出揃ったあとにフェードイン
-    _buttonFade = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(footprintEnd, 1.0, curve: Curves.easeOut),
-    );
-
     _controller.forward();
   }
 
@@ -115,17 +108,14 @@ class _HomePageState extends ConsumerState<HomePage>
                 children: [
                   const ClockHeader(),
                   const Spacer(flex: 8),
-                  FadeTransition(
-                    opacity: _buttonFade,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.x2l,
-                      ),
-                      child: PrimaryButton(
-                        label: AppStrings.startWalk,
-                        onPressed: () =>
-                            ref.read(walkSessionProvider.notifier).startWalk(),
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.x2l,
+                    ),
+                    child: PrimaryButton(
+                      label: AppStrings.startWalk,
+                      onPressed: () =>
+                          ref.read(walkSessionProvider.notifier).startWalk(),
                     ),
                   ),
                   const Spacer(),
