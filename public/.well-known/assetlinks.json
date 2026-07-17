@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "tekushare.app",
       "sha256_cert_fingerprints": [
-        "8C:57:66:69:BC:F2:56:D7:41:40:08:CA:4E:2F:55:47:CC:64:B5:37:B3:01:4E:BF:7C:67:AA:51:75:C8:50:28"
+        "8C:57:66:69:BC:F2:56:D7:41:40:08:CA:4E:2F:55:47:CC:64:B5:37:B3:01:4E:BF:7C:67:AA:51:75:C8:50:28",
+        "19:A9:C6:3A:BD:71:B6:2B:20:F1:57:30:ED:E9:69:A2:97:0A:24:E6:50:E7:01:06:A9:4D:F0:94:4C:86:66:3C"
       ]
     }
   },
