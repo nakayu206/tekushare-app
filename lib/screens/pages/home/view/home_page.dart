@@ -73,6 +73,18 @@ class _HomePageState extends ConsumerState<HomePage>
     });
 
     _controller.forward();
+
+    // プロセスキル後の復元: SharedPreferences から walking 状態が復元されていたら
+    // ref.listen は初期値で発火しないため、initState で明示的にチェックして遷移する
+    Future.microtask(() {
+      if (!mounted) return;
+      if (ref.read(walkSessionProvider).status == WalkStatus.walking) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const WalkPage()),
+        );
+      }
+    });
   }
 
   @override
