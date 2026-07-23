@@ -115,7 +115,7 @@ class FirebaseAuthServiceImpl implements AuthService {
         handleCodeInApp: true,
         androidPackageName: AppConfig.packageName,
         androidInstallApp: true,
-        iOSBundleId: AppConfig.packageName,
+        iOSBundleId: AppConfig.iosBundleId,
       );
       await _auth.sendPasswordResetEmail(
           email: email, actionCodeSettings: settings);
@@ -132,7 +132,7 @@ class FirebaseAuthServiceImpl implements AuthService {
         handleCodeInApp: true,
         androidPackageName: AppConfig.packageName,
         androidInstallApp: true,
-        iOSBundleId: AppConfig.packageName,
+        iOSBundleId: AppConfig.iosBundleId,
       );
       await _auth.currentUser?.sendEmailVerification(settings);
     } on FirebaseAuthException catch (e) {
