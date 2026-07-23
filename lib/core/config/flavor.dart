@@ -37,15 +37,27 @@ abstract class AppConfig {
     }
   }
 
-  /// Android パッケージ名 / iOS Bundle ID
+  /// Android パッケージ名
   static String get packageName {
     switch (_flavor) {
       case Flavor.dev:
-        return 'tekushare.app.dev';
+        return 'com.tekushare.app.dev';
       case Flavor.stg:
-        return 'tekushare.app.stg';
+        return 'com.tekushare.app.stg';
       case Flavor.prod:
-        return 'tekushare.app';
+        return 'com.tekushare.app';
+    }
+  }
+
+  /// iOS Bundle ID
+  static String get iosBundleId {
+    switch (_flavor) {
+      case Flavor.dev:
+        return 'com.example.tekushare.dev';
+      case Flavor.stg:
+        return 'com.example.tekushare.stg';
+      case Flavor.prod:
+        return 'com.example.tekushare';
     }
   }
 

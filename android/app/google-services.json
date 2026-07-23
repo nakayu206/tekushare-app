@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:607979997790:android:1d1f1528a392b6825742cf",
+        "mobilesdk_app_id": "1:607979997790:android:b71382402c5b29ac5742cf",
         "android_client_info": {
-          "package_name": "com.example.tekushare"
+          "package_name": "com.tekushare.app"
         }
       },
       "oauth_client": [],
@@ -26,9 +26,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:607979997790:android:90148ba83b7680ec5742cf",
+        "mobilesdk_app_id": "1:607979997790:android:c26fe9971643ff225742cf",
         "android_client_info": {
-          "package_name": "com.example.tekushare.dev"
+          "package_name": "com.tekushare.app.dev"
         }
       },
       "oauth_client": [],
@@ -45,9 +45,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:607979997790:android:ec4f743cbf5e0b125742cf",
+        "mobilesdk_app_id": "1:607979997790:android:99b5edd4d1832e9b5742cf",
         "android_client_info": {
-          "package_name": "com.example.tekushare.stg"
+          "package_name": "com.tekushare.app.stg"
         }
       },
       "oauth_client": [],
