@@ -68,7 +68,7 @@ abstract class AppStrings {
   static const emailAuthPasswordHint = '6文字以上';
   static const emailAuthPasswordAlphanumericError = 'パスワードは英字と数字を両方含めてください';
   static const emailAuthRegisteredDescription =
-      'ご登録のメールアドレスに確認メールをお送りしました。\nメール内のリンクをクリックして確認を完了してから、ログインしてください。';
+      'ご登録のメールアドレスに確認メールをお送りしました。\nメール内のリンクをクリックして確認を完了してから、ログインしてください。\n届いていない場合は迷惑メールフォルダもご確認ください。';
   static const emailAuthLoginButton = 'ログインへ';
 
   // メールアドレス確認
