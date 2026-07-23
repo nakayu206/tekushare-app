@@ -28,6 +28,10 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
     if (id == null || statusIndex == null) {
       return const WalkSession(id: '', status: WalkStatus.idle);
     }
+    // 範囲外インデックスはクラッシュを防ぐため idle に戻す
+    if (statusIndex < 0 || statusIndex >= WalkStatus.values.length) {
+      return const WalkSession(id: '', status: WalkStatus.idle);
+    }
     final status = WalkStatus.values[statusIndex];
     if (status != WalkStatus.walking) {
       return const WalkSession(id: '', status: WalkStatus.idle);
@@ -44,38 +48,43 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
     );
   }
 
-  void _persist(WalkSession session) {
+  Future<void> _persist(WalkSession session) async {
     if (session.status == WalkStatus.walking) {
-      _prefs.setString(_kId, session.id);
-      _prefs.setInt(_kStatus, session.status.index);
-      if (session.startedAt != null) {
-        _prefs.setInt(_kStartedAt, session.startedAt!.millisecondsSinceEpoch);
-      }
-      _prefs.setInt(_kElapsed, session.elapsedSeconds);
+      await Future.wait([
+        _prefs.setString(_kId, session.id),
+        _prefs.setInt(_kStatus, session.status.index),
+        if (session.startedAt != null)
+          _prefs.setInt(_kStartedAt, session.startedAt!.millisecondsSinceEpoch)
+        else
+          _prefs.remove(_kStartedAt),
+        _prefs.setInt(_kElapsed, session.elapsedSeconds),
+      ]);
     } else {
-      _prefs.remove(_kId);
-      _prefs.remove(_kStatus);
-      _prefs.remove(_kStartedAt);
-      _prefs.remove(_kElapsed);
+      await Future.wait([
+        _prefs.remove(_kId),
+        _prefs.remove(_kStatus),
+        _prefs.remove(_kStartedAt),
+        _prefs.remove(_kElapsed),
+      ]);
     }
   }
 
-  void startWalk() {
+  Future<void> startWalk() async {
     final session = _startWalk.call();
-    _persist(session);
+    await _persist(session);
     state = session;
   }
 
   Future<void> endWalk(WalkRoute route) async {
     if (state.status != WalkStatus.walking) return;
     final finished = await _endWalk.call(state, route);
-    _persist(finished);
+    await _persist(finished);
     state = finished;
   }
 
-  void resetWalk() {
+  Future<void> resetWalk() async {
     const session = WalkSession(id: '', status: WalkStatus.idle);
-    _persist(session);
+    await _persist(session);
     state = session;
   }
 }

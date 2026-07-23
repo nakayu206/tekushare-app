@@ -62,7 +62,7 @@ void main() {
       final container = await makeContainer();
       addTearDown(container.dispose);
 
-      container.read(walkSessionProvider.notifier).startWalk();
+      await container.read(walkSessionProvider.notifier).startWalk();
 
       final session = container.read(walkSessionProvider);
       expect(session.status, WalkStatus.walking);
@@ -73,7 +73,7 @@ void main() {
       final container = await makeContainer();
       addTearDown(container.dispose);
 
-      container.read(walkSessionProvider.notifier).startWalk();
+      await container.read(walkSessionProvider.notifier).startWalk();
       await container.read(walkSessionProvider.notifier).endWalk(makeRoute());
 
       final session = container.read(walkSessionProvider);
@@ -85,7 +85,7 @@ void main() {
       final container = await makeContainer();
       addTearDown(container.dispose);
 
-      container.read(walkSessionProvider.notifier).startWalk();
+      await container.read(walkSessionProvider.notifier).startWalk();
       await container.read(walkSessionProvider.notifier).endWalk(makeRoute());
 
       verify(mockSessionRepo.saveSession(any)).called(1);
@@ -95,7 +95,7 @@ void main() {
       final container = await makeContainer();
       addTearDown(container.dispose);
 
-      container.read(walkSessionProvider.notifier).startWalk();
+      await container.read(walkSessionProvider.notifier).startWalk();
       await container.read(walkSessionProvider.notifier).endWalk(makeRoute());
 
       verify(mockRouteRepo.saveRoute(any)).called(1);
