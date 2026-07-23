@@ -196,8 +196,11 @@ final _contactOverride =
 
 void main() {
   group('SettingsPage', () {
-    setUp(() {
+    late SharedPreferences settingsPrefs;
+
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      settingsPrefs = await SharedPreferences.getInstance();
     });
 
     Future<void> pumpPage(WidgetTester tester) async {
@@ -764,6 +767,7 @@ void main() {
                   _FakeWalkSessionRepository(),
                   _FakeWalkRouteRepository(),
                 ),
+                prefs: settingsPrefs,
               ),
             ),
           ],
@@ -810,6 +814,7 @@ void main() {
                   _FakeWalkSessionRepository(),
                   _FakeWalkRouteRepository(),
                 ),
+                prefs: settingsPrefs,
               ),
             ),
           ],
@@ -857,6 +862,7 @@ void main() {
                   _FakeWalkSessionRepository(),
                   _FakeWalkRouteRepository(),
                 ),
+                prefs: settingsPrefs,
               ),
             ),
           ],
@@ -907,6 +913,7 @@ void main() {
                   _FakeWalkSessionRepository(),
                   _FakeWalkRouteRepository(),
                 ),
+                prefs: settingsPrefs,
               ),
             ),
           ],
@@ -954,6 +961,7 @@ void main() {
                   _FakeWalkSessionRepository(),
                   _FakeWalkRouteRepository(),
                 ),
+                prefs: settingsPrefs,
               ),
             ),
           ],
@@ -1002,6 +1010,7 @@ void main() {
                   _FakeWalkSessionRepository(),
                   _FakeWalkRouteRepository(),
                 ),
+                prefs: settingsPrefs,
               ),
             ),
           ],

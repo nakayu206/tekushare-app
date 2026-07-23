@@ -189,12 +189,14 @@ class _WalkPageState extends ConsumerState<WalkPage> {
         content: const Text(AppStrings.gpsTimeoutMessage),
         actions: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(dialogContext);
               ref.read(notificationServiceProvider).cancelAll();
               ref.read(walkTimerProvider.notifier).reset();
-              ref.read(walkSessionProvider.notifier).resetWalk();
-              Navigator.popUntil(context, (route) => route.isFirst);
+              await ref.read(walkSessionProvider.notifier).resetWalk();
+              if (mounted) {
+                Navigator.popUntil(context, (route) => route.isFirst);
+              }
             },
             child: const Text(AppStrings.gpsTimeoutRetry),
           ),

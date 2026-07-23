@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
@@ -33,21 +34,50 @@ class _FakeRouteRepository implements RouteRepository {
   Future<List<WalkRoute>> getAllRoutes() async => [];
 }
 
-/// 共通のプロバイダーオーバーライド（clockProvider のタイマーを回避）
-List<Override> get _baseOverrides => [
-      // Stream.periodic によるタイマーをテストで残さないよう単発ストリームに差し替え
-      clockProvider.overrideWith((ref) => Stream.value(DateTime.now())),
-      walkSessionRepositoryProvider
-          .overrideWithValue(_FakeWalkSessionRepository()),
-      routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
-      // WalkPage の CircularProgressIndicator で pumpAndSettle がタイムアウトしないよう静的ストリームに差し替え
-      locationProvider.overrideWith(
-        (ref) => Stream<Position>.error(Exception('GPS unavailable')),
-      ),
-    ];
+Widget _buildApp(ProviderContainer container) {
+  return UncontrolledProviderScope(
+    container: container,
+    child: MaterialApp(
+      builder: (context, child) {
+        final sw = MediaQuery.sizeOf(context).width;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            extensions: [AppSizingTheme.fromScreenWidth(sw)],
+          ),
+          child: child!,
+        );
+      },
+      home: const HomePage(),
+    ),
+  );
+}
 
 void main() {
   AppConfig.setFlavor(Flavor.dev);
+
+  late SharedPreferences prefs;
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  });
+
+  List<Override> baseOverrides() => [
+        clockProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+        walkSessionRepositoryProvider
+            .overrideWithValue(_FakeWalkSessionRepository()),
+        routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
+        locationProvider.overrideWith(
+          (ref) => Stream<Position>.error(Exception('GPS unavailable')),
+        ),
+        sharedPrefsProvider.overrideWith((ref) async => prefs),
+      ];
+
+  Future<ProviderContainer> makeContainer() async {
+    final container = ProviderContainer(overrides: baseOverrides());
+    await container.read(sharedPrefsProvider.future);
+    return container;
+  }
 
   group('HomePage', () {
     testWidgets('初期状態でホーム画面が表示される', (tester) async {
@@ -56,23 +86,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: _baseOverrides,
-          child: MaterialApp(
-            builder: (context, child) {
-              final sw = MediaQuery.sizeOf(context).width;
-              return Theme(
-                data: Theme.of(context).copyWith(
-                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
-                ),
-                child: child!,
-              );
-            },
-            home: const HomePage(),
-          ),
-        ),
-      );
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_buildApp(container));
       await tester.pump();
 
       expect(find.byType(HomePage), findsOneWidget);
@@ -84,27 +101,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer(overrides: _baseOverrides);
+      final container = await makeContainer();
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            builder: (context, child) {
-              final sw = MediaQuery.sizeOf(context).width;
-              return Theme(
-                data: Theme.of(context).copyWith(
-                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
-                ),
-                child: child!,
-              );
-            },
-            home: const HomePage(),
-          ),
-        ),
-      );
-      // アニメーション完了まで進める
+      await tester.pumpWidget(_buildApp(container));
       await tester.pump(const Duration(milliseconds: 3000));
 
       await tester.tap(find.byType(ElevatedButton).first);
@@ -117,32 +117,15 @@ void main() {
     });
 
     testWidgets('walking 状態になったら WalkPage へ遷移する', (tester) async {
-      // WalkPage のコンテンツが収まるよう縦に広いサイズを指定
       tester.view.physicalSize = const Size(1170, 3600);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer(overrides: _baseOverrides);
+      final container = await makeContainer();
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            builder: (context, child) {
-              final sw = MediaQuery.sizeOf(context).width;
-              return Theme(
-                data: Theme.of(context).copyWith(
-                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
-                ),
-                child: child!,
-              );
-            },
-            home: const HomePage(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_buildApp(container));
       await tester.pump(const Duration(milliseconds: 3000));
 
       await tester.tap(find.byType(ElevatedButton).first);
@@ -157,26 +140,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer(overrides: _baseOverrides);
+      final container = await makeContainer();
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            builder: (context, child) {
-              final sw = MediaQuery.sizeOf(context).width;
-              return Theme(
-                data: Theme.of(context).copyWith(
-                  extensions: [AppSizingTheme.fromScreenWidth(sw)],
-                ),
-                child: child!,
-              );
-            },
-            home: const HomePage(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_buildApp(container));
       await tester.pump(const Duration(milliseconds: 3000));
 
       // 1回目：WalkPage へ遷移
@@ -193,6 +160,42 @@ void main() {
       // 2回目：再度ボタンを押しても WalkPage へ遷移する
       await tester.tap(find.byType(ElevatedButton).first);
       await tester.pumpAndSettle();
+      expect(find.byType(WalkPage), findsOneWidget);
+    });
+
+    testWidgets('プロセスキル後の復元: walking 状態で起動したら WalkPage へ自動遷移する',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 3600);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // SharedPreferences に walking 状態を事前書き込み（プロセスキル後の再起動をシミュレート）
+      SharedPreferences.setMockInitialValues({
+        'walk_id': 'restored_walk_id',
+        'walk_status': WalkStatus.walking.index,
+        'walk_started_at': DateTime.now().millisecondsSinceEpoch,
+        'walk_elapsed': 300,
+      });
+      final walkingPrefs = await SharedPreferences.getInstance();
+
+      final container = ProviderContainer(overrides: [
+        clockProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+        walkSessionRepositoryProvider
+            .overrideWithValue(_FakeWalkSessionRepository()),
+        routeRepositoryProvider.overrideWithValue(_FakeRouteRepository()),
+        locationProvider.overrideWith(
+          (ref) => Stream<Position>.error(Exception('GPS unavailable')),
+        ),
+        sharedPrefsProvider.overrideWith((ref) async => walkingPrefs),
+      ]);
+      addTearDown(container.dispose);
+      // sharedPrefsProvider を先に解決しておく（walkSessionProvider が requireValue で参照するため）
+      await container.read(sharedPrefsProvider.future);
+
+      await tester.pumpWidget(_buildApp(container));
+      await tester.pumpAndSettle();
+
       expect(find.byType(WalkPage), findsOneWidget);
     });
   });
