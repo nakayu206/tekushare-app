@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
@@ -7,6 +9,31 @@ import 'package:tekushare/core/constants/map_constants.dart';
 
 /// 写真をフルスクリーンで表示するビューアーを開く。
 /// [onDelete] を渡すと削除ボタンを表示する。
+Widget _buildImage(String path) {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return CachedNetworkImage(
+      imageUrl: path,
+      fit: BoxFit.contain,
+      placeholder: (_, __) =>
+          const Center(child: CircularProgressIndicator(color: Colors.white54)),
+      errorWidget: (_, __, ___) => const Icon(
+        Icons.broken_image,
+        color: Colors.white54,
+        size: AppSize.iconXl,
+      ),
+    );
+  }
+  return Image.file(
+    File(path),
+    fit: BoxFit.contain,
+    errorBuilder: (_, __, ___) => const Icon(
+      Icons.broken_image,
+      color: Colors.white54,
+      size: AppSize.iconXl,
+    ),
+  );
+}
+
 void showPhotoViewer(
   BuildContext context,
   String path, {
@@ -25,18 +52,7 @@ void showPhotoViewer(
               child: SizedBox.expand(
                 child: InteractiveViewer(
                   child: Center(
-                    child: CachedNetworkImage(
-                      imageUrl: path,
-                      fit: BoxFit.contain,
-                      placeholder: (_, __) => const Center(
-                        child: CircularProgressIndicator(color: Colors.white54),
-                      ),
-                      errorWidget: (_, __, ___) => const Icon(
-                        Icons.broken_image,
-                        color: Colors.white54,
-                        size: AppSize.iconXl,
-                      ),
-                    ),
+                    child: _buildImage(path),
                   ),
                 ),
               ),
