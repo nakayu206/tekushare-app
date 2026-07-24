@@ -18,4 +18,5 @@ abstract class AppColors {
   static const shareLinkBg = Color(0xFF3A3A3A);
   static const shareLinkLabel = Color(0x80FFFFFF);
   static const shareLinkButton = Color(0x3DFFFFFF);
+  static const viewerIcon = Color(0x8AFFFFFF);
 }
