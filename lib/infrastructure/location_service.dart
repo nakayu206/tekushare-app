@@ -4,7 +4,7 @@ class LocationService {
   static const _distanceFilterMeters = 3;
 
   // 通常精度しきい値：これ以下の誤差のみ採用
-  static const _maxAccuracyMeters = 20.0;
+  static const _maxAccuracyMeters = 30.0;
 
   // フォールバックしきい値：一定時間良好なポイントが来なければ緩和
   static const _fallbackAccuracyMeters = 50.0;

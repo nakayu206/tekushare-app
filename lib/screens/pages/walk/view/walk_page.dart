@@ -34,7 +34,7 @@ import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 import 'package:tekushare/screens/widgets/common/clock_header.dart';
 import 'package:tekushare/screens/widgets/common/primary_button.dart';
 
-const _gpsTimeoutSeconds = 30;
+const _gpsTimeoutSeconds = 60;
 
 /// 散歩モード画面
 class WalkPage extends ConsumerStatefulWidget {
