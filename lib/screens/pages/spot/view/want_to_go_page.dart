@@ -121,7 +121,7 @@ class _WantToGoPageState extends ConsumerState<WantToGoPage> {
             builder: (_) => _SavedDialog(
               onClose: () {
                 Navigator.pop(context); // ダイアログを閉じる
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.pop(context); // WalkPage へ戻る
               },
             ),
           );
