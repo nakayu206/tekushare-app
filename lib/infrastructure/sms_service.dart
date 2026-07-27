@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter_sms/flutter_sms.dart';
+import 'package:flutter/services.dart';
 import 'package:tekushare/domain/entities/contact.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,6 +14,7 @@ abstract interface class SmsService {
 class SmsServiceImpl implements SmsService {
   const SmsServiceImpl();
 
+  static const _channel = MethodChannel('tekushare/sms_direct');
   static const _messageTemplate = '【てくしぇあ】{name}さんから連絡がありません。確認してください。';
 
   @override
@@ -32,18 +33,17 @@ class SmsServiceImpl implements SmsService {
     }
   }
 
-  /// Android: flutter_sms で SMS アプリを開き宛先・本文をセット（1件失敗しても残りへ継続）
+  /// Android: Method Channel 経由で SmsManager を使って直接送信
   Future<void> _sendAndroid(List<String> numbers, String message) async {
     for (final number in numbers) {
-      try {
-        await sendSMS(message: message, recipients: [number]);
-      } catch (_) {
-        // 送信失敗をスキップして次の連絡先へ
-      }
+      await _channel.invokeMethod<void>('sendSms', {
+        'number': number,
+        'message': message,
+      });
     }
   }
 
-  /// iOS: SMSアプリを開き宛先・本文をセット
+  /// iOS: SMS アプリを開き宛先・本文をセット
   Future<void> _openIosSms(List<String> numbers, String message) async {
     final recipients = numbers.join(',');
     final uri = Uri(

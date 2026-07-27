@@ -230,6 +230,33 @@ class _EmailAuthPageState extends ConsumerState<EmailAuthPage> {
                 textAlign: TextAlign.center,
                 style: AppTextStyle.bodyMedium,
               ),
+              const SizedBox(height: AppSpacing.x2l),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  border: Border.all(color: AppColors.warning),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_outlined,
+                      color: AppColors.warning,
+                    ),
+                    SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(
+                        AppStrings.emailSpamFolderWarning,
+                        style: TextStyle(color: AppColors.warning),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: AppSpacing.x4l),
               SizedBox(
                 height: AppSize.buttonHeight,

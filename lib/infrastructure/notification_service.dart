@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -22,6 +24,7 @@ class NotificationService {
   static const _idInactivity = 1;
   static const _idTurnaround = 2;
   static const _idRoundTrip = 3;
+  static const _idSmsSent = 4;
 
   Future<void> initialize() async {
     const androidSettings =
@@ -37,6 +40,22 @@ class NotificationService {
         android: androidSettings,
         iOS: iosSettings,
       ),
+    );
+
+    if (Platform.isAndroid) {
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.requestNotificationsPermission();
+    }
+  }
+
+  /// SMS 送信後の通知を表示する（バックグラウンド時でも気づけるよう）
+  Future<void> showSmsSentNotification() async {
+    await _plugin.show(
+      id: _idSmsSent,
+      title: AppStrings.smsSentNotificationTitle,
+      body: AppStrings.smsSentNotificationBody,
+      notificationDetails: _notificationDetails(),
     );
   }
 
