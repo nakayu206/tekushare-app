@@ -507,11 +507,7 @@ class _InactivityCard extends StatelessWidget {
   final VoidCallback onAddContact;
   final VoidCallback onShowContacts;
 
-  static final _inactivityOptions = [
-    1,
-    2,
-    ...List.generate(24, (i) => (i + 1) * 5)
-  ];
+  static final _inactivityOptions = List.generate(24, (i) => (i + 1) * 5);
 
   @override
   Widget build(BuildContext context) {
