@@ -131,6 +131,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
             contacts: contacts,
             senderName: senderName,
           );
+      await ref.read(notificationServiceProvider).showSmsSentNotification();
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -798,6 +799,7 @@ class _SafetyConfirmDialog extends StatefulWidget {
 class _SafetyConfirmDialogState extends State<_SafetyConfirmDialog> {
   late int _secondsLeft;
   Timer? _timer;
+  bool _smsSent = false;
 
   @override
   void initState() {
@@ -811,8 +813,9 @@ class _SafetyConfirmDialogState extends State<_SafetyConfirmDialog> {
     setState(() => _secondsLeft--);
     if (_secondsLeft <= 0) {
       _timer?.cancel();
-      Navigator.of(context).pop();
       await widget.onTimeout();
+      if (!mounted) return;
+      setState(() => _smsSent = true);
     }
   }
 
@@ -831,16 +834,22 @@ class _SafetyConfirmDialogState extends State<_SafetyConfirmDialog> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(AppStrings.safetyConfirmBody),
-            const SizedBox(height: AppSpacing.x2l),
             Text(
-              '$_secondsLeft秒',
-              style: const TextStyle(
-                fontSize: AppTextStyle.x3l,
-                fontWeight: AppTextStyle.bold,
-                color: AppColors.error,
-              ),
+              _smsSent
+                  ? AppStrings.safetySmsSentBody
+                  : AppStrings.safetyConfirmBody,
             ),
+            if (!_smsSent) ...[
+              const SizedBox(height: AppSpacing.x2l),
+              Text(
+                '$_secondsLeft秒',
+                style: const TextStyle(
+                  fontSize: AppTextStyle.x3l,
+                  fontWeight: AppTextStyle.bold,
+                  color: AppColors.error,
+                ),
+              ),
+            ],
           ],
         ),
         actions: [

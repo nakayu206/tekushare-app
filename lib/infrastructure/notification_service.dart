@@ -22,6 +22,7 @@ class NotificationService {
   static const _idInactivity = 1;
   static const _idTurnaround = 2;
   static const _idRoundTrip = 3;
+  static const _idSmsSent = 4;
 
   Future<void> initialize() async {
     const androidSettings =
@@ -37,6 +38,16 @@ class NotificationService {
         android: androidSettings,
         iOS: iosSettings,
       ),
+    );
+  }
+
+  /// SMS 送信後の通知を表示する（バックグラウンド時でも気づけるよう）
+  Future<void> showSmsSentNotification() async {
+    await _plugin.show(
+      id: _idSmsSent,
+      title: AppStrings.smsSentNotificationTitle,
+      body: AppStrings.smsSentNotificationBody,
+      notificationDetails: _notificationDetails(),
     );
   }
 

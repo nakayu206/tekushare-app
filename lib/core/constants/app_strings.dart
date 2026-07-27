@@ -26,7 +26,7 @@ abstract class AppStrings {
   static const wantToGo = '行きたい！';
   static const recenterMap = '現在地に戻る';
   static const timerTurnaround = '折り返し';
-  static const timerInactivity = '不活動';
+  static const timerInactivity = '安否通知';
   static const timerReset = 'リセット';
   static const timerFinishedTitle = '散歩タイマー';
   static const timerFinishedMessage = '設定した時間になりました。';
@@ -41,6 +41,9 @@ abstract class AppStrings {
   static const safetyConfirmTitle = '大丈夫ですか？';
   static const smsSendError = 'SMS送信に失敗しました';
   static const safetyConfirmBody = '動きがありません。\n応答がない場合、登録した通知先にSMSを送信します。';
+  static const safetySmsSentBody = 'SMSで通知しました。\n元気な場合はボタンを押してください。';
+  static const smsSentNotificationTitle = '安否通知を送信しました';
+  static const smsSentNotificationBody = '登録した通知先にSMSを送信しました。';
 
   // 行きたい！ページ
   static const wantToGoPageTitle = '行きたい！';
