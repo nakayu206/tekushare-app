@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -601,11 +600,15 @@ class _InactivityCard extends StatelessWidget {
             children: [
               _CustomSwitch(
                 value: state.inactivityEnabled,
-                onChanged: (v) {
-                  vm.setInactivityEnabled(v);
+                onChanged: (v) async {
                   if (v && Platform.isAndroid) {
-                    unawaited(Permission.sms.request());
+                    final status = await Permission.sms.request();
+                    if (status.isPermanentlyDenied) {
+                      await openAppSettings();
+                    }
+                    if (!status.isGranted) return;
                   }
+                  vm.setInactivityEnabled(v);
                 },
               ),
               const SizedBox(width: AppSpacing.sm),
