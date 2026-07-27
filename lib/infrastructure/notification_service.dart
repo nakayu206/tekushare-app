@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -39,6 +41,12 @@ class NotificationService {
         iOS: iosSettings,
       ),
     );
+
+    if (Platform.isAndroid) {
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.requestNotificationsPermission();
+    }
   }
 
   /// SMS 送信後の通知を表示する（バックグラウンド時でも気づけるよう）

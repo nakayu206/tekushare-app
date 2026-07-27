@@ -1,8 +1,12 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
@@ -503,7 +507,11 @@ class _InactivityCard extends StatelessWidget {
   final VoidCallback onAddContact;
   final VoidCallback onShowContacts;
 
-  static final _inactivityOptions = List.generate(24, (i) => (i + 1) * 5);
+  static final _inactivityOptions = [
+    1,
+    2,
+    ...List.generate(24, (i) => (i + 1) * 5)
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -597,7 +605,12 @@ class _InactivityCard extends StatelessWidget {
             children: [
               _CustomSwitch(
                 value: state.inactivityEnabled,
-                onChanged: vm.setInactivityEnabled,
+                onChanged: (v) {
+                  vm.setInactivityEnabled(v);
+                  if (v && Platform.isAndroid) {
+                    unawaited(Permission.sms.request());
+                  }
+                },
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
