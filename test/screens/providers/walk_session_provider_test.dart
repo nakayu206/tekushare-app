@@ -8,23 +8,30 @@ import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
+import 'package:tekushare/domain/repositories/walk_status_repository.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 
 import 'walk_session_provider_test.mocks.dart';
 
-@GenerateMocks([WalkSessionRepository, RouteRepository])
+@GenerateMocks([WalkSessionRepository, RouteRepository, WalkStatusRepository])
 void main() {
   late MockWalkSessionRepository mockSessionRepo;
   late MockRouteRepository mockRouteRepo;
+  late MockWalkStatusRepository mockWalkStatusRepo;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     mockSessionRepo = MockWalkSessionRepository();
     mockRouteRepo = MockRouteRepository();
+    mockWalkStatusRepo = MockWalkStatusRepository();
     when(mockSessionRepo.saveSession(any))
         .thenAnswer((_) => Future<void>.value());
     when(mockRouteRepo.saveRoute(any)).thenAnswer((_) => Future<void>.value());
+    when(mockWalkStatusRepo.setWalking())
+        .thenAnswer((_) => Future<void>.value());
+    when(mockWalkStatusRepo.clearWalking())
+        .thenAnswer((_) => Future<void>.value());
   });
 
   Future<ProviderContainer> makeContainer({
@@ -35,6 +42,7 @@ void main() {
       overrides: [
         walkSessionRepositoryProvider.overrideWithValue(mockSessionRepo),
         routeRepositoryProvider.overrideWithValue(mockRouteRepo),
+        walkStatusRepositoryProvider.overrideWithValue(mockWalkStatusRepo),
       ],
     );
     // sharedPrefsProvider (FutureProvider) を先に解決しておく
@@ -135,6 +143,44 @@ void main() {
 
       final session = container.read(walkSessionProvider);
       expect(session.status, WalkStatus.idle);
+    });
+
+    test('startWalk で setWalking が呼ばれる', () async {
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+
+      await container.read(walkSessionProvider.notifier).startWalk();
+
+      verify(mockWalkStatusRepo.setWalking()).called(1);
+    });
+
+    test('endWalk で clearWalking が呼ばれる', () async {
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+
+      await container.read(walkSessionProvider.notifier).startWalk();
+      await container.read(walkSessionProvider.notifier).endWalk(makeRoute());
+
+      verify(mockWalkStatusRepo.clearWalking()).called(1);
+    });
+
+    test('resetWalk で clearWalking が呼ばれる', () async {
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+
+      await container.read(walkSessionProvider.notifier).startWalk();
+      await container.read(walkSessionProvider.notifier).resetWalk();
+
+      verify(mockWalkStatusRepo.clearWalking()).called(1);
+    });
+
+    test('idle 状態で endWalk を呼んでも clearWalking が呼ばれない', () async {
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+
+      await container.read(walkSessionProvider.notifier).endWalk(makeRoute());
+
+      verifyNever(mockWalkStatusRepo.clearWalking());
     });
   });
 }

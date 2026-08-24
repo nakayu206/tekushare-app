@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,6 +15,13 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   try {
     await NotificationService.instance.initialize();
+  } catch (_) {}
+  try {
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: false,
+      sound: true,
+    );
   } catch (_) {}
   AppConfig.setFlavor(Flavor.dev);
   runApp(

@@ -1,4 +1,6 @@
 import 'package:app_links/app_links.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,6 +35,21 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   // getInitialLink() と uriLinkStream の両方から同じ起動時リンクが
   // 届くことがあるため、処理済みトークンを覚えて二重に画面を開かないようにする。
   final _handledTokens = <String>{};
+
+  String? _lastFcmSavedUid;
+
+  Future<void> _saveFcmToken(String uid) async {
+    if (_lastFcmSavedUid == uid) return;
+    _lastFcmSavedUid = uid;
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .set({'fcmToken': token}, SetOptions(merge: true));
+    } catch (_) {}
+  }
 
   @override
   void initState() {
@@ -141,6 +158,7 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
       if (user == null || user.displayName == null || user.displayName == '') {
         return;
       }
+      _saveFcmToken(user.uid);
       final token = ref.read(pendingInviteTokenProvider);
       if (token == null) return;
       ref.read(pendingInviteTokenProvider.notifier).state = null;

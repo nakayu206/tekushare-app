@@ -28,6 +28,7 @@ import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
 import 'package:tekushare/screens/pages/walk/view/walk_page.dart';
+import 'package:tekushare/domain/repositories/walk_status_repository.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/location_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
@@ -106,10 +107,19 @@ class _FakeRouteRepository implements RouteRepository {
   Future<List<WalkRoute>> getAllRoutes() async => [];
 }
 
+class _FakeWalkStatusRepository implements WalkStatusRepository {
+  @override
+  Future<void> setWalking() async {}
+  @override
+  Future<void> clearWalking() async {}
+}
+
 final _walkSessionRepoOverride = walkSessionRepositoryProvider
     .overrideWithValue(_FakeWalkSessionRepository());
 final _routeRepoOverride =
     routeRepositoryProvider.overrideWithValue(_FakeRouteRepository());
+final _walkStatusRepoOverride =
+    walkStatusRepositoryProvider.overrideWithValue(_FakeWalkStatusRepository());
 
 final _spotOverride = spotProvider.overrideWith(
   (ref) => SpotNotifier(
@@ -241,6 +251,7 @@ void main() {
         _notificationOverride,
         _walkSessionRepoOverride,
         _routeRepoOverride,
+        _walkStatusRepoOverride,
         contactProvider.overrideWith((ref) => Stream.value([])),
         if (camera != null) cameraServiceProvider.overrideWith((ref) => camera),
       ];

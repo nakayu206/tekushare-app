@@ -6,6 +6,7 @@ import 'package:tekushare/data/repositories/account_link_repository_impl.dart';
 import 'package:tekushare/data/repositories/firestore_contact_repository_impl.dart';
 import 'package:tekushare/data/repositories/firestore_photo_repository_impl.dart';
 import 'package:tekushare/data/repositories/firestore_spot_repository_impl.dart';
+import 'package:tekushare/data/repositories/firestore_walk_status_repository_impl.dart';
 import 'package:tekushare/data/services/firebase_auth_service_impl.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
@@ -37,6 +38,12 @@ List<Override> firebaseProviderOverrides() => [
       }),
       accountLinkRepositoryProvider.overrideWith((_) {
         return AccountLinkRepositoryImpl(
+          FirebaseFirestore.instance,
+          fb_auth.FirebaseAuth.instance,
+        );
+      }),
+      walkStatusRepositoryProvider.overrideWith((_) {
+        return FirestoreWalkStatusRepositoryImpl(
           FirebaseFirestore.instance,
           fb_auth.FirebaseAuth.instance,
         );

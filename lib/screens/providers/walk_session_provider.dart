@@ -2,20 +2,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/domain/repositories/walk_status_repository.dart';
 import 'package:tekushare/domain/usecases/walk/end_walk.dart';
 import 'package:tekushare/domain/usecases/walk/start_walk.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 
 class WalkSessionNotifier extends StateNotifier<WalkSession> {
-  WalkSessionNotifier(
-      {required EndWalk endWalk, required SharedPreferences prefs})
-      : _endWalk = endWalk,
+  WalkSessionNotifier({
+    required EndWalk endWalk,
+    required SharedPreferences prefs,
+    required WalkStatusRepository walkStatusRepository,
+  })  : _endWalk = endWalk,
         _prefs = prefs,
+        _walkStatusRepository = walkStatusRepository,
         super(_restore(prefs));
 
   static const _startWalk = StartWalk();
   final EndWalk _endWalk;
   final SharedPreferences _prefs;
+  final WalkStatusRepository _walkStatusRepository;
 
   static const _kId = 'walk_id';
   static const _kStatus = 'walk_status';
@@ -78,20 +83,29 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
 
   Future<void> startWalk() async {
     final session = _startWalk.call();
-    await _persist(session);
+    await Future.wait([
+      _persist(session),
+      _walkStatusRepository.setWalking(),
+    ]);
     state = session;
   }
 
   Future<void> endWalk(WalkRoute route) async {
     if (state.status != WalkStatus.walking) return;
     final finished = await _endWalk.call(state, route);
-    await _persist(finished);
+    await Future.wait([
+      _persist(finished),
+      _walkStatusRepository.clearWalking(),
+    ]);
     state = finished;
   }
 
   Future<void> resetWalk() async {
     const session = WalkSession(id: '', status: WalkStatus.idle);
-    await _persist(session);
+    await Future.wait([
+      _persist(session),
+      _walkStatusRepository.clearWalking(),
+    ]);
     state = session;
   }
 }
@@ -104,5 +118,6 @@ final walkSessionProvider =
       ref.watch(routeRepositoryProvider),
     ),
     prefs: ref.watch(sharedPrefsProvider).requireValue,
+    walkStatusRepository: ref.watch(walkStatusRepositoryProvider),
   );
 });

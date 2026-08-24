@@ -15,6 +15,7 @@ import 'package:tekushare/domain/repositories/route_repository.dart';
 import 'package:tekushare/domain/repositories/saved_route_repository.dart';
 import 'package:tekushare/domain/repositories/spot_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
+import 'package:tekushare/domain/repositories/walk_status_repository.dart';
 import 'package:tekushare/infrastructure/camera_service.dart';
 import 'package:tekushare/infrastructure/sms_service.dart';
 export 'package:tekushare/screens/providers/notification_provider.dart';
@@ -78,6 +79,11 @@ final smsServiceProvider = Provider<SmsService>((ref) {
 final accountLinkRepositoryProvider = Provider<AccountLinkRepository>((ref) {
   throw UnimplementedError(
       'accountLinkRepositoryProvider must be overridden in ProviderScope');
+});
+
+final walkStatusRepositoryProvider = Provider<WalkStatusRepository>((ref) {
+  throw UnimplementedError(
+      'walkStatusRepositoryProvider must be overridden in ProviderScope');
 });
 
 final sharedPrefsProvider = FutureProvider<SharedPreferences>((ref) async {
