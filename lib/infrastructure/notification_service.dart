@@ -25,6 +25,8 @@ class NotificationService {
   static const _idTurnaround = 2;
   static const _idRoundTrip = 3;
   static const _idSmsSent = 4;
+  static const _idWalkReminder = 5;
+  static const _idWalkAutoEnd = 6;
 
   Future<void> initialize() async {
     const androidSettings =
@@ -47,6 +49,36 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin>();
       await androidPlugin?.requestNotificationsPermission();
     }
+  }
+
+  /// 長時間散歩中のリマインド通知を表示する
+  Future<void> showWalkReminderNotification(int hours) async {
+    await _plugin.show(
+      id: _idWalkReminder,
+      title: AppStrings.walkReminderNotificationTitle,
+      body: AppStrings.walkReminderNotificationBody(hours),
+      notificationDetails: _notificationDetails(),
+    );
+  }
+
+  /// 自動終了30分前の警告通知を表示する
+  Future<void> showWalkAutoEndWarningNotification() async {
+    await _plugin.show(
+      id: _idWalkAutoEnd,
+      title: AppStrings.walkAutoEndWarningTitle,
+      body: AppStrings.walkAutoEndWarningBody,
+      notificationDetails: _notificationDetails(),
+    );
+  }
+
+  /// 散歩が自動終了したことを通知する
+  Future<void> showWalkAutoEndNotification() async {
+    await _plugin.show(
+      id: _idWalkAutoEnd,
+      title: AppStrings.walkAutoEndNotificationTitle,
+      body: AppStrings.walkAutoEndNotificationBody,
+      notificationDetails: _notificationDetails(),
+    );
   }
 
   /// SMS 送信後の通知を表示する（バックグラウンド時でも気づけるよう）

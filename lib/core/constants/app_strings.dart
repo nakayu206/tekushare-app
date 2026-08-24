@@ -44,6 +44,15 @@ abstract class AppStrings {
   static const safetySmsSentBody = 'SMSで通知しました。\n元気な場合はボタンを押してください。';
   static const smsSentNotificationTitle = '安否通知を送信しました';
   static const smsSentNotificationBody = '登録した通知先にSMSを送信しました。';
+  static const walkForegroundNotificationTitle = 'てくしぇあ';
+  static const walkForegroundNotificationBody = 'バックグラウンドでGPSを記録しています';
+  static const walkReminderNotificationTitle = '散歩を続けていますか？';
+  static String walkReminderNotificationBody(int hours) =>
+      '散歩が$hours時間続いています。終了する場合はアプリを開いてください。';
+  static const walkAutoEndWarningTitle = '散歩が自動終了します';
+  static const walkAutoEndWarningBody = '散歩開始から7時間30分が経過しました。30分後に自動で散歩を終了します。';
+  static const walkAutoEndNotificationTitle = '散歩を自動終了しました';
+  static const walkAutoEndNotificationBody = '散歩開始から8時間が経過したため、自動で終了しました。';
 
   // 行きたい！ページ
   static const wantToGoPageTitle = '行きたい！';

@@ -22,7 +22,10 @@ import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.da
 import 'package:tekushare/screens/pages/spot/view/spot_list_page.dart';
 import 'package:tekushare/screens/pages/spot/view/want_to_go_page.dart';
 import 'package:tekushare/screens/pages/walk/view/end_walk_page.dart';
+import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/walk_history_provider.dart';
+import 'package:tekushare/screens/providers/walk_routes_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/providers/contact_provider.dart';
@@ -104,6 +107,44 @@ class _WalkPageState extends ConsumerState<WalkPage> {
       await svc.showInactivityNotification();
       _showSafetyConfirmDialog();
     }
+
+    // 長時間散歩の監視（2h/4h/6h リマインド、7.5h 警告、8h 自動終了）
+    final startedAt = ref.read(walkSessionProvider).startedAt;
+    if (startedAt != null) {
+      final elapsed = DateTime.now().difference(startedAt);
+      for (final hour in [2, 4, 6]) {
+        if (elapsed.inHours >= hour && !ts.reminderHoursFired.contains(hour)) {
+          ref.read(walkTimerProvider.notifier).markReminderFired(hour);
+          await svc.showWalkReminderNotification(elapsed.inHours);
+        }
+      }
+      if (elapsed.inSeconds >= 7 * 3600 + 30 * 60 && !ts.autoEndWarningFired) {
+        ref.read(walkTimerProvider.notifier).markAutoEndWarningFired();
+        await svc.showWalkAutoEndWarningNotification();
+      }
+      if (elapsed.inSeconds >= 8 * 3600 && !ts.autoEndFired) {
+        ref.read(walkTimerProvider.notifier).markAutoEndFired();
+        await _autoEndWalk();
+      }
+    }
+  }
+
+  Future<void> _autoEndWalk() async {
+    if (!mounted) return;
+    final session = ref.read(walkSessionProvider);
+    final trackPoints = ref.read(walkTrackPointsProvider);
+    final route = WalkRoute(
+      id: session.id,
+      walkSessionId: session.id,
+      points: trackPoints,
+      createdAt: DateTime.now(),
+    );
+    await ref.read(walkSessionProvider.notifier).endWalk(route);
+    ref.invalidate(walkHistoryProvider);
+    ref.invalidate(walkRoutesProvider);
+    ref.read(walkSessionProvider.notifier).resetWalk();
+    ref.read(walkTimerProvider.notifier).reset();
+    await ref.read(notificationServiceProvider).showWalkAutoEndNotification();
   }
 
   void _showSafetyConfirmDialog() {
