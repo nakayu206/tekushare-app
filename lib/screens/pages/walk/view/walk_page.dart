@@ -57,6 +57,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
 
   Timer? _tickTimer;
   Timer? _gpsTimeoutTimer;
+  bool _isFiringNotifications = false;
 
   @override
   void initState() {
@@ -87,6 +88,16 @@ class _WalkPageState extends ConsumerState<WalkPage> {
   }
 
   Future<void> _fireNotificationsIfNeeded() async {
+    if (_isFiringNotifications) return;
+    _isFiringNotifications = true;
+    try {
+      await _doFireNotifications();
+    } finally {
+      _isFiringNotifications = false;
+    }
+  }
+
+  Future<void> _doFireNotifications() async {
     final svc = ref.read(notificationServiceProvider);
     final ts = ref.read(walkTimerProvider);
     // 往復タイマーの折り返し通知（全体の半分の時間になったとき）
@@ -115,7 +126,7 @@ class _WalkPageState extends ConsumerState<WalkPage> {
       for (final hour in [2, 4, 6]) {
         if (elapsed.inHours >= hour && !ts.reminderHoursFired.contains(hour)) {
           ref.read(walkTimerProvider.notifier).markReminderFired(hour);
-          await svc.showWalkReminderNotification(elapsed.inHours);
+          await svc.showWalkReminderNotification(hour);
         }
       }
       if (elapsed.inSeconds >= 7 * 3600 + 30 * 60 && !ts.autoEndWarningFired) {
