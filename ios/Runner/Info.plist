@@ -28,6 +28,12 @@
 		<true/>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>散歩中の現在地を記録するために位置情報を使用します。</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>バックグラウンドでも散歩ルートを記録するために位置情報を使用します。</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>location</string>
+		</array>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>

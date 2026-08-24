@@ -38,6 +38,13 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
     }
     final startedAtMs = prefs.getInt(_kStartedAt);
     final elapsed = prefs.getInt(_kElapsed) ?? 0;
+    // 8時間以上経過していた場合はフォアグラウンドサービスが停止した可能性があるため自動リセット
+    if (startedAtMs != null) {
+      final startedAt = DateTime.fromMillisecondsSinceEpoch(startedAtMs);
+      if (DateTime.now().difference(startedAt).inSeconds >= 8 * 3600) {
+        return const WalkSession(id: '', status: WalkStatus.idle);
+      }
+    }
     return WalkSession(
       id: id,
       status: status,

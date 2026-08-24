@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:geolocator/geolocator.dart';
+import 'package:tekushare/core/constants/app_strings.dart';
 
 class LocationService {
   static const _distanceFilterMeters = 3;
@@ -24,10 +27,24 @@ class LocationService {
       }
     } catch (_) {}
 
-    const settings = LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: _distanceFilterMeters,
-    );
+    final LocationSettings settings = Platform.isAndroid
+        ? AndroidSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            distanceFilter: _distanceFilterMeters,
+            foregroundNotificationConfig: const ForegroundNotificationConfig(
+              notificationTitle: AppStrings.walkForegroundNotificationTitle,
+              notificationText: AppStrings.walkForegroundNotificationBody,
+              enableWakeLock: true,
+            ),
+          )
+        : AppleSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            distanceFilter: _distanceFilterMeters,
+            activityType: ActivityType.fitness,
+            pauseLocationUpdatesAutomatically: false,
+            allowBackgroundLocationUpdates: true,
+            showBackgroundLocationIndicator: true,
+          );
 
     DateTime? lastEmitted;
     await for (final pos

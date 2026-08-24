@@ -10,6 +10,9 @@ class WalkTimerState {
     this.inactFired = false,
     this.turnAlertShown = false,
     this.initialized = false,
+    this.reminderHoursFired = const {},
+    this.autoEndWarningFired = false,
+    this.autoEndFired = false,
   });
 
   final int? turnSecondsLeft;
@@ -22,6 +25,15 @@ class WalkTimerState {
   final bool inactFired;
   final bool turnAlertShown;
   final bool initialized;
+
+  /// リマインド済みの時間（2, 4, 6 時間）
+  final Set<int> reminderHoursFired;
+
+  /// 7時間30分経過時の自動終了警告を送信済みか
+  final bool autoEndWarningFired;
+
+  /// 8時間経過による自動終了を実行済みか
+  final bool autoEndFired;
 }
 
 class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
@@ -61,6 +73,9 @@ class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
       inactFired: s.inactFired,
       turnAlertShown: s.turnAlertShown,
       initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: s.autoEndFired,
     );
   }
 
@@ -75,6 +90,9 @@ class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
       inactFired: s.inactFired,
       turnAlertShown: s.turnAlertShown,
       initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: s.autoEndFired,
     );
   }
 
@@ -89,6 +107,9 @@ class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
       inactFired: s.inactFired,
       turnAlertShown: s.turnAlertShown,
       initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: s.autoEndFired,
     );
   }
 
@@ -103,6 +124,9 @@ class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
       inactFired: true,
       turnAlertShown: s.turnAlertShown,
       initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: s.autoEndFired,
     );
   }
 
@@ -117,6 +141,60 @@ class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
       inactFired: s.inactFired,
       turnAlertShown: true,
       initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: s.autoEndFired,
+    );
+  }
+
+  void markReminderFired(int hour) {
+    final s = state;
+    state = WalkTimerState(
+      turnSecondsLeft: s.turnSecondsLeft,
+      midpointSeconds: s.midpointSeconds,
+      inactSecondsLeft: s.inactSecondsLeft,
+      turnFired: s.turnFired,
+      midpointFired: s.midpointFired,
+      inactFired: s.inactFired,
+      turnAlertShown: s.turnAlertShown,
+      initialized: s.initialized,
+      reminderHoursFired: {...s.reminderHoursFired, hour},
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: s.autoEndFired,
+    );
+  }
+
+  void markAutoEndWarningFired() {
+    final s = state;
+    state = WalkTimerState(
+      turnSecondsLeft: s.turnSecondsLeft,
+      midpointSeconds: s.midpointSeconds,
+      inactSecondsLeft: s.inactSecondsLeft,
+      turnFired: s.turnFired,
+      midpointFired: s.midpointFired,
+      inactFired: s.inactFired,
+      turnAlertShown: s.turnAlertShown,
+      initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: true,
+      autoEndFired: s.autoEndFired,
+    );
+  }
+
+  void markAutoEndFired() {
+    final s = state;
+    state = WalkTimerState(
+      turnSecondsLeft: s.turnSecondsLeft,
+      midpointSeconds: s.midpointSeconds,
+      inactSecondsLeft: s.inactSecondsLeft,
+      turnFired: s.turnFired,
+      midpointFired: s.midpointFired,
+      inactFired: s.inactFired,
+      turnAlertShown: s.turnAlertShown,
+      initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: true,
     );
   }
 
@@ -132,6 +210,9 @@ class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
       inactFired: s.inactFired,
       turnAlertShown: false,
       initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: s.autoEndFired,
     );
   }
 
@@ -146,6 +227,9 @@ class WalkTimerNotifier extends StateNotifier<WalkTimerState> {
       inactFired: false,
       turnAlertShown: s.turnAlertShown,
       initialized: s.initialized,
+      reminderHoursFired: s.reminderHoursFired,
+      autoEndWarningFired: s.autoEndWarningFired,
+      autoEndFired: s.autoEndFired,
     );
   }
 
