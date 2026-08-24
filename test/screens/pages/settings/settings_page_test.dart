@@ -27,6 +27,7 @@ import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/spot_provider.dart';
+import 'package:tekushare/domain/repositories/walk_status_repository.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
 import 'package:tekushare/screens/widgets/common/app_bottom_nav.dart';
 
@@ -96,6 +97,13 @@ class _FakeWalkRouteRepository implements RouteRepository {
 
   @override
   Future<List<WalkRoute>> getAllRoutes() async => [];
+}
+
+class _FakeWalkStatusRepository implements WalkStatusRepository {
+  @override
+  Future<void> setWalking() async {}
+  @override
+  Future<void> clearWalking() async {}
 }
 
 class _FakeSaveSpot implements SaveSpot {
@@ -768,6 +776,7 @@ void main() {
                   _FakeWalkRouteRepository(),
                 ),
                 prefs: settingsPrefs,
+                walkStatusRepository: _FakeWalkStatusRepository(),
               ),
             ),
           ],
@@ -815,6 +824,7 @@ void main() {
                   _FakeWalkRouteRepository(),
                 ),
                 prefs: settingsPrefs,
+                walkStatusRepository: _FakeWalkStatusRepository(),
               ),
             ),
           ],
@@ -863,6 +873,7 @@ void main() {
                   _FakeWalkRouteRepository(),
                 ),
                 prefs: settingsPrefs,
+                walkStatusRepository: _FakeWalkStatusRepository(),
               ),
             ),
           ],
@@ -914,6 +925,7 @@ void main() {
                   _FakeWalkRouteRepository(),
                 ),
                 prefs: settingsPrefs,
+                walkStatusRepository: _FakeWalkStatusRepository(),
               ),
             ),
           ],
@@ -962,6 +974,7 @@ void main() {
                   _FakeWalkRouteRepository(),
                 ),
                 prefs: settingsPrefs,
+                walkStatusRepository: _FakeWalkStatusRepository(),
               ),
             ),
           ],
@@ -1011,6 +1024,7 @@ void main() {
                   _FakeWalkRouteRepository(),
                 ),
                 prefs: settingsPrefs,
+                walkStatusRepository: _FakeWalkStatusRepository(),
               ),
             ),
           ],

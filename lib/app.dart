@@ -65,8 +65,8 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   ///   - https://tekushare.firebaseapp.com/__/auth/action?mode=resetPassword&oobCode=...
   ///   - https://tekushare.firebaseapp.com/__/auth/action?mode=verifyEmail&oobCode=...
   ///   - https://tekushare.web.app/auth/action?mode=...  (カスタムパス、将来用)
-  ///   - tekushare://link/<token>
-  ///   - https://tekushare.web.app/link/<token>
+  ///   - tekushare://link/[token]
+  ///   - https://tekushare.web.app/link/[token]
   void _handleUri(Uri uri) {
     if (_isPasswordResetAction(uri)) {
       final oobCode = uri.queryParameters['oobCode']!;

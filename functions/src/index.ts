@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { onDocumentWritten } from "firebase-functions/v2/firestore";
+import * as functions from "firebase-functions/v1";
 
 admin.initializeApp();
 
@@ -10,12 +10,13 @@ const messaging = admin.messaging();
  * users/{uid} の walkingStatus が 'walking' に変わったとき、
  * 連携アカウントへ FCM プッシュ通知を送信する。
  */
-export const onWalkStarted = onDocumentWritten(
-  "users/{uid}",
-  async (event) => {
-    const uid = event.params.uid;
-    const after = event.data?.after?.data();
-    const before = event.data?.before?.data();
+export const onWalkStarted = functions
+  .region("asia-northeast1")
+  .firestore.document("users/{uid}")
+  .onWrite(async (change, context) => {
+    const uid = context.params.uid;
+    const before = change.before.data();
+    const after = change.after.data();
 
     // walkingStatus が 'walking' になった瞬間だけ処理する
     const isNowWalking = after?.walkingStatus === "walking";
@@ -66,5 +67,4 @@ export const onWalkStarted = onDocumentWritten(
         });
       }),
     );
-  },
-);
+  });
