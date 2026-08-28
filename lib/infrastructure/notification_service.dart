@@ -27,6 +27,10 @@ class NotificationService {
   static const _idSmsSent = 4;
   static const _idWalkReminder = 5;
   static const _idWalkAutoEnd = 6;
+  static const _idWalkOngoing = 10;
+
+  static const _walkOngoingChannelId = 'tekushare_walk_ongoing';
+  static const _walkOngoingChannelName = '散歩記録中';
 
   Future<void> initialize() async {
     const androidSettings =
@@ -119,6 +123,34 @@ class NotificationService {
       body: AppStrings.timerFinishedMessage,
       notificationDetails: _notificationDetails(),
     );
+  }
+
+  /// 散歩中の ongoing 通知を表示する。
+  /// 通常通知（フォアグラウンドサービスとは別）のため Android 14 でも消せない。
+  Future<void> showWalkOngoingNotification() async {
+    await _plugin.show(
+      id: _idWalkOngoing,
+      title: AppStrings.walkForegroundNotificationTitle,
+      body: AppStrings.walkForegroundNotificationBody,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _walkOngoingChannelId,
+          _walkOngoingChannelName,
+          importance: Importance.low,
+          priority: Priority.low,
+          ongoing: true,
+          autoCancel: false,
+          showWhen: false,
+          playSound: false,
+          enableVibration: false,
+        ),
+      ),
+    );
+  }
+
+  /// 散歩中の ongoing 通知をキャンセルする
+  Future<void> cancelWalkOngoingNotification() async {
+    await _plugin.cancel(id: _idWalkOngoing);
   }
 
   /// 表示中の通知をすべてキャンセルする
