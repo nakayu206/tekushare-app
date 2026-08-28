@@ -35,6 +35,7 @@ class LocationService {
               notificationTitle: AppStrings.walkForegroundNotificationTitle,
               notificationText: AppStrings.walkForegroundNotificationBody,
               enableWakeLock: true,
+              setOngoing: true,
             ),
           )
         : AppleSettings(
