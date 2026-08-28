@@ -18,13 +18,7 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
         _prefs = prefs,
         _walkStatusRepository = walkStatusRepository,
         _notificationService = notificationService,
-        super(_restore(prefs)) {
-    // アプリ再起動時に散歩中だった場合は ongoing 通知を再表示
-    if (state.status == WalkStatus.walking) {
-      Future.microtask(
-          () => _notificationService?.showWalkOngoingNotification());
-    }
-  }
+        super(_restore(prefs));
 
   static const _startWalk = StartWalk();
   final EndWalk _endWalk;
@@ -109,7 +103,7 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
       _walkStatusRepository.clearWalking(),
     ]);
     state = finished;
-    // 通知 ID 75415 は geolocator の stopForeground() が削除するため明示キャンセル不要
+    await _notificationService?.cancelWalkOngoingNotification();
   }
 
   Future<void> resetWalk() async {
@@ -119,7 +113,7 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
       _walkStatusRepository.clearWalking(),
     ]);
     state = session;
-    // 通知 ID 75415 は geolocator の stopForeground() が削除するため明示キャンセル不要
+    await _notificationService?.cancelWalkOngoingNotification();
   }
 }
 
