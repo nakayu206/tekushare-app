@@ -106,7 +106,10 @@ class _HomePageState extends ConsumerState<HomePage>
     });
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
       child: Scaffold(
         backgroundColor: AppColors.background,
         resizeToAvoidBottomInset: false,
