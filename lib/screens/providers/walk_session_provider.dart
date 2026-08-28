@@ -109,7 +109,7 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
       _walkStatusRepository.clearWalking(),
     ]);
     state = finished;
-    await _notificationService?.cancelWalkOngoingNotification();
+    // 通知 ID 75415 は geolocator の stopForeground() が削除するため明示キャンセル不要
   }
 
   Future<void> resetWalk() async {
@@ -119,7 +119,7 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
       _walkStatusRepository.clearWalking(),
     ]);
     state = session;
-    await _notificationService?.cancelWalkOngoingNotification();
+    // 通知 ID 75415 は geolocator の stopForeground() が削除するため明示キャンセル不要
   }
 }
 
