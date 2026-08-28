@@ -5,7 +5,6 @@ import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/domain/repositories/walk_status_repository.dart';
 import 'package:tekushare/domain/usecases/walk/end_walk.dart';
 import 'package:tekushare/domain/usecases/walk/start_walk.dart';
-import 'package:tekushare/infrastructure/notification_service.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 
 class WalkSessionNotifier extends StateNotifier<WalkSession> {
@@ -13,24 +12,15 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
     required EndWalk endWalk,
     required SharedPreferences prefs,
     required WalkStatusRepository walkStatusRepository,
-    NotificationService? notificationService,
   })  : _endWalk = endWalk,
         _prefs = prefs,
         _walkStatusRepository = walkStatusRepository,
-        _notificationService = notificationService,
-        super(_restore(prefs)) {
-    // アプリ再起動時に散歩中だった場合は ongoing 通知を再表示
-    if (state.status == WalkStatus.walking) {
-      Future.microtask(
-          () => _notificationService?.showWalkOngoingNotification());
-    }
-  }
+        super(_restore(prefs));
 
   static const _startWalk = StartWalk();
   final EndWalk _endWalk;
   final SharedPreferences _prefs;
   final WalkStatusRepository _walkStatusRepository;
-  final NotificationService? _notificationService;
 
   static const _kId = 'walk_id';
   static const _kStatus = 'walk_status';
@@ -98,7 +88,6 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
       _walkStatusRepository.setWalking(),
     ]);
     state = session;
-    await _notificationService?.showWalkOngoingNotification();
   }
 
   Future<void> endWalk(WalkRoute route) async {
@@ -109,7 +98,6 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
       _walkStatusRepository.clearWalking(),
     ]);
     state = finished;
-    await _notificationService?.cancelWalkOngoingNotification();
   }
 
   Future<void> resetWalk() async {
@@ -119,7 +107,6 @@ class WalkSessionNotifier extends StateNotifier<WalkSession> {
       _walkStatusRepository.clearWalking(),
     ]);
     state = session;
-    await _notificationService?.cancelWalkOngoingNotification();
   }
 }
 
@@ -132,6 +119,5 @@ final walkSessionProvider =
     ),
     prefs: ref.watch(sharedPrefsProvider).requireValue,
     walkStatusRepository: ref.watch(walkStatusRepositoryProvider),
-    notificationService: ref.watch(notificationServiceProvider),
   );
 });
