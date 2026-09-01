@@ -1,10 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tekushare/data/models/saved_route_model.dart';
-import 'package:tekushare/data/models/walk_route_model.dart';
-import 'package:tekushare/data/models/walk_session_model.dart';
 import 'package:tekushare/data/repositories/route_repository_impl.dart';
 import 'package:tekushare/data/repositories/saved_route_repository_impl.dart';
 import 'package:tekushare/data/repositories/walk_session_repository_impl.dart';
@@ -20,21 +16,15 @@ import 'package:tekushare/infrastructure/camera_service.dart';
 import 'package:tekushare/infrastructure/sms_service.dart';
 export 'package:tekushare/screens/providers/notification_provider.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
+import 'package:tekushare/objectbox.g.dart';
 
-/// Isar インスタンスを非同期で提供する。
+/// ObjectBox Store を非同期で提供する。
 /// アプリ起動時に一度だけ初期化される。
-final isarProvider = FutureProvider<Isar>((ref) async {
+final objectBoxStoreProvider = FutureProvider<Store>((ref) async {
   final dir = await getApplicationDocumentsDirectory();
-  final isar = await Isar.open(
-    [
-      WalkSessionModelSchema,
-      WalkRouteModelSchema,
-      SavedRouteModelSchema,
-    ],
-    directory: dir.path,
-  );
-  ref.onDispose(isar.close);
-  return isar;
+  final store = await openStore(directory: '${dir.path}/objectbox');
+  ref.onDispose(store.close);
+  return store;
 });
 
 // 実装は firebase_providers.dart の firebaseProviderOverrides() で注入する。
@@ -45,17 +35,20 @@ final spotRepositoryProvider = Provider<SpotRepository>((ref) {
 
 final walkSessionRepositoryProvider = Provider<WalkSessionRepository>((ref) {
   final uid = ref.watch(authStateProvider).value?.uid ?? '';
-  return WalkSessionRepositoryImpl(ref.watch(isarProvider).requireValue, uid);
+  return WalkSessionRepositoryImpl(
+      ref.watch(objectBoxStoreProvider).requireValue, uid);
 });
 
 final routeRepositoryProvider = Provider<RouteRepository>((ref) {
   final uid = ref.watch(authStateProvider).value?.uid ?? '';
-  return RouteRepositoryImpl(ref.watch(isarProvider).requireValue, uid);
+  return RouteRepositoryImpl(
+      ref.watch(objectBoxStoreProvider).requireValue, uid);
 });
 
 final savedRouteRepositoryProvider = Provider<SavedRouteRepository>((ref) {
   final uid = ref.watch(authStateProvider).value?.uid ?? '';
-  return SavedRouteRepositoryImpl(ref.watch(isarProvider).requireValue, uid);
+  return SavedRouteRepositoryImpl(
+      ref.watch(objectBoxStoreProvider).requireValue, uid);
 });
 
 final photoRepositoryProvider = Provider<PhotoRepository>((ref) {
@@ -94,7 +87,7 @@ final sharedPrefsProvider = FutureProvider<SharedPreferences>((ref) async {
 /// ウィジェットテストでは overrideWith(() async {}) で即時解決できる。
 final appReadyProvider = FutureProvider<void>((ref) async {
   await Future.wait([
-    ref.watch(isarProvider.future),
+    ref.watch(objectBoxStoreProvider.future),
     ref.watch(sharedPrefsProvider.future),
   ]);
 });

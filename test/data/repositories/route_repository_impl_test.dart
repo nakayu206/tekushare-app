@@ -1,26 +1,28 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
-import 'package:tekushare/data/models/walk_route_model.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/data/repositories/route_repository_impl.dart';
 import 'package:tekushare/domain/entities/lat_lng.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';
+import 'package:tekushare/objectbox.g.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late Isar isar;
+  late Directory tempDir;
+  late Store store;
   late RouteRepositoryImpl repo;
 
   setUp(() async {
-    final dir = Directory.systemTemp.createTempSync('isar_route_');
-    isar = await Isar.open([WalkRouteModelSchema], directory: dir.path);
-    repo = RouteRepositoryImpl(isar, 'user-1');
+    tempDir = Directory.systemTemp.createTempSync('ob_route_');
+    store = await openStore(directory: tempDir.path);
+    repo = RouteRepositoryImpl(store, 'user-1');
   });
 
-  tearDown(() async {
-    await isar.close(deleteFromDisk: true);
+  tearDown(() {
+    store.close();
+    tempDir.deleteSync(recursive: true);
   });
 
   WalkRoute makeRoute({
