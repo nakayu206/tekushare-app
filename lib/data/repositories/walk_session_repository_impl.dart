@@ -1,4 +1,3 @@
-import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/data/models/walk_session_model.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';

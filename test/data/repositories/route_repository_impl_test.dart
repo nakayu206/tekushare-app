@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/data/repositories/route_repository_impl.dart';
 import 'package:tekushare/domain/entities/lat_lng.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';

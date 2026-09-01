@@ -1,4 +1,3 @@
-import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/data/models/walk_route_model.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';
 import 'package:tekushare/domain/repositories/route_repository.dart';

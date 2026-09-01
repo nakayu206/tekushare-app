@@ -1,4 +1,3 @@
-import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/data/models/spot_model.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/repositories/spot_repository.dart';
