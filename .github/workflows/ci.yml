@@ -66,13 +66,7 @@ jobs:
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
 
-      # 9. libobjectbox.so をプロジェクトルートにコピー（ObjectBox が Directory.current で探すため）
-      #    firebase_auth は Linux デスクトップビルドに非対応のため full build を避け、
-      #    flutter pub get 後に pub-cache から直接 libobjectbox.so を取得する。
-      - name: Prepare libobjectbox.so for tests
-        run: cp "$(find ~/.pub-cache -name 'libobjectbox.so' | head -1)" .
-
-      # 10. 単体テスト（Firebase 非依存のパスのみ明示的に実行）
+      # 9. 単体テスト（Firebase 非依存のパスのみ明示的に実行）
       #     firebase_auth / cloud_firestore を直接・間接 import するファイルは
       #     Linux でコンパイル不可のため除外する。
       - name: Run unit tests
