@@ -27,7 +27,7 @@ void main() {
       expect(model.title, 'テストスポット');
       expect(model.latitude, 35.6895);
       expect(model.longitude, 139.6917);
-      expect(model.status, SpotStatus.wantToGo);
+      expect(model.statusName, SpotStatus.wantToGo.name);
       expect(model.memo, 'メモ');
       expect(model.photoPaths, ['/photos/test.jpg']);
       expect(model.createdAt, createdAt);

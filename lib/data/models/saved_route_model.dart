@@ -1,11 +1,10 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/domain/entities/saved_route.dart';
 
-part 'saved_route_model.g.dart';
-
-@Collection()
+@Entity()
 class SavedRouteModel {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
   @Index()
   String userUid = '';
@@ -14,7 +13,10 @@ class SavedRouteModel {
   late String date;
   late String distance;
   late String time;
+
+  @Property(type: PropertyType.date)
   late DateTime createdAt;
+
   String? walkSessionId;
 
   SavedRoute toEntity() => SavedRoute(

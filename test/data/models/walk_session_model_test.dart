@@ -9,7 +9,7 @@ void main() {
       final model = WalkSessionModel.fromEntity(session, 'user-1');
 
       expect(model.uid, 'session-1');
-      expect(model.status, WalkStatus.idle);
+      expect(model.statusName, WalkStatus.idle.name);
       expect(model.startedAt, isNull);
       expect(model.finishedAt, isNull);
       expect(model.elapsedSeconds, 0);
@@ -27,7 +27,7 @@ void main() {
       );
       final model = WalkSessionModel.fromEntity(session, 'user-1');
 
-      expect(model.status, WalkStatus.finished);
+      expect(model.statusName, WalkStatus.finished.name);
       expect(model.startedAt, startedAt);
       expect(model.finishedAt, finishedAt);
       expect(model.elapsedSeconds, 1800);
