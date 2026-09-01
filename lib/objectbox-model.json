@@ -1,0 +1,223 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:7489605914726273475",
+      "lastPropertyId": "8:8503831499602420933",
+      "name": "SavedRouteModel",
+      "properties": [
+        {
+          "id": "1:2903911351368461518",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6038868310966606448",
+          "name": "userUid",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "1:1857520984652546542"
+        },
+        {
+          "id": "3:7997517541089110512",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "4:243568257568447536",
+          "name": "date",
+          "type": 9
+        },
+        {
+          "id": "5:8705507653777122883",
+          "name": "distance",
+          "type": 9
+        },
+        {
+          "id": "6:5213122988155261609",
+          "name": "time",
+          "type": 9
+        },
+        {
+          "id": "7:7859650230451945715",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "8:8503831499602420933",
+          "name": "walkSessionId",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:8481478283363595926",
+      "lastPropertyId": "10:9142305711447235650",
+      "name": "SpotModel",
+      "properties": [
+        {
+          "id": "1:2920357863814774842",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7204710948942407810",
+          "name": "uid",
+          "type": 9,
+          "flags": 2080,
+          "indexId": "2:3191489977635530073"
+        },
+        {
+          "id": "3:8471282771292118994",
+          "name": "title",
+          "type": 9
+        },
+        {
+          "id": "4:7090024025017031088",
+          "name": "latitude",
+          "type": 8
+        },
+        {
+          "id": "5:8861009369417351075",
+          "name": "longitude",
+          "type": 8
+        },
+        {
+          "id": "6:6034721514288059866",
+          "name": "statusName",
+          "type": 9
+        },
+        {
+          "id": "7:1513058705711166904",
+          "name": "memo",
+          "type": 9
+        },
+        {
+          "id": "8:148024176784313469",
+          "name": "category",
+          "type": 9
+        },
+        {
+          "id": "9:7142488862004607575",
+          "name": "photoPaths",
+          "type": 30
+        },
+        {
+          "id": "10:9142305711447235650",
+          "name": "createdAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:5788617943982370255",
+      "lastPropertyId": "6:5159250059236105716",
+      "name": "WalkRouteModel",
+      "properties": [
+        {
+          "id": "1:732685086915125973",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:479241945827114914",
+          "name": "uid",
+          "type": 9,
+          "flags": 2080,
+          "indexId": "3:881151546691708027"
+        },
+        {
+          "id": "3:2874140942122530581",
+          "name": "walkSessionId",
+          "type": 9,
+          "flags": 2080,
+          "indexId": "4:7945588830789651940"
+        },
+        {
+          "id": "4:164477172535919472",
+          "name": "userUid",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "5:6692260172934188870"
+        },
+        {
+          "id": "5:3244908164062144619",
+          "name": "pointsJson",
+          "type": 9
+        },
+        {
+          "id": "6:5159250059236105716",
+          "name": "createdAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:7969674422863070264",
+      "lastPropertyId": "7:1415508175939701772",
+      "name": "WalkSessionModel",
+      "properties": [
+        {
+          "id": "1:4805055088879611507",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5044778078737198802",
+          "name": "uid",
+          "type": 9,
+          "flags": 2080,
+          "indexId": "6:1949058247438553960"
+        },
+        {
+          "id": "3:7486150492048852117",
+          "name": "userUid",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "7:3475997624815909548"
+        },
+        {
+          "id": "4:2708160122215410577",
+          "name": "statusName",
+          "type": 9
+        },
+        {
+          "id": "5:4433423887378260953",
+          "name": "startedAt",
+          "type": 10
+        },
+        {
+          "id": "6:4990450389672713425",
+          "name": "finishedAt",
+          "type": 10
+        },
+        {
+          "id": "7:1415508175939701772",
+          "name": "elapsedSeconds",
+          "type": 6
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "4:7969674422863070264",
+  "lastIndexId": "7:3475997624815909548",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

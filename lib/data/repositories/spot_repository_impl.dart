@@ -1,42 +1,42 @@
-import 'package:isar/isar.dart';
 import 'package:tekushare/data/models/spot_model.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/repositories/spot_repository.dart';
+import 'package:tekushare/objectbox.g.dart';
 
 class SpotRepositoryImpl implements SpotRepository {
-  SpotRepositoryImpl(this._isar);
+  SpotRepositoryImpl(Store store) : _box = store.box<SpotModel>();
 
-  final Isar _isar;
+  final Box<SpotModel> _box;
 
   @override
   Future<void> saveSpot(Spot spot) async {
-    await _isar.writeTxn(() async {
-      await _isar.spotModels.putByUid(SpotModel.fromEntity(spot));
-    });
+    final model = SpotModel.fromEntity(spot);
+    final existing =
+        _box.query(SpotModel_.uid.equals(spot.id)).build().findFirst();
+    if (existing != null) model.id = existing.id;
+    _box.put(model);
   }
 
   @override
   Stream<List<Spot>> getSpots() {
-    return _isar.spotModels
-        .where()
-        .watch(fireImmediately: true)
-        .map((models) => models.map((m) => m.toEntity()).toList());
+    return _box
+        .query()
+        .watch(triggerImmediately: true)
+        .map((query) => query.find().map((m) => m.toEntity()).toList());
   }
 
   @override
   Future<void> updateSpotStatus(String id, SpotStatus status) async {
-    await _isar.writeTxn(() async {
-      final model = await _isar.spotModels.getByUid(id);
-      if (model == null) return;
-      model.status = status;
-      await _isar.spotModels.put(model);
-    });
+    final model = _box.query(SpotModel_.uid.equals(id)).build().findFirst();
+    if (model == null) return;
+    model.statusName = status.name;
+    _box.put(model);
   }
 
   @override
   Future<void> deleteSpot(String id) async {
-    await _isar.writeTxn(() async {
-      await _isar.spotModels.deleteByUid(id);
-    });
+    final model = _box.query(SpotModel_.uid.equals(id)).build().findFirst();
+    if (model == null) return;
+    _box.remove(model.id);
   }
 }

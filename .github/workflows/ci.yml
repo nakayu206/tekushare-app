@@ -8,8 +8,8 @@ name: CI
 #   - 単体テスト (test/): ウィジェット・ロジックを1件ずつ責務単位でテスト
 #   - 結合テスト (integration_test/): Firebase 依存のため現在は CI から除外
 #   いずれも Linux デスクトップターゲット (-d linux) で実行する。
-#   isar_flutter_libs は FFI プラグインのため、ヘッドレスの flutter test では
-#   ネイティブライブラリが初期化されず Isar が使えない。-d linux が必須。
+#   objectbox_flutter_libs は FFI プラグインのため、ヘッドレスの flutter test では
+#   ネイティブライブラリが初期化されず ObjectBox が使えない。-d linux が必須。
 #
 # Firebase 非対応について
 #   firebase_auth / cloud_firestore は Linux デスクトップ向けのコンパイルが不可。
@@ -66,16 +66,10 @@ jobs:
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
 
-      # 9. libisar.so をプロジェクトルートにコピー（Isar が Directory.current で探すため）
-      #    firebase_auth は Linux デスクトップビルドに非対応のため full build を避け、
-      #    flutter pub get 後に pub-cache から直接 libisar.so を取得する。
-      - name: Prepare libisar.so for tests
-        run: cp "$(find ~/.pub-cache -name 'libisar.so' | head -1)" .
-
-      # 10. 単体テスト（Firebase・Isar 非依存のパスのみ明示的に実行）
+      # 9. 単体テスト（Firebase・ObjectBox FFI 非依存のパスのみ明示的に実行）
       #     firebase_auth / cloud_firestore を直接・間接 import するファイルは
       #     Linux でコンパイル不可のため除外する。
-      #     Isar の FFI ランタイムを必要とする *_repository_impl_test.dart も除外する。
+      #     ObjectBox FFI ランタイムを必要とする *_repository_impl_test.dart も除外する。
       - name: Run unit tests
         run: |
           xvfb-run flutter test -d linux --reporter expanded \

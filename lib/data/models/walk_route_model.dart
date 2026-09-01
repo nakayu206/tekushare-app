@@ -1,27 +1,28 @@
 import 'dart:convert';
 
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/domain/entities/lat_lng.dart';
 import 'package:tekushare/domain/entities/walk_route.dart';
 
-part 'walk_route_model.g.dart';
-
-@Collection()
+@Entity()
 class WalkRouteModel {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Index()
+  @Unique()
   late String uid;
 
-  @Index(unique: true)
+  @Index()
+  @Unique()
   late String walkSessionId;
 
   @Index()
   String userUid = '';
 
-  // List<LatLng> を JSON 文字列として保存
   late String pointsJson;
 
+  @Property(type: PropertyType.date)
   late DateTime createdAt;
 
   WalkRoute toEntity() {
@@ -42,7 +43,7 @@ class WalkRouteModel {
   }
 
   static WalkRouteModel fromEntity(WalkRoute route, String userUid) {
-    final pointsJson = jsonEncode(
+    final json = jsonEncode(
       route.points.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList(),
     );
 
@@ -50,7 +51,7 @@ class WalkRouteModel {
       ..uid = route.id
       ..walkSessionId = route.walkSessionId
       ..userUid = userUid
-      ..pointsJson = pointsJson
+      ..pointsJson = json
       ..createdAt = route.createdAt;
   }
 }

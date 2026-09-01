@@ -1,30 +1,26 @@
-import 'package:isar/isar.dart';
 import 'package:tekushare/data/models/spot_model.dart';
 import 'package:tekushare/domain/repositories/photo_repository.dart';
+import 'package:tekushare/objectbox.g.dart';
 
 class PhotoRepositoryImpl implements PhotoRepository {
-  PhotoRepositoryImpl(this._isar);
+  PhotoRepositoryImpl(Store store) : _box = store.box<SpotModel>();
 
-  final Isar _isar;
+  final Box<SpotModel> _box;
 
   @override
   Future<String> attachPhoto(String spotId, String imagePath) async {
-    await _isar.writeTxn(() async {
-      final model = await _isar.spotModels.getByUid(spotId);
-      if (model == null) throw StateError('Spot not found: $spotId');
-      model.photoPaths = [...model.photoPaths, imagePath];
-      await _isar.spotModels.put(model);
-    });
+    final model = _box.query(SpotModel_.uid.equals(spotId)).build().findFirst();
+    if (model == null) throw StateError('Spot not found: $spotId');
+    model.photoPaths = [...model.photoPaths, imagePath];
+    _box.put(model);
     return imagePath;
   }
 
   @override
   Future<void> removePhoto(String spotId, String imagePath) async {
-    await _isar.writeTxn(() async {
-      final model = await _isar.spotModels.getByUid(spotId);
-      if (model == null) return;
-      model.photoPaths = model.photoPaths.where((p) => p != imagePath).toList();
-      await _isar.spotModels.put(model);
-    });
+    final model = _box.query(SpotModel_.uid.equals(spotId)).build().findFirst();
+    if (model == null) return;
+    model.photoPaths = model.photoPaths.where((p) => p != imagePath).toList();
+    _box.put(model);
   }
 }

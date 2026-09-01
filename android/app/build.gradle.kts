@@ -43,8 +43,7 @@ android {
     defaultConfig {
         applicationId = "com.tekushare.app"
         minSdk = flutter.minSdkVersion
-        // isar_flutter_libs が 16KB ページ未対応のため API 34 に固定
-        targetSdk = 34
+        targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

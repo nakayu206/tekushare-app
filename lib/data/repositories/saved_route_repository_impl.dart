@@ -1,38 +1,36 @@
-import 'package:isar/isar.dart';
 import 'package:tekushare/data/models/saved_route_model.dart';
 import 'package:tekushare/domain/entities/saved_route.dart';
 import 'package:tekushare/domain/repositories/saved_route_repository.dart';
+import 'package:tekushare/objectbox.g.dart';
 
 class SavedRouteRepositoryImpl implements SavedRouteRepository {
-  SavedRouteRepositoryImpl(this._isar, this._userUid);
+  SavedRouteRepositoryImpl(Store store, this._userUid)
+      : _box = store.box<SavedRouteModel>();
 
-  final Isar _isar;
+  final Box<SavedRouteModel> _box;
   final String _userUid;
 
   @override
   Future<void> save(SavedRoute route) async {
-    await _isar.writeTxn(() async {
-      await _isar.savedRouteModels
-          .put(SavedRouteModel.fromEntity(route, _userUid));
-    });
+    _box.put(SavedRouteModel.fromEntity(route, _userUid));
   }
 
   @override
   Future<List<SavedRoute>> getAll() async {
-    final models = await _isar.savedRouteModels
-        .filter()
-        .userUidEqualTo(_userUid)
-        .sortByCreatedAt()
-        .findAll();
-    return models.map((m) => m.toEntity()).toList();
+    final models = (_box
+            .query(SavedRouteModel_.userUid.equals(_userUid))
+            .order(SavedRouteModel_.createdAt)
+            .build()
+            .find())
+        .map((m) => m.toEntity())
+        .toList();
+    return models;
   }
 
   @override
   Future<void> delete(int id) async {
-    await _isar.writeTxn(() async {
-      final model = await _isar.savedRouteModels.get(id);
-      if (model == null || model.userUid != _userUid) return;
-      await _isar.savedRouteModels.delete(id);
-    });
+    final model = _box.get(id);
+    if (model == null || model.userUid != _userUid) return;
+    _box.remove(id);
   }
 }

@@ -1,29 +1,35 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
 
-part 'walk_session_model.g.dart';
-
-@Collection()
+@Entity()
 class WalkSessionModel {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Index()
+  @Unique()
   late String uid;
 
   @Index()
   String userUid = '';
 
-  @Enumerated(EnumType.name)
-  late WalkStatus status;
+  late String statusName;
 
+  @Property(type: PropertyType.date)
   DateTime? startedAt;
+
+  @Property(type: PropertyType.date)
   DateTime? finishedAt;
+
   late int elapsedSeconds;
 
   WalkSession toEntity() {
     return WalkSession(
       id: uid,
-      status: status,
+      status: WalkStatus.values.firstWhere(
+        (e) => e.name == statusName,
+        orElse: () => WalkStatus.idle,
+      ),
       startedAt: startedAt,
       finishedAt: finishedAt,
       elapsedSeconds: elapsedSeconds,
@@ -34,7 +40,7 @@ class WalkSessionModel {
     return WalkSessionModel()
       ..uid = session.id
       ..userUid = userUid
-      ..status = session.status
+      ..statusName = session.status.name
       ..startedAt = session.startedAt
       ..finishedAt = session.finishedAt
       ..elapsedSeconds = session.elapsedSeconds;

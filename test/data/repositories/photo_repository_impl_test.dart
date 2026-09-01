@@ -1,28 +1,29 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
-import 'package:tekushare/data/models/spot_model.dart';
 import 'package:tekushare/data/repositories/photo_repository_impl.dart';
 import 'package:tekushare/data/repositories/spot_repository_impl.dart';
 import 'package:tekushare/domain/entities/spot.dart';
+import 'package:tekushare/objectbox.g.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late Isar isar;
+  late Directory tempDir;
+  late Store store;
   late PhotoRepositoryImpl repo;
   late SpotRepositoryImpl spotRepo;
 
   setUp(() async {
-    final dir = Directory.systemTemp.createTempSync('isar_photo_');
-    isar = await Isar.open([SpotModelSchema], directory: dir.path);
-    repo = PhotoRepositoryImpl(isar);
-    spotRepo = SpotRepositoryImpl(isar);
+    tempDir = Directory.systemTemp.createTempSync('ob_photo_');
+    store = await openStore(directory: tempDir.path);
+    repo = PhotoRepositoryImpl(store);
+    spotRepo = SpotRepositoryImpl(store);
   });
 
-  tearDown(() async {
-    await isar.close(deleteFromDisk: true);
+  tearDown(() {
+    store.close();
+    tempDir.deleteSync(recursive: true);
   });
 
   Spot makeSpot() => Spot(
