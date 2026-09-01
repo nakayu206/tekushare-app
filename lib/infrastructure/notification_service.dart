@@ -27,7 +27,8 @@ class NotificationService {
   static const _idSmsSent = 4;
   static const _idWalkReminder = 5;
   static const _idWalkAutoEnd = 6;
-  static const _idWalkOngoing = 10;
+  // geolocator が startForeground で使う ID と同じにしてスロットを共有させる
+  static const _idWalkOngoing = 75415;
 
   static const _walkOngoingChannelId = 'tekushare_walk_ongoing';
   static const _walkOngoingChannelName = '散歩記録中';
