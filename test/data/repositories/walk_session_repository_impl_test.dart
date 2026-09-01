@@ -1,25 +1,27 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
-import 'package:tekushare/data/models/walk_session_model.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/data/repositories/walk_session_repository_impl.dart';
 import 'package:tekushare/domain/entities/walk_session.dart';
+import 'package:tekushare/objectbox.g.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late Isar isar;
+  late Directory tempDir;
+  late Store store;
   late WalkSessionRepositoryImpl repo;
 
   setUp(() async {
-    final dir = Directory.systemTemp.createTempSync('isar_session_');
-    isar = await Isar.open([WalkSessionModelSchema], directory: dir.path);
-    repo = WalkSessionRepositoryImpl(isar, 'user-1');
+    tempDir = Directory.systemTemp.createTempSync('ob_session_');
+    store = await openStore(directory: tempDir.path);
+    repo = WalkSessionRepositoryImpl(store, 'user-1');
   });
 
-  tearDown(() async {
-    await isar.close(deleteFromDisk: true);
+  tearDown(() {
+    store.close();
+    tempDir.deleteSync(recursive: true);
   });
 
   WalkSession makeSession({

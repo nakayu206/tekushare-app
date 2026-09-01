@@ -1,24 +1,26 @@
-import 'package:isar/isar.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 
-part 'spot_model.g.dart';
-
-@Collection()
+@Entity()
 class SpotModel {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0;
 
-  @Index(unique: true)
+  @Index()
+  @Unique()
   late String uid;
+
   late String title;
   late double latitude;
   late double longitude;
-
-  @Enumerated(EnumType.name)
-  late SpotStatus status;
-
+  late String statusName;
   String? memo;
   String? category;
+
+  @Property()
   List<String> photoPaths = [];
+
+  @Property(type: PropertyType.date)
   late DateTime createdAt;
 
   Spot toEntity() {
@@ -27,7 +29,10 @@ class SpotModel {
       title: title,
       latitude: latitude,
       longitude: longitude,
-      status: status,
+      status: SpotStatus.values.firstWhere(
+        (e) => e.name == statusName,
+        orElse: () => SpotStatus.visited,
+      ),
       memo: memo,
       category: category,
       photoPaths: photoPaths,
@@ -41,7 +46,7 @@ class SpotModel {
       ..title = spot.title
       ..latitude = spot.latitude
       ..longitude = spot.longitude
-      ..status = spot.status
+      ..statusName = spot.status.name
       ..memo = spot.memo
       ..category = spot.category
       ..photoPaths = spot.photoPaths
