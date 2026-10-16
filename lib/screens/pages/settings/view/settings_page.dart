@@ -17,6 +17,7 @@ import 'package:tekushare/screens/pages/map/view/walk_route_page.dart';
 import 'package:tekushare/screens/pages/settings/view/linked_account_detail_page.dart';
 import 'package:tekushare/screens/pages/settings/view/phone_register_page.dart';
 import 'package:tekushare/screens/providers/account_link_provider.dart';
+import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
 import 'package:tekushare/screens/providers/contact_provider.dart';
 import 'package:tekushare/screens/providers/walk_session_provider.dart';
@@ -87,7 +88,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         isDestructive: true,
         onConfirm: () async {
           ref.read(walkSessionProvider.notifier).resetWalk();
+          final uid = ref.read(authStateProvider).valueOrNull?.uid;
+          final cleaner = ref.read(localDataCleanerProvider);
           await ref.read(authServiceProvider).deleteUser();
+          // アカウント削除に成功した後で端末内データを消す（再認証失敗時に消えないように）
+          if (uid != null) await cleaner.deleteUserData(uid);
           if (!mounted) return;
           Navigator.popUntil(context, (route) => route.isFirst);
         },
