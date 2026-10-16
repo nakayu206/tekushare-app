@@ -12,6 +12,15 @@ const {
 } = require("firebase/firestore");
 
 const future = () => Timestamp.fromDate(new Date(Date.now() + 86400000));
+
+test("更新案内は未ログインでも単一取得でき、一覧取得・変更はできない", async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(db, "appUpdates/prod_android")));
+  await assertFails(getDocs(collection(db, "appUpdates")));
+  await assertFails(setDoc(doc(db, "appUpdates/prod_android"), { latestBuild: 99 }));
+  const alice = env.authenticatedContext("alice").firestore();
+  await assertFails(setDoc(doc(alice, "appUpdates/prod_android"), { latestBuild: 99 }));
+});
 let env;
 
 before(async () => {

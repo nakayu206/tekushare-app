@@ -7,6 +7,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // ログイン前にも更新案内を取得する。変更は管理者からのみ行う。
+    match /appUpdates/{configId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
     // 自分と otherUid が連携済みかどうかを確認する
     // linkId は2つのUIDをソートして _ でつないだもの（AccountLinkRepositoryImpl._linkIdOf と同一）
     function isLinkedWith(otherUid) {
