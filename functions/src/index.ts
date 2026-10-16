@@ -248,3 +248,62 @@ export const sweepDownloadTokens = functions
     }
     functions.logger.info(`[sweepDownloadTokens] ${revoked}件のトークンを削除`);
   });
+
+/** users/{uid} の共有設定から、連携に持たせる共有設定を作る（未設定はデフォルトON） */
+function shareOf(user: FirebaseFirestore.DocumentData | undefined) {
+  return {
+    wantToGo: user?.shareWantToGo !== false,
+    visited: user?.shareVisited !== false,
+  };
+}
+
+/**
+ * 連携の shares を、各ユーザーの最新の共有設定に合わせる。
+ * クライアントが共有設定を変えている最中に連携が作られた場合や、
+ * クライアントが途中で終了した場合の補正用（トランザクションで最新値を読み直す）。
+ */
+async function reconcileLinkShares(
+  linkRef: FirebaseFirestore.DocumentReference,
+): Promise<void> {
+  await db.runTransaction(async (tx) => {
+    const link = await tx.get(linkRef);
+    if (!link.exists) return;
+    const uids = (link.data()?.uids ?? []) as string[];
+    const users = await Promise.all(
+      uids.map((u) => tx.get(db.collection("users").doc(u))),
+    );
+    const shares: Record<string, unknown> = {};
+    uids.forEach((u, i) => (shares[u] = shareOf(users[i].data())));
+    if (JSON.stringify(link.data()?.shares) !== JSON.stringify(shares)) {
+      tx.update(linkRef, { shares });
+    }
+  });
+}
+
+/** 連携が作られたら、その時点の最新の共有設定に合わせる */
+export const reconcileSharesOnLinkCreated = functions
+  .region("asia-northeast1")
+  .runWith({ failurePolicy: true })
+  .firestore.document("accountLinks/{linkId}")
+  .onCreate(async (snap) => reconcileLinkShares(snap.ref));
+
+/** 共有設定が変更されたら、そのユーザーの全連携を最新の設定に合わせる */
+export const reconcileSharesOnSettingsChange = functions
+  .region("asia-northeast1")
+  .runWith({ failurePolicy: true })
+  .firestore.document("users/{uid}")
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    if (
+      before.shareWantToGo === after.shareWantToGo &&
+      before.shareVisited === after.shareVisited
+    ) {
+      return;
+    }
+    const links = await db
+      .collection("accountLinks")
+      .where("uids", "array-contains", context.params.uid)
+      .get();
+    await Promise.all(links.docs.map((d) => reconcileLinkShares(d.ref)));
+  });
