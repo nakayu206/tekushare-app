@@ -6,6 +6,7 @@ import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/repositories/account_link_repository.dart';
 import 'package:tekushare/screens/pages/settings/viewmodel/settings_viewmodel.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/auth_provider.dart';
 
 class _FakeAccountLinkRepository implements AccountLinkRepository {
   @override
@@ -156,5 +157,29 @@ void main() {
       expect(state2.timerMinutes, 45);
       expect(state2.inactivityEnabled, true);
     });
+
+    test('共有設定はサーバーの値を読み込み、端末の値に依存しない', () async {
+      SharedPreferences.setMockInitialValues({'settings_shareWantToGo': true});
+      final c = ProviderContainer(overrides: [
+        accountLinkRepositoryProvider
+            .overrideWithValue(_ServerOffAccountLinkRepository()),
+        authStateProvider
+            .overrideWith((_) => Stream.value(const AuthUser(uid: 'b'))),
+      ]);
+      addTearDown(c.dispose);
+      await c.read(sharedPrefsProvider.future);
+      await c.read(authStateProvider.future);
+      c.read(settingsViewModelProvider);
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(settingsViewModelProvider).shareWantToGo, false);
+      expect(c.read(settingsViewModelProvider).shareVisited, true);
+    });
   });
+}
+
+class _ServerOffAccountLinkRepository extends _FakeAccountLinkRepository {
+  @override
+  Future<({bool shareWantToGo, bool shareVisited})> fetchShareSettings(
+          String otherUid) async =>
+      (shareWantToGo: false, shareVisited: true);
 }
