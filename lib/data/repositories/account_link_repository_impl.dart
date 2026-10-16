@@ -6,14 +6,17 @@ import 'package:tekushare/domain/repositories/account_link_repository.dart';
 
 const _inviteValidDuration = Duration(days: 7);
 
-/// Firestore のバッチ書き込みは1回500件までのため、余裕を持たせる
-const _batchLimit = 400;
-
 /// 2人のUIDから決定的な連携ドキュメントIDを作る（順序に依存しない）
 String _linkIdOf(String uidA, String uidB) {
   final sorted = [uidA, uidB]..sort();
   return '${sorted[0]}_${sorted[1]}';
 }
+
+/// users/{uid} の共有設定から、連携に持たせる共有設定を作る（未設定はデフォルトON）
+Map<String, bool> _shareOf(Map<String, dynamic>? user) => {
+      'wantToGo': user?['shareWantToGo'] as bool? ?? true,
+      'visited': user?['shareVisited'] as bool? ?? true,
+    };
 
 class AccountLinkRepositoryImpl implements AccountLinkRepository {
   AccountLinkRepositoryImpl(this._firestore, this._auth);
@@ -113,8 +116,18 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
       final linkSnap = await tx.get(linkRef);
       if (linkSnap.exists) throw const AlreadyLinkedException();
 
+      // 各ユーザーの共有設定を連携に持たせる（Storageルールが写真の公開可否に使う）
+      final fromUserSnap =
+          await tx.get(_firestore.collection('users').doc(fromUid));
+      final myUserSnap =
+          await tx.get(_firestore.collection('users').doc(myUid));
+
       tx.set(linkRef, {
         'uids': [fromUid, myUid],
+        'shares': {
+          fromUid: _shareOf(fromUserSnap.data()),
+          myUid: _shareOf(myUserSnap.data()),
+        },
         'createdAt': Timestamp.now(),
         // Firestoreルールが「正当な招待経由か」を検証するために必要
         'inviteToken': token,
@@ -134,41 +147,25 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
     required bool shareWantToGo,
     required bool shareVisited,
   }) async {
-    final userRef = _firestore.collection('users').doc(_myUid);
-    final spots = await userRef.collection('spots').get();
-    bool sharedOf(Object? status) => switch (status) {
-          'wantToGo' => shareWantToGo,
-          'visited' => shareVisited,
-          _ => false,
-        };
-    final toPrivate = <DocumentReference>[];
-    final toPublic = <DocumentReference>[];
-    for (final doc in spots.docs) {
-      final shared = sharedOf(doc.data()['status']);
-      if (doc.data()['shared'] == shared) continue;
-      (shared ? toPublic : toPrivate).add(doc.reference);
+    final myUid = _myUid;
+    final links = await _firestore
+        .collection('accountLinks')
+        .where('uids', arrayContains: myUid)
+        .get();
+    // 設定と、各連携の共有設定(shares.{自分})を1回のバッチで原子的に更新する。
+    // 連携は少数なので分割は不要。更新途中に写真が公開されたままになることはない。
+    final batch = _firestore.batch();
+    batch.set(
+      _firestore.collection('users').doc(myUid),
+      {'shareWantToGo': shareWantToGo, 'shareVisited': shareVisited},
+      SetOptions(merge: true),
+    );
+    for (final link in links.docs) {
+      batch.update(link.reference, {
+        'shares.$myUid': {'wantToGo': shareWantToGo, 'visited': shareVisited},
+      });
     }
-    // バッチ上限(500件)を超えると複数バッチに分かれて原子的でなくなる。
-    // 先にスポットだけを非公開にすると、設定がまだONの間に Cloud Functions
-    // (syncSpotShared)が shared を true へ戻してしまうため、設定を最初に書く。
-    // 設定が先に反映されていれば、Functions は最新の設定から再計算するので
-    // shared を公開側へ戻すことはない（非公開になるスポットを公開になるスポットより先に書く）。
-    final writes = <void Function(WriteBatch)>[
-      (b) => b.set(
-            userRef,
-            {'shareWantToGo': shareWantToGo, 'shareVisited': shareVisited},
-            SetOptions(merge: true),
-          ),
-      for (final ref in toPrivate) (b) => b.update(ref, {'shared': false}),
-      for (final ref in toPublic) (b) => b.update(ref, {'shared': true}),
-    ];
-    for (var i = 0; i < writes.length; i += _batchLimit) {
-      final batch = _firestore.batch();
-      for (final write in writes.skip(i).take(_batchLimit)) {
-        write(batch);
-      }
-      await batch.commit();
-    }
+    await batch.commit();
   }
 
   @override

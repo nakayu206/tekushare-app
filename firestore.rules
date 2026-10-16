@@ -16,6 +16,22 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/accountLinks/$(linkId));
     }
 
+    // 共有設定の値(shares.{uid})が users/{uid} の設定と一致するか（未設定はデフォルトON）
+    function shareMatchesUser(uid, share) {
+      let user = get(/databases/$(database)/documents/users/$(uid)).data;
+      return share.keys().hasOnly(['wantToGo', 'visited'])
+        && share.wantToGo == user.get('shareWantToGo', true)
+        && share.visited == user.get('shareVisited', true);
+    }
+
+    // 同一バッチ書き込み後の users/{uid} の設定との一致
+    function shareMatchesUserAfter(uid, share) {
+      let user = getAfter(/databases/$(database)/documents/users/$(uid)).data;
+      return share.keys().hasOnly(['wantToGo', 'visited'])
+        && share.wantToGo == user.get('shareWantToGo', true)
+        && share.visited == user.get('shareVisited', true);
+    }
+
     // users/{uid}: 連携相手の表示名・共有設定を引けるよう単一取得(get)のみログイン済み全員に許可
     // 一覧(list)は禁止して全ユーザーの列挙を防ぐ。FCMトークンは users/{uid}/private/fcm（オーナーのみ）に置く
     // users/{uid} の値の型・長さの検証
@@ -105,9 +121,21 @@ service cloud.firestore {
           request.resource.data.uids[0] < request.resource.data.uids[1]
             ? request.resource.data.uids[0] + '_' + request.resource.data.uids[1]
             : request.resource.data.uids[1] + '_' + request.resource.data.uids[0]
-        );
+        )
+        // 各ユーザーの共有設定を shares に持たせる（Storage ルールが参照する）。
+        // 値は作成時点の users/{uid} の設定と一致していなければならない
+        && request.resource.data.shares.keys().hasOnly(request.resource.data.uids)
+        && shareMatchesUser(request.resource.data.uids[0], request.resource.data.shares[request.resource.data.uids[0]])
+        && shareMatchesUser(request.resource.data.uids[1], request.resource.data.shares[request.resource.data.uids[1]]);
 
-      allow update: if false;
+      // 自分の共有設定(shares.{自分のUID})だけ更新できる。
+      // 同じバッチで更新される users/{uid} の設定と一致していること（getAfter）を強制し、
+      // 1回の書き込みで写真・スポットの公開範囲が原子的に切り替わるようにする
+      allow update: if isSignedIn()
+        && request.auth.uid in resource.data.uids
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shares'])
+        && request.resource.data.shares.diff(resource.data.shares).affectedKeys().hasOnly([request.auth.uid])
+        && shareMatchesUserAfter(request.auth.uid, request.resource.data.shares[request.auth.uid]);
 
       allow delete: if isSignedIn() && request.auth.uid in resource.data.uids;
     }

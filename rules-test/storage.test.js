@@ -4,7 +4,7 @@ const path = require("node:path");
 const {
   initializeTestEnvironment, assertSucceeds, assertFails,
 } = require("@firebase/rules-unit-testing");
-const { doc, setDoc } = require("firebase/firestore");
+const { doc, setDoc, deleteDoc } = require("firebase/firestore");
 const { ref, getBytes, uploadBytes, deleteObject } = require("firebase/storage");
 
 let env;
@@ -25,10 +25,13 @@ before(async () => {
   });
   await env.withSecurityRulesDisabled(async (ctx) => {
     const fs_ = ctx.firestore();
-    await setDoc(doc(fs_, "accountLinks/alice_bob"), { uids: ["alice", "bob"] });
+    await setDoc(doc(fs_, "accountLinks/alice_bob"), {
+      uids: ["alice", "bob"],
+      shares: { alice: { wantToGo: true, visited: false }, bob: { wantToGo: true, visited: true } },
+    });
     await setDoc(doc(fs_, "users/alice"), { displayName: "A", shareVisited: false });
-    await setDoc(doc(fs_, "users/alice/spots/s1"), { status: "wantToGo", shared: true });
-    await setDoc(doc(fs_, "users/alice/spots/s2"), { status: "visited", shared: false });
+    await setDoc(doc(fs_, "users/alice/spots/s1"), { status: "wantToGo" });
+    await setDoc(doc(fs_, "users/alice/spots/s2"), { status: "visited" });
     await uploadBytes(ref(ctx.storage(), "users/alice/spots/s2/a.jpg"), png, { contentType: "image/jpeg" });
     await uploadBytes(ref(ctx.storage(), "users/alice/spots/gone/a.jpg"), png, { contentType: "image/jpeg" });
     await uploadBytes(ref(ctx.storage(), file), png, { contentType: "image/jpeg" });
@@ -49,6 +52,36 @@ test("共有OFFのスポット・削除済みスポットの写真は連携相�
   await assertFails(getBytes(ref(bob, "users/alice/spots/gone/a.jpg")));
   await assertSucceeds(getBytes(ref(alice, "users/alice/spots/s2/a.jpg")));
   await assertSucceeds(getBytes(ref(alice, "users/alice/spots/gone/a.jpg")));
+});
+
+test("共有設定の更新は1回の書き込みで全スポットの写真に即時反映される", async () => {
+  // 旧設計ではスポットごとの更新が分割バッチになり、更新前の写真が取得できてしまった。
+  // 連携の shares を1か所更新するだけで、スポットが何件あっても一括で拒否される。
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, "users/alice/spots/s3"), { status: "wantToGo" });
+    await uploadBytes(ref(ctx.storage(), "users/alice/spots/s3/a.jpg"), png, { contentType: "image/jpeg" });
+  });
+  const bob = env.authenticatedContext("bob").storage();
+  await assertSucceeds(getBytes(ref(bob, "users/alice/spots/s3/a.jpg")));
+  await assertSucceeds(getBytes(ref(bob, file)));
+
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "accountLinks/alice_bob"), {
+      uids: ["alice", "bob"],
+      shares: { alice: { wantToGo: false, visited: false }, bob: { wantToGo: true, visited: true } },
+    });
+  });
+  await assertFails(getBytes(ref(bob, "users/alice/spots/s3/a.jpg")));
+  await assertFails(getBytes(ref(bob, file)));
+  await assertSucceeds(getBytes(ref(env.authenticatedContext("alice").storage(), file)));
+});
+
+test("連携が解除されると写真は読めない", async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await deleteDoc(doc(ctx.firestore(), "accountLinks/alice_bob"));
+  });
+  await assertFails(getBytes(ref(env.authenticatedContext("bob").storage(), file)));
 });
 
 test("書き込みは本人の画像のみ・サイズ上限あり", async () => {
