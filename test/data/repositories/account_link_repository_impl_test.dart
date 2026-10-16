@@ -89,6 +89,23 @@ void main() {
           containsAll(['uidA', 'uidB']));
     });
 
+    test('承認すると双方の共有設定が shares に入る（未設定はON）', () async {
+      await firestore
+          .collection('users')
+          .doc('uidA')
+          .set({'displayName': 'あかり', 'shareVisited': false});
+      final link = await repoFor('uidA').createInviteLink();
+      final token = link.split('/').last;
+
+      await repoFor('uidB').acceptInvite(token);
+
+      final shares =
+          (await firestore.collection('accountLinks').doc('uidA_uidB').get())
+              .data()!['shares'] as Map<String, dynamic>;
+      expect(shares['uidA'], {'wantToGo': true, 'visited': false});
+      expect(shares['uidB'], {'wantToGo': true, 'visited': true});
+    });
+
     test('承認後は招待が used になる', () async {
       final link = await repoFor('uidA').createInviteLink();
       final token = link.split('/').last;
@@ -145,6 +162,69 @@ void main() {
       final linkDoc =
           await firestore.collection('accountLinks').doc('uidA_uidB').get();
       expect(linkDoc.exists, false);
+    });
+  });
+
+  group('updateShareSettings', () {
+    test('設定と全連携の shares.自分 を同時に更新し、相手の分は変えない', () async {
+      await putUser('uidA', 'あかり');
+      await putUser('uidB', 'ぼぶ');
+      await putUser('uidC', 'しー');
+      for (final other in ['uidB', 'uidC']) {
+        final token =
+            (await repoFor('uidA').createInviteLink()).split('/').last;
+        await repoFor(other).acceptInvite(token);
+      }
+
+      await repoFor('uidA')
+          .updateShareSettings(shareWantToGo: false, shareVisited: true);
+
+      final user = await firestore.collection('users').doc('uidA').get();
+      expect(user.data()!['shareWantToGo'], false);
+      for (final id in ['uidA_uidB', 'uidA_uidC']) {
+        final shares =
+            (await firestore.collection('accountLinks').doc(id).get())
+                .data()!['shares'] as Map<String, dynamic>;
+        expect(shares['uidA'], {'wantToGo': false, 'visited': true});
+        expect(shares.keys.length, 2);
+      }
+      final other =
+          (await firestore.collection('accountLinks').doc('uidA_uidB').get())
+              .data()!['shares'] as Map<String, dynamic>;
+      expect(other['uidB'], {'wantToGo': true, 'visited': true});
+    });
+
+    test('更新中に別の連携が作られても、取り直して非公開に更新する', () async {
+      await putUser('uidA', 'あかり');
+      // 一覧取得の後・確定の前に、変更前(ON)の設定で連携が作られた状況を再現する
+      var created = false;
+      final auth = MockFirebaseAuth(
+        signedIn: true,
+        mockUser: MockUser(uid: 'uidA', displayName: 'uidA'),
+      );
+      final repo = AccountLinkRepositoryImpl(
+        firestore,
+        auth,
+        afterShareBatchForTest: () async {
+          if (created) return;
+          created = true;
+          await firestore.collection('accountLinks').doc('uidA_uidD').set({
+            'uids': ['uidA', 'uidD'],
+            'shares': {
+              'uidA': {'wantToGo': true, 'visited': true},
+              'uidD': {'wantToGo': true, 'visited': true},
+            },
+          });
+        },
+      );
+
+      await repo.updateShareSettings(shareWantToGo: false, shareVisited: false);
+
+      final shares =
+          (await firestore.collection('accountLinks').doc('uidA_uidD').get())
+              .data()!['shares'] as Map<String, dynamic>;
+      expect(shares['uidA'], {'wantToGo': false, 'visited': false});
+      expect(shares['uidD'], {'wantToGo': true, 'visited': true});
     });
   });
 }

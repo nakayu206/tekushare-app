@@ -249,56 +249,46 @@ export const sweepDownloadTokens = functions
     functions.logger.info(`[sweepDownloadTokens] ${revoked}件のトークンを削除`);
   });
 
-/** ステータスと共有設定から、連携相手に写真を見せてよいかを求める（未設定はデフォルトON） */
-function isSpotShared(
-  status: string | undefined,
-  owner: FirebaseFirestore.DocumentData | undefined,
-): boolean {
-  if (status === "wantToGo") return owner?.shareWantToGo !== false;
-  if (status === "visited") return owner?.shareVisited !== false;
-  return false;
+/** users/{uid} の共有設定から、連携に持たせる共有設定を作る（未設定はデフォルトON） */
+function shareOf(user: FirebaseFirestore.DocumentData | undefined) {
+  return {
+    wantToGo: user?.shareWantToGo !== false,
+    visited: user?.shareVisited !== false,
+  };
 }
 
 /**
- * スポット1件の shared を、最新の共有設定・ステータスから再計算して同期する。
- * トランザクション内で読み直すため、遅れて届いた古いイベントが
- * 共有OFF後に shared を true へ戻すことはない。
+ * 連携の shares を、各ユーザーの最新の共有設定に合わせる。
+ * クライアントが共有設定を変えている最中に連携が作られた場合や、
+ * クライアントが途中で終了した場合の補正用（トランザクションで最新値を読み直す）。
  */
-async function syncSpotSharedTx(
-  ownerRef: FirebaseFirestore.DocumentReference,
-  spotRef: FirebaseFirestore.DocumentReference,
+async function reconcileLinkShares(
+  linkRef: FirebaseFirestore.DocumentReference,
 ): Promise<void> {
   await db.runTransaction(async (tx) => {
-    const spotSnap = await tx.get(spotRef);
-    if (!spotSnap.exists) return;
-    const ownerSnap = await tx.get(ownerRef);
-    const shared = isSpotShared(spotSnap.data()?.status, ownerSnap.data());
-    if (spotSnap.data()?.shared !== shared) tx.update(spotRef, { shared });
+    const link = await tx.get(linkRef);
+    if (!link.exists) return;
+    const uids = (link.data()?.uids ?? []) as string[];
+    const users = await Promise.all(
+      uids.map((u) => tx.get(db.collection("users").doc(u))),
+    );
+    const shares: Record<string, unknown> = {};
+    uids.forEach((u, i) => (shares[u] = shareOf(users[i].data())));
+    if (JSON.stringify(link.data()?.shares) !== JSON.stringify(shares)) {
+      tx.update(linkRef, { shares });
+    }
   });
 }
 
-/**
- * スポットの作成・更新時に、Storage ルールが参照する shared フィールドを同期する。
- * Storage ルールは Firestore を2件までしか参照できないため、共有設定を非正規化する。
- * 非公開への変更はクライアントが先に shared=false を書いて即時に反映し、
- * こちらは共有ON側への反映と取りこぼしの補正を担う（失敗時は安全側＝非公開）。
- */
-export const syncSpotShared = functions
+/** 連携が作られたら、その時点の最新の共有設定に合わせる */
+export const reconcileSharesOnLinkCreated = functions
   .region("asia-northeast1")
   .runWith({ failurePolicy: true })
-  .firestore.document("users/{uid}/spots/{spotId}")
-  .onWrite(async (change, context) => {
-    if (!change.after.exists) return;
-    await syncSpotSharedTx(
-      db.collection("users").doc(context.params.uid),
-      change.after.ref,
-    );
-  });
+  .firestore.document("accountLinks/{linkId}")
+  .onCreate(async (snap) => reconcileLinkShares(snap.ref));
 
-/**
- * 共有設定が変更されたら、そのユーザーの全スポットの shared を更新する。
- */
-export const syncSharedOnSettingsChange = functions
+/** 共有設定が変更されたら、そのユーザーの全連携を最新の設定に合わせる */
+export const reconcileSharesOnSettingsChange = functions
   .region("asia-northeast1")
   .runWith({ failurePolicy: true })
   .firestore.document("users/{uid}")
@@ -311,7 +301,9 @@ export const syncSharedOnSettingsChange = functions
     ) {
       return;
     }
-    const ownerRef = db.collection("users").doc(context.params.uid);
-    const spots = await ownerRef.collection("spots").get();
-    await Promise.all(spots.docs.map((doc) => syncSpotSharedTx(ownerRef, doc.ref)));
+    const links = await db
+      .collection("accountLinks")
+      .where("uids", "array-contains", context.params.uid)
+      .get();
+    await Promise.all(links.docs.map((d) => reconcileLinkShares(d.ref)));
   });

@@ -1,13 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:tekushare/domain/entities/linked_account.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/repositories/account_link_repository.dart';
 
 const _inviteValidDuration = Duration(days: 7);
-
-/// Firestore のバッチ書き込みは1回500件までのため、余裕を持たせる
-const _batchLimit = 400;
 
 /// 2人のUIDから決定的な連携ドキュメントIDを作る（順序に依存しない）
 String _linkIdOf(String uidA, String uidB) {
@@ -15,8 +13,24 @@ String _linkIdOf(String uidA, String uidB) {
   return '${sorted[0]}_${sorted[1]}';
 }
 
+/// 共有設定の更新と連携作成が重なった場合に、取り直して更新する最大回数
+const _shareSyncMaxAttempts = 3;
+
+/// users/{uid} の共有設定から、連携に持たせる共有設定を作る（未設定はデフォルトON）
+Map<String, bool> _shareOf(Map<String, dynamic>? user) => {
+      'wantToGo': user?['shareWantToGo'] as bool? ?? true,
+      'visited': user?['shareVisited'] as bool? ?? true,
+    };
+
 class AccountLinkRepositoryImpl implements AccountLinkRepository {
-  AccountLinkRepositoryImpl(this._firestore, this._auth);
+  AccountLinkRepositoryImpl(
+    this._firestore,
+    this._auth, {
+    @visibleForTesting this.afterShareBatchForTest,
+  });
+
+  /// テスト用: 共有設定のバッチ確定直後に呼ばれる（連携作成との競合を再現するため）
+  final Future<void> Function()? afterShareBatchForTest;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -113,8 +127,18 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
       final linkSnap = await tx.get(linkRef);
       if (linkSnap.exists) throw const AlreadyLinkedException();
 
+      // 各ユーザーの共有設定を連携に持たせる（Storageルールが写真の公開可否に使う）
+      final fromUserSnap =
+          await tx.get(_firestore.collection('users').doc(fromUid));
+      final myUserSnap =
+          await tx.get(_firestore.collection('users').doc(myUid));
+
       tx.set(linkRef, {
         'uids': [fromUid, myUid],
+        'shares': {
+          fromUid: _shareOf(fromUserSnap.data()),
+          myUid: _shareOf(myUserSnap.data()),
+        },
         'createdAt': Timestamp.now(),
         // Firestoreルールが「正当な招待経由か」を検証するために必要
         'inviteToken': token,
@@ -134,31 +158,38 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
     required bool shareWantToGo,
     required bool shareVisited,
   }) async {
-    final userRef = _firestore.collection('users').doc(_myUid);
-    final spots = await userRef.collection('spots').get();
-    // 設定とスポットの shared を同じバッチで更新し、非公開への変更を即時に有効にする
-    // （Cloud Functions の非同期更新を待たない）。バッチ上限があるため分割する。
-    final writes = <void Function(WriteBatch)>[
-      (b) => b.set(
-            userRef,
-            {'shareWantToGo': shareWantToGo, 'shareVisited': shareVisited},
-            SetOptions(merge: true),
-          ),
-      for (final doc in spots.docs)
-        (b) => b.update(doc.reference, {
-              'shared': switch (doc.data()['status']) {
-                'wantToGo' => shareWantToGo,
-                'visited' => shareVisited,
-                _ => false,
-              },
-            }),
-    ];
-    for (var i = 0; i < writes.length; i += _batchLimit) {
+    final myUid = _myUid;
+    final desired = {'wantToGo': shareWantToGo, 'visited': shareVisited};
+    var settingsWritten = false;
+    for (var attempt = 0; attempt < _shareSyncMaxAttempts; attempt++) {
+      final links = await _firestore
+          .collection('accountLinks')
+          .where('uids', arrayContains: myUid)
+          .get();
+      final stale = links.docs.where((link) {
+        final mine = (link.data()['shares'] as Map?)?[myUid] as Map?;
+        return mine?['wantToGo'] != shareWantToGo ||
+            mine?['visited'] != shareVisited;
+      }).toList();
+      // 設定を書いた後に、古い設定のまま残った連携が無ければ完了
+      if (settingsWritten && stale.isEmpty) return;
+
+      // 設定と、各連携の共有設定(shares.{自分})を1回のバッチで原子的に更新する。
+      // 連携は少数なので分割は不要。更新途中に写真が公開されたままになることはない。
       final batch = _firestore.batch();
-      for (final write in writes.skip(i).take(_batchLimit)) {
-        write(batch);
+      batch.set(
+        _firestore.collection('users').doc(myUid),
+        {'shareWantToGo': shareWantToGo, 'shareVisited': shareVisited},
+        SetOptions(merge: true),
+      );
+      for (final link in stale) {
+        batch.update(link.reference, {'shares.$myUid': desired});
       }
       await batch.commit();
+      settingsWritten = true;
+      await afterShareBatchForTest?.call();
+      // 連携の一覧取得から確定までの間に別の連携が作られた場合は、
+      // 次の周回で検出して更新する（確定後の新規連携はルールが設定との一致を要求する）
     }
   }
 

@@ -33,12 +33,14 @@ beforeEach(async () => {
       fromUid: "alice", used: false, expiresAt: future(),
     });
     await setDoc(doc(db, "users/alice"), { displayName: "A" });
+    await setDoc(doc(db, "users/bob"), { displayName: "B" });
     await setDoc(doc(db, "users/alice/private/fcm"), { fcmToken: "x" });
   });
 });
 
-const linkData = (token = "t1") => ({
-  uids: ["alice", "bob"], inviteToken: token, createdAt: Timestamp.now(),
+const on = { wantToGo: true, visited: true };
+const linkData = (token = "t1", shares = { alice: on, bob: on }) => ({
+  uids: ["alice", "bob"], inviteToken: token, createdAt: Timestamp.now(), shares,
 });
 
 test("招待は list 不可・get 可", async () => {
@@ -145,4 +147,36 @@ test("deletionJobs はクライアントから読み書きできない", async (
   const alice = env.authenticatedContext("alice").firestore();
   await assertFails(getDoc(doc(alice, "deletionJobs/alice")));
   await assertFails(setDoc(doc(alice, "deletionJobs/alice"), { status: "completed" }));
+});
+
+test("連携作成時の shares が users の設定と違えば失敗", async () => {
+  const db = env.authenticatedContext("bob").firestore();
+  const b = writeBatch(db);
+  b.set(doc(db, "accountLinks/alice_bob"),
+    linkData("t1", { alice: on, bob: { wantToGo: false, visited: true } }));
+  b.update(doc(db, "linkInvites/t1"), { used: true });
+  await assertFails(b.commit());
+});
+
+test("shares は自分の分だけ、users の設定と同じバッチで更新できる", async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "accountLinks/alice_bob"),
+      { uids: ["alice", "bob"], shares: { alice: on, bob: on } });
+  });
+  const alice = env.authenticatedContext("alice").firestore();
+  const off = { wantToGo: false, visited: false };
+  const batch = writeBatch(alice);
+  batch.set(doc(alice, "users/alice"), { shareWantToGo: false, shareVisited: false }, { merge: true });
+  batch.update(doc(alice, "accountLinks/alice_bob"), { "shares.alice": off });
+  await assertSucceeds(batch.commit());
+
+  // users と食い違う更新・相手の分の更新は失敗
+  const mismatch = writeBatch(alice);
+  mismatch.update(doc(alice, "accountLinks/alice_bob"), { "shares.alice": on });
+  await assertFails(mismatch.commit());
+  const other = writeBatch(alice);
+  other.update(doc(alice, "accountLinks/alice_bob"), { "shares.bob": off });
+  await assertFails(other.commit());
+  const mallory = env.authenticatedContext("mallory").firestore();
+  await assertFails(setDoc(doc(mallory, "accountLinks/alice_bob"), { "shares": { alice: on, bob: on } }, { merge: true }));
 });

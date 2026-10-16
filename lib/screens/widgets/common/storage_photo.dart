@@ -63,6 +63,9 @@ class _StoragePhotoState extends ConsumerState<StoragePhoto> {
   Map<String, _CacheEntry>? _cacheMap;
   Timer? _expiryTimer;
 
+  /// ユーザーが切り替わるたびに増やし、FutureBuilder の状態（旧ユーザーの画像）を破棄する
+  int _generation = 0;
+
   @override
   void dispose() {
     _expiryTimer?.cancel();
@@ -118,10 +121,13 @@ class _StoragePhotoState extends ConsumerState<StoragePhoto> {
     // ログインユーザーが変わるとキャッシュが作り直されるので、表示中でも取得し直す
     final cacheMap = ref.watch(storagePhotoCacheProvider);
     if (!identical(cacheMap, _cacheMap)) {
+      // 最初の構築では世代を進めない（以降の切り替え時のみ旧画像を破棄する）
+      if (_cacheMap != null) _generation++;
       _cacheMap = cacheMap;
       _refresh();
     }
     return FutureBuilder<Uint8List?>(
+      key: ValueKey(_generation),
       future: _future,
       builder: (context, snap) {
         if (snap.hasError ||
