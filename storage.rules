@@ -14,15 +14,22 @@ service firebase.storage {
       // 削除はオーナーのみ（delete には request.resource がないため write と分ける）
       allow delete: if request.auth != null && request.auth.uid == uid;
 
-      // 読み取りはオーナーと連携済みユーザーのみ
-      // accountLinks のドキュメントIDは2つのUIDをソートして _ でつないだもの
-      // （firestore.exists は Cross-service rules。デプロイ時に IAM ロール付与の確認が出る）
+      // 読み取りはオーナー、または連携済みかつスポットが共有対象のユーザーのみ
+      // Storage ルールで参照できる Firestore ドキュメントは1リクエスト2件までのため、
+      // 連携(accountLinks) + スポット(users/{uid}/spots/{spotId}) の2件に収める。
+      // スポットの shared は、共有設定(users/{uid})とステータスから Cloud Functions
+      // (syncSpotShared / syncSharedOnSettingsChange)が算出して書き込む非正規化フィールド。
+      // accountLinks のドキュメントIDは2つのUIDをソートして _ でつないだもの。
+      // スポットが削除済みなら firestore.get が失敗して拒否になる。
+      // （firestore.* は Cross-service rules。デプロイ時に IAM ロール付与の確認が出る）
       allow read: if request.auth != null
         && (request.auth.uid == uid
-          || firestore.exists(/databases/(default)/documents/accountLinks/$(
-            request.auth.uid < uid
-              ? request.auth.uid + '_' + uid
-              : uid + '_' + request.auth.uid)));
+          || (firestore.exists(/databases/(default)/documents/accountLinks/$(
+              request.auth.uid < uid
+                ? request.auth.uid + '_' + uid
+                : uid + '_' + request.auth.uid))
+            && firestore.get(/databases/(default)/documents/users/$(uid)/spots/$(spotId))
+              .data.get('shared', false) == true));
     }
   }
 }

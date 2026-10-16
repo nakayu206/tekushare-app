@@ -24,7 +24,13 @@ before(async () => {
     },
   });
   await env.withSecurityRulesDisabled(async (ctx) => {
-    await setDoc(doc(ctx.firestore(), "accountLinks/alice_bob"), { uids: ["alice", "bob"] });
+    const fs_ = ctx.firestore();
+    await setDoc(doc(fs_, "accountLinks/alice_bob"), { uids: ["alice", "bob"] });
+    await setDoc(doc(fs_, "users/alice"), { displayName: "A", shareVisited: false });
+    await setDoc(doc(fs_, "users/alice/spots/s1"), { status: "wantToGo", shared: true });
+    await setDoc(doc(fs_, "users/alice/spots/s2"), { status: "visited", shared: false });
+    await uploadBytes(ref(ctx.storage(), "users/alice/spots/s2/a.jpg"), png, { contentType: "image/jpeg" });
+    await uploadBytes(ref(ctx.storage(), "users/alice/spots/gone/a.jpg"), png, { contentType: "image/jpeg" });
     await uploadBytes(ref(ctx.storage(), file), png, { contentType: "image/jpeg" });
   });
 });
@@ -34,6 +40,15 @@ test("読み取りは本人と連携相手のみ", async () => {
   await assertSucceeds(getBytes(ref(env.authenticatedContext("alice").storage(), file)));
   await assertSucceeds(getBytes(ref(env.authenticatedContext("bob").storage(), file)));
   await assertFails(getBytes(ref(env.authenticatedContext("mallory").storage(), file)));
+});
+
+test("共有OFFのスポット・削除済みスポットの写真は連携相手も読めない", async () => {
+  const bob = env.authenticatedContext("bob").storage();
+  const alice = env.authenticatedContext("alice").storage();
+  await assertFails(getBytes(ref(bob, "users/alice/spots/s2/a.jpg")));
+  await assertFails(getBytes(ref(bob, "users/alice/spots/gone/a.jpg")));
+  await assertSucceeds(getBytes(ref(alice, "users/alice/spots/s2/a.jpg")));
+  await assertSucceeds(getBytes(ref(alice, "users/alice/spots/gone/a.jpg")));
 });
 
 test("書き込みは本人の画像のみ・サイズ上限あり", async () => {

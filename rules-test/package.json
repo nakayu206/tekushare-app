@@ -2,7 +2,7 @@
   "name": "rules-test",
   "private": true,
   "scripts": {
-    "test": "firebase emulators:exec --only firestore,storage --project demo-tekushare \"node --test\""
+    "test": "firebase emulators:exec --only firestore,storage --project demo-tekushare \"node --test --test-concurrency=1\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^3.0.4",

@@ -1,12 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:tekushare/domain/entities/spot.dart';
 import 'package:tekushare/domain/repositories/spot_repository.dart';
 
 class FirestoreSpotRepositoryImpl implements SpotRepository {
-  FirestoreSpotRepositoryImpl(this._firestore, this._uid);
+  FirestoreSpotRepositoryImpl(this._firestore, this._uid,
+      [FirebaseStorage? storage])
+      : _storage = storage ?? FirebaseStorage.instance;
 
   final FirebaseFirestore _firestore;
   final String _uid;
+  final FirebaseStorage _storage;
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('users').doc(_uid).collection('spots');
@@ -34,6 +38,9 @@ class FirestoreSpotRepositoryImpl implements SpotRepository {
 
   @override
   Future<void> deleteSpot(String id) async {
+    // 写真を先に消す。失敗したらスポットを残したまま例外にして、再実行で回収できるようにする
+    final photos = await _storage.ref('users/$_uid/spots/$id').listAll();
+    await Future.wait(photos.items.map((item) => item.delete()));
     await _collection.doc(id).delete();
   }
 
