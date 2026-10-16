@@ -74,6 +74,130 @@ export const onWalkStarted = functions
     );
   });
 
+const DELETION_JOBS = "deletionJobs";
+
+/**
+ * ユーザーの個人データをすべて削除する。何度実行しても結果が同じ（冪等）。
+ * 一部が失敗しても残りを続行し、失敗した項目名を返す。
+ */
+async function deleteUserData(uid: string): Promise<string[]> {
+  const failures: string[] = [];
+  const run = async (label: string, task: () => Promise<unknown>) => {
+    try {
+      await task();
+    } catch (e) {
+      functions.logger.error(`[deleteUserData] ${label} の削除に失敗しました`, {
+        uid,
+        error: String(e),
+      });
+      failures.push(label);
+    }
+  };
+
+  await run("accountLinks", async () => {
+    const snap = await db
+      .collection("accountLinks")
+      .where("uids", "array-contains", uid)
+      .get();
+    await Promise.all(snap.docs.map((d) => d.ref.delete()));
+  });
+
+  await run("linkInvites", async () => {
+    const snap = await db
+      .collection("linkInvites")
+      .where("fromUid", "==", uid)
+      .get();
+    await Promise.all(snap.docs.map((d) => d.ref.delete()));
+  });
+
+  await run("users", () => db.recursiveDelete(db.collection("users").doc(uid)));
+
+  await run("storage", () =>
+    admin.storage().bucket().deleteFiles({ prefix: `users/${uid}/` }),
+  );
+
+  return failures;
+}
+
+/**
+ * 削除を実行し、結果を deletionJobs/{uid} に記録する（クライアントからは読み書き不可）。
+ * 失敗時は例外を投げる。
+ */
+async function runDeletionJob(uid: string): Promise<void> {
+  const jobRef = db.collection(DELETION_JOBS).doc(uid);
+  const failures = await deleteUserData(uid);
+  if (failures.length === 0) {
+    await jobRef.set(
+      {
+        status: "completed",
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        failures: [],
+      },
+      { merge: true },
+    );
+    return;
+  }
+  await jobRef.set(
+    {
+      status: "failed",
+      failures,
+      lastFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+      attempts: admin.firestore.FieldValue.increment(1),
+    },
+    { merge: true },
+  );
+  // ERROR ログはログベースアラートで通知する想定（docs 参照）
+  functions.logger.error("[deletion-failed] 退会データの削除が未完了です", {
+    uid,
+    failures,
+  });
+  throw new Error(`uid=${uid} の削除に失敗: ${failures.join(", ")}`);
+}
+
+/**
+ * Firebase Auth のユーザーが削除されたとき、そのユーザーの個人データをすべて削除する。
+ * - Firestore: users/{uid}（サブコレクション含む）、自分が関わる accountLinks、自分が発行した linkInvites
+ * - Storage: users/{uid}/ 配下の写真
+ * 失敗時は failurePolicy による自動再試行に加え、retryFailedDeletions が毎日再実行する。
+ */
+export const onUserDeleted = functions
+  .region("asia-northeast1")
+  .runWith({ failurePolicy: true })
+  .auth.user()
+  .onDelete(async (user) => {
+    const jobRef = db.collection(DELETION_JOBS).doc(user.uid);
+    // 先に「未完了」を永続化しておく（関数が途中で落ちても回収できるようにする）
+    await jobRef.set(
+      {
+        status: "pending",
+        requestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+    await runDeletionJob(user.uid);
+  });
+
+/**
+ * 未完了（pending / failed）の退会削除を毎日再実行する。
+ * 自動再試行の期限切れや、関数が途中で落ちた場合の回収用。
+ */
+export const retryFailedDeletions = functions
+  .region("asia-northeast1")
+  .pubsub.schedule("every 24 hours")
+  .onRun(async () => {
+    const snap = await db
+      .collection(DELETION_JOBS)
+      .where("status", "in", ["pending", "failed"])
+      .get();
+    for (const doc of snap.docs) {
+      try {
+        await runDeletionJob(doc.id);
+      } catch {
+        // 失敗は runDeletionJob が記録・ログ済み。次のジョブへ進む
+      }
+    }
+  });
+
 const DOWNLOAD_TOKEN_KEY = "firebaseStorageDownloadTokens";
 
 /** ファイルのダウンロードトークンを削除する（トークンが無ければ何もしない） */

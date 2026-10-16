@@ -140,3 +140,9 @@ test("共有OFFのステータスは一覧取得できない", async () => {
   await assertFails(getDocs(spots(bob)));
   await assertFails(getDocs(query(spots("mallory"), where("status", "==", "wantToGo"))));
 });
+
+test("deletionJobs はクライアントから読み書きできない", async () => {
+  const alice = env.authenticatedContext("alice").firestore();
+  await assertFails(getDoc(doc(alice, "deletionJobs/alice")));
+  await assertFails(setDoc(doc(alice, "deletionJobs/alice"), { status: "completed" }));
+});
