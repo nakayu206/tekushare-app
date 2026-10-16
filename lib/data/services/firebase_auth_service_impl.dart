@@ -97,8 +97,28 @@ class FirebaseAuthServiceImpl implements AuthService {
     }
   }
 
+  /// このユーザーの FCM トークン登録を解除する。
+  /// 別アカウントへ切り替えた端末に、前ユーザー宛ての通知が届き続けるのを防ぐ。
+  /// 付随的な処理なので失敗してもサインアウト自体は妨げない。
+  Future<void> _clearFcmToken(String uid) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('private')
+          .doc('fcm')
+          .delete();
+    } catch (e) {
+      debugPrint('FCMトークンの解除に失敗しました: $e');
+    }
+  }
+
   @override
-  Future<void> signOut() => _auth.signOut();
+  Future<void> signOut() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) await _clearFcmToken(uid);
+    await _auth.signOut();
+  }
 
   @override
   Future<void> deleteUser() async {

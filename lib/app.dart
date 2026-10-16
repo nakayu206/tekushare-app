@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_links/app_links.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -37,6 +39,7 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
   final _handledTokens = <String>{};
 
   String? _lastFcmSavedUid;
+  StreamSubscription<String>? _tokenRefreshSub;
 
   Future<void> _saveFcmToken(String uid) async {
     if (_lastFcmSavedUid == uid) return;
@@ -63,6 +66,19 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
       if (uri != null) _handleUri(uri);
     });
     _appLinks.uriLinkStream.listen(_handleUri);
+    // トークンが更新されたら保存し直す
+    _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((_) {
+      final uid = ref.read(authStateProvider).valueOrNull?.uid;
+      if (uid == null) return;
+      _lastFcmSavedUid = null;
+      _saveFcmToken(uid);
+    });
+  }
+
+  @override
+  void dispose() {
+    _tokenRefreshSub?.cancel();
+    super.dispose();
   }
 
   /// ディープリンクを受け取り、種別に応じて画面遷移する。
@@ -160,6 +176,8 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (previous, next) {
       final user = next.valueOrNull;
+      // サインアウト後に同じアカウントへ再ログインしても保存し直せるようにする
+      if (user == null) _lastFcmSavedUid = null;
       if (user == null || user.displayName == null || user.displayName == '') {
         return;
       }

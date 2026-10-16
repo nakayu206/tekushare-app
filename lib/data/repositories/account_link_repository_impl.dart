@@ -158,13 +158,19 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
       if (shareWantToGo) SpotStatus.wantToGo.name,
       if (shareVisited) SpotStatus.visited.name,
     ];
-    final snap = await _firestore
-        .collection('users')
-        .doc(otherUid)
-        .collection('spots')
-        .where('status', whereIn: statuses)
-        .get();
-    return snap.docs.map((doc) {
+    // セキュリティルールはクエリが status で絞られていることを要求するため、
+    // ステータスごとに個別に取得する
+    final docs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+    for (final status in statuses) {
+      final snap = await _firestore
+          .collection('users')
+          .doc(otherUid)
+          .collection('spots')
+          .where('status', isEqualTo: status)
+          .get();
+      docs.addAll(snap.docs);
+    }
+    return docs.map((doc) {
       final d = doc.data();
       return Spot(
         id: doc.id,

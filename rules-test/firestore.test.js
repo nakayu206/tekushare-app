@@ -123,3 +123,20 @@ test("旧 fcmToken の削除は許可される", async () => {
   const { deleteField } = require("firebase/firestore");
   await assertSucceeds(setDoc(doc(alice, "users/alice"), { fcmToken: deleteField() }, { merge: true }));
 });
+
+test("共有OFFのステータスは一覧取得できない", async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, "users/alice"), { displayName: "A", shareVisited: false });
+    await setDoc(doc(db, "users/alice/spots/s1"), { status: "wantToGo", title: "a" });
+    await setDoc(doc(db, "users/alice/spots/s2"), { status: "visited", title: "b" });
+    await setDoc(doc(db, "accountLinks/alice_bob"), { uids: ["alice", "bob"] });
+  });
+  const { query, where } = require("firebase/firestore");
+  const spots = (uid) => collection(env.authenticatedContext(uid).firestore(), "users/alice/spots");
+  const bob = "bob";
+  await assertSucceeds(getDocs(query(spots(bob), where("status", "==", "wantToGo"))));
+  await assertFails(getDocs(query(spots(bob), where("status", "==", "visited"))));
+  await assertFails(getDocs(spots(bob)));
+  await assertFails(getDocs(query(spots("mallory"), where("status", "==", "wantToGo"))));
+});

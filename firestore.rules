@@ -53,13 +53,20 @@ service cloud.firestore {
         && isLinkedWith(uid)
         && (
           (resource.data.status == 'wantToGo'
-            && get(/databases/$(database)/documents/users/$(uid)).data.shareWantToGo != false)
+            && get(/databases/$(database)/documents/users/$(uid)).data.get('shareWantToGo', true) != false)
           || (resource.data.status == 'visited'
-            && get(/databases/$(database)/documents/users/$(uid)).data.shareVisited != false)
+            && get(/databases/$(database)/documents/users/$(uid)).data.get('shareVisited', true) != false)
         );
-      // コレクションクエリ: LIST では resource.data が使えないため連携確認のみ
-      // クライアント側が shareSettings を確認した上で対象ステータスのみ whereIn で絞る
-      allow list: if isSignedIn() && isLinkedWith(uid);
+      // コレクションクエリ: クエリが status で絞られている場合のみ、そのステータスの共有設定を確認する
+      // （クライアントは共有ONのステータスごとに where('status', isEqualTo: ...) で取得する）
+      allow list: if isSignedIn()
+        && isLinkedWith(uid)
+        && (
+          (resource.data.status == 'wantToGo'
+            && get(/databases/$(database)/documents/users/$(uid)).data.get('shareWantToGo', true) != false)
+          || (resource.data.status == 'visited'
+            && get(/databases/$(database)/documents/users/$(uid)).data.get('shareVisited', true) != false)
+        );
     }
 
     match /linkInvites/{token} {
