@@ -86,6 +86,7 @@ jobs:
             test/screens/widgets/common/dashed_border_painter_test.dart \
             test/screens/widgets/common/primary_button_test.dart \
             test/screens/widgets/common/storage_photo_test.dart \
+            test/screens/widgets/common/app_update_gate_test.dart \
             test/screens/providers/auth_provider_test.dart \
             test/screens/providers/inactivity_provider_test.dart \
             test/screens/pages/history/history_page_test.dart \

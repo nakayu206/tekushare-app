@@ -19,6 +19,7 @@ import 'package:tekushare/screens/pages/home/view/home_page.dart';
 import 'package:tekushare/screens/providers/account_link_provider.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
+import 'package:tekushare/screens/widgets/common/app_update_gate.dart';
 
 final routeObserver = RouteObserver<ModalRoute<void>>();
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -209,7 +210,7 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
           data: Theme.of(context).copyWith(
             extensions: [AppSizingTheme.fromScreenWidth(sw)],
           ),
-          child: child!,
+          child: AppUpdateGate(child: child!),
         );
       },
       home: ready.when(

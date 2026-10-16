@@ -2,6 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:tekushare/core/config/flavor.dart';
+import 'package:tekushare/domain/entities/app_update.dart';
+import 'package:tekushare/screens/providers/app_update_provider.dart';
 import 'package:tekushare/data/repositories/account_link_repository_impl.dart';
 import 'package:tekushare/data/repositories/firestore_contact_repository_impl.dart';
 import 'package:tekushare/data/repositories/firestore_photo_repository_impl.dart';
@@ -17,6 +22,25 @@ const _maxPhotoBytes = 10 * 1024 * 1024;
 /// Firebase 実装を ProviderScope.overrides に渡すためのリスト。
 /// main_*.dart の ProviderScope(overrides: firebaseProviderOverrides()) で使用する。
 List<Override> firebaseProviderOverrides() => [
+      installedBuildLoaderProvider.overrideWithValue(() async {
+        final info = await PackageInfo.fromPlatform();
+        return int.parse(info.buildNumber);
+      }),
+      appUpdateLoaderProvider.overrideWithValue(() async {
+        if (kIsWeb ||
+            (defaultTargetPlatform != TargetPlatform.android &&
+                defaultTargetPlatform != TargetPlatform.iOS)) {
+          return null;
+        }
+        final platform =
+            defaultTargetPlatform == TargetPlatform.android ? 'android' : 'ios';
+        final doc = await FirebaseFirestore.instance
+            .collection('appUpdates')
+            .doc('${AppConfig.flavor.name}_$platform')
+            .get(const GetOptions(source: Source.server));
+        final data = doc.data();
+        return data == null ? null : AppUpdate.fromMap(data);
+      }),
       // 写真は長期有効なダウンロードURLではなく、ログイン中のユーザー権限で取得する
       storagePhotoLoaderProvider.overrideWithValue(
         (path) => FirebaseStorage.instance.ref(path).getData(_maxPhotoBytes),
