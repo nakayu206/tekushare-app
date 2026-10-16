@@ -3,14 +3,6 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // スポットのステータスに対応する共有設定がONか（フィールド未設定はデフォルトON）
-    function isSpotShared(uid, spotId) {
-      let spot = firestore.get(/databases/(default)/documents/users/$(uid)/spots/$(spotId)).data;
-      let owner = firestore.get(/databases/(default)/documents/users/$(uid)).data;
-      return (spot.status == 'wantToGo' && owner.get('shareWantToGo', true) != false)
-        || (spot.status == 'visited' && owner.get('shareVisited', true) != false);
-    }
-
     // ユーザーの写真: オーナーのみ書き込み可、連携ユーザーは読み取り可
     match /users/{uid}/spots/{spotId}/{fileName} {
       // 書き込みはオーナーのみ。画像かつ10MB未満に制限する
@@ -23,8 +15,12 @@ service firebase.storage {
       allow delete: if request.auth != null && request.auth.uid == uid;
 
       // 読み取りはオーナー、または連携済みかつスポットが共有対象のユーザーのみ
-      // accountLinks のドキュメントIDは2つのUIDをソートして _ でつないだもの
-      // スポットが削除済み・共有OFFなら連携相手は読めない（firestore.get は存在しないと拒否になる）
+      // Storage ルールで参照できる Firestore ドキュメントは1リクエスト2件までのため、
+      // 連携(accountLinks) + スポット(users/{uid}/spots/{spotId}) の2件に収める。
+      // スポットの shared は、共有設定(users/{uid})とステータスから Cloud Functions
+      // (syncSpotShared / syncSharedOnSettingsChange)が算出して書き込む非正規化フィールド。
+      // accountLinks のドキュメントIDは2つのUIDをソートして _ でつないだもの。
+      // スポットが削除済みなら firestore.get が失敗して拒否になる。
       // （firestore.* は Cross-service rules。デプロイ時に IAM ロール付与の確認が出る）
       allow read: if request.auth != null
         && (request.auth.uid == uid
@@ -32,7 +28,8 @@ service firebase.storage {
               request.auth.uid < uid
                 ? request.auth.uid + '_' + uid
                 : uid + '_' + request.auth.uid))
-            && isSpotShared(uid, spotId)));
+            && firestore.get(/databases/(default)/documents/users/$(uid)/spots/$(spotId))
+              .data.get('shared', false) == true));
     }
   }
 }

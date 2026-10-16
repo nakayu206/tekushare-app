@@ -73,3 +73,58 @@ export const onWalkStarted = functions
       }),
     );
   });
+
+/** ステータスと共有設定から、連携相手に写真を見せてよいかを求める（未設定はデフォルトON） */
+function isSpotShared(
+  status: string | undefined,
+  owner: FirebaseFirestore.DocumentData | undefined,
+): boolean {
+  if (status === "wantToGo") return owner?.shareWantToGo !== false;
+  if (status === "visited") return owner?.shareVisited !== false;
+  return false;
+}
+
+/**
+ * スポットの作成・更新時に、Storage ルールが参照する shared フィールドを同期する。
+ * Storage ルールは Firestore を2件までしか参照できないため、共有設定を非正規化する。
+ */
+export const syncSpotShared = functions
+  .region("asia-northeast1")
+  .runWith({ failurePolicy: true })
+  .firestore.document("users/{uid}/spots/{spotId}")
+  .onWrite(async (change, context) => {
+    if (!change.after.exists) return;
+    const ownerSnap = await db.collection("users").doc(context.params.uid).get();
+    const shared = isSpotShared(change.after.data()?.status, ownerSnap.data());
+    if (change.after.data()?.shared === shared) return;
+    await change.after.ref.update({ shared });
+  });
+
+/**
+ * 共有設定が変更されたら、そのユーザーの全スポットの shared を更新する。
+ */
+export const syncSharedOnSettingsChange = functions
+  .region("asia-northeast1")
+  .runWith({ failurePolicy: true })
+  .firestore.document("users/{uid}")
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    if (
+      before.shareWantToGo === after.shareWantToGo &&
+      before.shareVisited === after.shareVisited
+    ) {
+      return;
+    }
+    const spots = await db
+      .collection("users")
+      .doc(context.params.uid)
+      .collection("spots")
+      .get();
+    await Promise.all(
+      spots.docs.map((doc) => {
+        const shared = isSpotShared(doc.data().status, after);
+        return doc.data().shared === shared ? null : doc.ref.update({ shared });
+      }),
+    );
+  });

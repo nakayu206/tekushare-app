@@ -27,8 +27,8 @@ before(async () => {
     const fs_ = ctx.firestore();
     await setDoc(doc(fs_, "accountLinks/alice_bob"), { uids: ["alice", "bob"] });
     await setDoc(doc(fs_, "users/alice"), { displayName: "A", shareVisited: false });
-    await setDoc(doc(fs_, "users/alice/spots/s1"), { status: "wantToGo" });
-    await setDoc(doc(fs_, "users/alice/spots/s2"), { status: "visited" });
+    await setDoc(doc(fs_, "users/alice/spots/s1"), { status: "wantToGo", shared: true });
+    await setDoc(doc(fs_, "users/alice/spots/s2"), { status: "visited", shared: false });
     await uploadBytes(ref(ctx.storage(), "users/alice/spots/s2/a.jpg"), png, { contentType: "image/jpeg" });
     await uploadBytes(ref(ctx.storage(), "users/alice/spots/gone/a.jpg"), png, { contentType: "image/jpeg" });
     await uploadBytes(ref(ctx.storage(), file), png, { contentType: "image/jpeg" });
