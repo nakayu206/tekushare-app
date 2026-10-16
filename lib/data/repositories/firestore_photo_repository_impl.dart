@@ -18,16 +18,17 @@ class FirestorePhotoRepositoryImpl implements PhotoRepository {
   Future<String> attachPhoto(String spotId, String imagePath) async {
     final fileName =
         '${DateTime.now().millisecondsSinceEpoch}_${imagePath.split('/').last}';
-    final ref = _storage.ref('users/$_uid/spots/$spotId/$fileName');
-    await ref.putFile(File(imagePath));
-    final url = await ref.getDownloadURL();
+    final storagePath = 'users/$_uid/spots/$spotId/$fileName';
+    await _storage.ref(storagePath).putFile(File(imagePath));
+    // 長期有効なダウンロードURLは発行・保存せず、Storageのパスを保存する
+    // （表示時にログイン中のユーザー権限で取得するため、連携解除・共有OFFが即時反映される）
     await _collection.doc(spotId).set(
       {
-        'photoPaths': FieldValue.arrayUnion([url])
+        'photoPaths': FieldValue.arrayUnion([storagePath])
       },
       SetOptions(merge: true),
     );
-    return url;
+    return storagePath;
   }
 
   @override
@@ -38,9 +39,12 @@ class FirestorePhotoRepositoryImpl implements PhotoRepository {
       },
       SetOptions(merge: true),
     );
-    if (imagePath.startsWith('https://')) {
+    if (imagePath.startsWith('users/') || imagePath.startsWith('https://')) {
       try {
-        await _storage.refFromURL(imagePath).delete();
+        final ref = imagePath.startsWith('users/')
+            ? _storage.ref(imagePath)
+            : _storage.refFromURL(imagePath);
+        await ref.delete();
       } catch (_) {
         // Storage上に存在しない場合は無視
       }

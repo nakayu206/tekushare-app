@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/screens/widgets/common/storage_photo.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
 import 'package:tekushare/core/constants/app_text_style.dart';
@@ -11,9 +11,11 @@ import 'package:tekushare/core/constants/map_constants.dart';
 /// 写真をフルスクリーンで表示するビューアーを開く。
 /// [onDelete] を渡すと削除ボタンを表示する。
 Widget _buildImage(String path) {
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return CachedNetworkImage(
-      imageUrl: path,
+  if (isStoragePath(path) ||
+      path.startsWith('http://') ||
+      path.startsWith('https://')) {
+    return StoragePhoto(
+      path: path,
       fit: BoxFit.contain,
       placeholder: (_, __) => const Center(
           child: CircularProgressIndicator(color: AppColors.viewerIcon)),

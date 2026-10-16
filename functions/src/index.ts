@@ -74,6 +74,57 @@ export const onWalkStarted = functions
     );
   });
 
+const DOWNLOAD_TOKEN_KEY = "firebaseStorageDownloadTokens";
+
+/** ファイルのダウンロードトークンを削除する（トークンが無ければ何もしない） */
+async function revokeToken(bucketName: string, name: string): Promise<boolean> {
+  const file = admin.storage().bucket(bucketName).file(name);
+  const [metadata] = await file.getMetadata();
+  if (!metadata.metadata?.[DOWNLOAD_TOKEN_KEY]) return false;
+  await file.setMetadata({ metadata: { [DOWNLOAD_TOKEN_KEY]: null } });
+  return true;
+}
+
+/**
+ * 写真がアップロードされたら、ダウンロードトークンを削除する。
+ * トークン付きURLは長期間有効で連携解除・共有OFFでも失効しないため、
+ * 写真はルール（認証付き）経由の取得だけに限定する。
+ * 失敗時は自動再試行し、取りこぼしは sweepDownloadTokens が回収する。
+ */
+export const revokeDownloadToken = functions
+  .region("asia-northeast1")
+  .runWith({ failurePolicy: true })
+  .storage.object()
+  .onFinalize(async (object) => {
+    const name = object.name;
+    if (!name || !name.startsWith("users/")) return;
+    if (!object.metadata?.[DOWNLOAD_TOKEN_KEY]) return;
+    await revokeToken(object.bucket, name);
+  });
+
+/**
+ * トークンが残っている写真を毎日探して削除する（revokeDownloadToken の取りこぼし回収用）。
+ */
+export const sweepDownloadTokens = functions
+  .region("asia-northeast1")
+  .pubsub.schedule("every 24 hours")
+  .onRun(async () => {
+    const [files] = await admin.storage().bucket().getFiles({ prefix: "users/" });
+    let revoked = 0;
+    for (const file of files) {
+      if (!file.metadata.metadata?.[DOWNLOAD_TOKEN_KEY]) continue;
+      try {
+        if (await revokeToken(file.bucket.name, file.name)) revoked++;
+      } catch (e) {
+        functions.logger.error("[sweepDownloadTokens] トークン削除に失敗", {
+          file: file.name,
+          error: String(e),
+        });
+      }
+    }
+    functions.logger.info(`[sweepDownloadTokens] ${revoked}件のトークンを削除`);
+  });
+
 /** ステータスと共有設定から、連携相手に写真を見せてよいかを求める（未設定はデフォルトON） */
 function isSpotShared(
   status: string | undefined,
@@ -85,8 +136,28 @@ function isSpotShared(
 }
 
 /**
+ * スポット1件の shared を、最新の共有設定・ステータスから再計算して同期する。
+ * トランザクション内で読み直すため、遅れて届いた古いイベントが
+ * 共有OFF後に shared を true へ戻すことはない。
+ */
+async function syncSpotSharedTx(
+  ownerRef: FirebaseFirestore.DocumentReference,
+  spotRef: FirebaseFirestore.DocumentReference,
+): Promise<void> {
+  await db.runTransaction(async (tx) => {
+    const spotSnap = await tx.get(spotRef);
+    if (!spotSnap.exists) return;
+    const ownerSnap = await tx.get(ownerRef);
+    const shared = isSpotShared(spotSnap.data()?.status, ownerSnap.data());
+    if (spotSnap.data()?.shared !== shared) tx.update(spotRef, { shared });
+  });
+}
+
+/**
  * スポットの作成・更新時に、Storage ルールが参照する shared フィールドを同期する。
  * Storage ルールは Firestore を2件までしか参照できないため、共有設定を非正規化する。
+ * 非公開への変更はクライアントが先に shared=false を書いて即時に反映し、
+ * こちらは共有ON側への反映と取りこぼしの補正を担う（失敗時は安全側＝非公開）。
  */
 export const syncSpotShared = functions
   .region("asia-northeast1")
@@ -94,10 +165,10 @@ export const syncSpotShared = functions
   .firestore.document("users/{uid}/spots/{spotId}")
   .onWrite(async (change, context) => {
     if (!change.after.exists) return;
-    const ownerSnap = await db.collection("users").doc(context.params.uid).get();
-    const shared = isSpotShared(change.after.data()?.status, ownerSnap.data());
-    if (change.after.data()?.shared === shared) return;
-    await change.after.ref.update({ shared });
+    await syncSpotSharedTx(
+      db.collection("users").doc(context.params.uid),
+      change.after.ref,
+    );
   });
 
 /**
@@ -116,15 +187,7 @@ export const syncSharedOnSettingsChange = functions
     ) {
       return;
     }
-    const spots = await db
-      .collection("users")
-      .doc(context.params.uid)
-      .collection("spots")
-      .get();
-    await Promise.all(
-      spots.docs.map((doc) => {
-        const shared = isSpotShared(doc.data().status, after);
-        return doc.data().shared === shared ? null : doc.ref.update({ shared });
-      }),
-    );
+    const ownerRef = db.collection("users").doc(context.params.uid);
+    const spots = await ownerRef.collection("spots").get();
+    await Promise.all(spots.docs.map((doc) => syncSpotSharedTx(ownerRef, doc.ref)));
   });
