@@ -6,6 +6,9 @@ import 'package:tekushare/domain/repositories/account_link_repository.dart';
 
 const _inviteValidDuration = Duration(days: 7);
 
+/// Firestore のバッチ書き込みは1回500件までのため、余裕を持たせる
+const _batchLimit = 400;
+
 /// 2人のUIDから決定的な連携ドキュメントIDを作る（順序に依存しない）
 String _linkIdOf(String uidA, String uidB) {
   final sorted = [uidA, uidB]..sort();
@@ -131,10 +134,32 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
     required bool shareWantToGo,
     required bool shareVisited,
   }) async {
-    await _firestore.collection('users').doc(_myUid).set({
-      'shareWantToGo': shareWantToGo,
-      'shareVisited': shareVisited,
-    }, SetOptions(merge: true));
+    final userRef = _firestore.collection('users').doc(_myUid);
+    final spots = await userRef.collection('spots').get();
+    // 設定とスポットの shared を同じバッチで更新し、非公開への変更を即時に有効にする
+    // （Cloud Functions の非同期更新を待たない）。バッチ上限があるため分割する。
+    final writes = <void Function(WriteBatch)>[
+      (b) => b.set(
+            userRef,
+            {'shareWantToGo': shareWantToGo, 'shareVisited': shareVisited},
+            SetOptions(merge: true),
+          ),
+      for (final doc in spots.docs)
+        (b) => b.update(doc.reference, {
+              'shared': switch (doc.data()['status']) {
+                'wantToGo' => shareWantToGo,
+                'visited' => shareVisited,
+                _ => false,
+              },
+            }),
+    ];
+    for (var i = 0; i < writes.length; i += _batchLimit) {
+      final batch = _firestore.batch();
+      for (final write in writes.skip(i).take(_batchLimit)) {
+        write(batch);
+      }
+      await batch.commit();
+    }
   }
 
   @override

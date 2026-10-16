@@ -31,7 +31,8 @@ class FirestoreSpotRepositoryImpl implements SpotRepository {
   @override
   Future<void> updateSpotStatus(String id, SpotStatus status) async {
     await _collection.doc(id).set(
-      {'status': status.name},
+      // 非公開側に倒してから Cloud Functions が共有設定に合わせて更新する
+      {'status': status.name, 'shared': false},
       SetOptions(merge: true),
     );
   }
@@ -53,6 +54,8 @@ class FirestoreSpotRepositoryImpl implements SpotRepository {
         'category': spot.category,
         'photoPaths': spot.photoPaths,
         'createdAt': Timestamp.fromDate(spot.createdAt),
+        // Storage ルールが参照する公開フラグ。安全側(false)で保存し、Cloud Functions が同期する
+        'shared': false,
       };
 
   Spot _fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {

@@ -10,10 +10,17 @@ import 'package:tekushare/data/repositories/firestore_walk_status_repository_imp
 import 'package:tekushare/data/services/firebase_auth_service_impl.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
+import 'package:tekushare/screens/widgets/common/storage_photo.dart';
+
+const _maxPhotoBytes = 10 * 1024 * 1024;
 
 /// Firebase 実装を ProviderScope.overrides に渡すためのリスト。
 /// main_*.dart の ProviderScope(overrides: firebaseProviderOverrides()) で使用する。
 List<Override> firebaseProviderOverrides() => [
+      // 写真は長期有効なダウンロードURLではなく、ログイン中のユーザー権限で取得する
+      storagePhotoLoaderProvider.overrideWithValue(
+        (path) => FirebaseStorage.instance.ref(path).getData(_maxPhotoBytes),
+      ),
       authServiceProvider.overrideWithValue(
         FirebaseAuthServiceImpl(
           fb_auth.FirebaseAuth.instance,

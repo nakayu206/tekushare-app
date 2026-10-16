@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -7,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:tekushare/core/config/flavor.dart';
 import 'package:tekushare/core/constants/app_colors.dart';
+import 'package:tekushare/screens/widgets/common/storage_photo.dart';
 import 'package:tekushare/core/constants/app_spacing.dart';
 import 'package:tekushare/core/constants/map_constants.dart';
 import 'package:tekushare/core/constants/app_strings.dart';
@@ -387,8 +387,8 @@ class _LocationArea extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => onPhotoExpand?.call(path),
                       child: ClipOval(
-                        child: CachedNetworkImage(
-                          imageUrl: path,
+                        child: StoragePhoto(
+                          path: path,
                           width: MapConstants.photoThumbnailSize,
                           height: MapConstants.photoThumbnailSize,
                           fit: BoxFit.cover,
@@ -495,8 +495,8 @@ class _PhotoBox extends StatelessWidget {
                 onTap: () => onExpand(path),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadius.sm),
-                  child: CachedNetworkImage(
-                    imageUrl: path,
+                  child: StoragePhoto(
+                    path: path,
                     width: tileW,
                     height: tileH,
                     fit: BoxFit.cover,
