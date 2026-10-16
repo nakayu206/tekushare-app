@@ -13,6 +13,7 @@ import 'package:tekushare/domain/repositories/spot_repository.dart';
 import 'package:tekushare/domain/repositories/walk_session_repository.dart';
 import 'package:tekushare/domain/repositories/walk_status_repository.dart';
 import 'package:tekushare/infrastructure/camera_service.dart';
+import 'package:tekushare/infrastructure/local_data_cleaner.dart';
 import 'package:tekushare/infrastructure/sms_service.dart';
 export 'package:tekushare/screens/providers/notification_provider.dart';
 import 'package:tekushare/screens/providers/auth_provider.dart';
@@ -81,6 +82,13 @@ final walkStatusRepositoryProvider = Provider<WalkStatusRepository>((ref) {
 
 final sharedPrefsProvider = FutureProvider<SharedPreferences>((ref) async {
   return SharedPreferences.getInstance();
+});
+
+final localDataCleanerProvider = Provider<LocalDataCleaner>((ref) {
+  return LocalDataCleaner(
+    ref.watch(objectBoxStoreProvider).requireValue,
+    ref.watch(sharedPrefsProvider).requireValue,
+  );
 });
 
 /// DB・SharedPreferences 初期化完了を表すプロバイダー。
