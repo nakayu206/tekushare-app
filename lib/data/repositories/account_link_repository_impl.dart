@@ -141,6 +141,13 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
           'visited' => shareVisited,
           _ => false,
         };
+    final toPrivate = <DocumentReference>[];
+    final toPublic = <DocumentReference>[];
+    for (final doc in spots.docs) {
+      final shared = sharedOf(doc.data()['status']);
+      if (doc.data()['shared'] == shared) continue;
+      (shared ? toPublic : toPrivate).add(doc.reference);
+    }
     // バッチ上限(500件)を超えると複数バッチに分かれて原子的でなくなる。
     // 先にスポットだけを非公開にすると、設定がまだONの間に Cloud Functions
     // (syncSpotShared)が shared を true へ戻してしまうため、設定を最初に書く。
