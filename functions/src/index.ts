@@ -42,8 +42,13 @@ export const onWalkStarted = functions
     // 各パートナーへ FCM 送信
     await Promise.all(
       partnerUids.map(async (partnerUid) => {
-        const userDoc = await db.collection("users").doc(partnerUid).get();
-        const fcmToken = userDoc.data()?.fcmToken as string | undefined;
+        const tokenDoc = await db
+          .collection("users")
+          .doc(partnerUid)
+          .collection("private")
+          .doc("fcm")
+          .get();
+        const fcmToken = tokenDoc.data()?.fcmToken as string | undefined;
         if (!fcmToken) return;
 
         await messaging.send({

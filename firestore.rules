@@ -16,14 +16,33 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/accountLinks/$(linkId));
     }
 
-    // users/{uid}: 連携相手の表示名・共有設定を引けるよう読み取りはログイン済み全員に許可
+    // users/{uid}: 連携相手の表示名・共有設定を引けるよう単一取得(get)のみログイン済み全員に許可
+    // 一覧(list)は禁止して全ユーザーの列挙を防ぐ。FCMトークンは users/{uid}/private/fcm（オーナーのみ）に置く
+    // users/{uid} の値の型・長さの検証
+    function validUserValues(data) {
+      return (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 50))
+        && (!('shareWantToGo' in data) || data.shareWantToGo is bool)
+        && (!('shareVisited' in data) || data.shareVisited is bool)
+        && (!('walkingStatus' in data) || data.walkingStatus == 'walking');
+    }
+
+    // 書き込めるフィールドは許可リストのみ
     match /users/{uid} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && request.auth.uid == uid;
+      allow get: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['displayName', 'updatedAt', 'shareWantToGo', 'shareVisited', 'walkingStatus'])
+        && validUserValues(request.resource.data);
+      // fcmToken は旧仕様の残骸を削除するために更新対象として許可する
+      allow update: if isSignedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'updatedAt', 'shareWantToGo', 'shareVisited', 'walkingStatus', 'fcmToken'])
+        && validUserValues(request.resource.data);
+      allow delete: if isSignedIn() && request.auth.uid == uid;
     }
 
     // users/{uid}/contacts, spots, photos などサブコレクションはオーナーのみ
-    match /users/{uid}/{document=**} {
+    // （{uid} 直下のドキュメント自体にはマッチさせない）
+    match /users/{uid}/{collection}/{document=**} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
@@ -44,7 +63,8 @@ service cloud.firestore {
     }
 
     match /linkInvites/{token} {
-      allow read: if isSignedIn();
+      // トークン（ドキュメントID）を知っている場合のみ取得可。一覧は禁止して未使用招待の収集を防ぐ
+      allow get: if isSignedIn();
 
       allow create: if isSignedIn()
         && request.resource.data.fromUid == request.auth.uid
@@ -69,7 +89,16 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken))
         && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.fromUid != request.auth.uid
         && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.fromUid in request.resource.data.uids
-        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.used == false;
+        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.used == false
+        && get(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.expiresAt > request.time
+        // 同一トランザクションで招待が使用済みにされていることを強制する
+        && getAfter(/databases/$(database)/documents/linkInvites/$(request.resource.data.inviteToken)).data.used == true
+        // ドキュメントIDが2つのUIDから決まる値であること
+        && linkId == (
+          request.resource.data.uids[0] < request.resource.data.uids[1]
+            ? request.resource.data.uids[0] + '_' + request.resource.data.uids[1]
+            : request.resource.data.uids[1] + '_' + request.resource.data.uids[0]
+        );
 
       allow update: if false;
 

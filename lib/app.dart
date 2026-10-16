@@ -44,10 +44,15 @@ class _TekuShareAppState extends ConsumerState<TekuShareApp> {
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
+      final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+      // トークンは本人のみ読めるサブコレクションに保存する
+      await userRef
+          .collection('private')
+          .doc('fcm')
           .set({'fcmToken': token}, SetOptions(merge: true));
+      // 旧仕様で users/{uid} に保存していたトークンを削除する
+      await userRef
+          .set({'fcmToken': FieldValue.delete()}, SetOptions(merge: true));
     } catch (_) {}
   }
 
