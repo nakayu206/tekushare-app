@@ -141,24 +141,18 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
           'visited' => shareVisited,
           _ => false,
         };
-    // バッチ上限(500件)を超えると複数バッチに分かれて原子的でなくなるため、
-    // 「非公開になるスポット → 設定 → 公開になるスポット」の順に書く。
-    // どこで中断・遅延しても公開側へ先に倒れることがなく、非公開への変更が先に有効になる。
-    // 公開になるスポットは Cloud Functions も補完する。
-    final toPrivate = <DocumentReference>[];
-    final toPublic = <DocumentReference>[];
-    for (final doc in spots.docs) {
-      final shared = sharedOf(doc.data()['status']);
-      if (doc.data()['shared'] == shared) continue;
-      (shared ? toPublic : toPrivate).add(doc.reference);
-    }
+    // バッチ上限(500件)を超えると複数バッチに分かれて原子的でなくなる。
+    // 先にスポットだけを非公開にすると、設定がまだONの間に Cloud Functions
+    // (syncSpotShared)が shared を true へ戻してしまうため、設定を最初に書く。
+    // 設定が先に反映されていれば、Functions は最新の設定から再計算するので
+    // shared を公開側へ戻すことはない（非公開になるスポットを公開になるスポットより先に書く）。
     final writes = <void Function(WriteBatch)>[
-      for (final ref in toPrivate) (b) => b.update(ref, {'shared': false}),
       (b) => b.set(
             userRef,
             {'shareWantToGo': shareWantToGo, 'shareVisited': shareVisited},
             SetOptions(merge: true),
           ),
+      for (final ref in toPrivate) (b) => b.update(ref, {'shared': false}),
       for (final ref in toPublic) (b) => b.update(ref, {'shared': true}),
     ];
     for (var i = 0; i < writes.length; i += _batchLimit) {
