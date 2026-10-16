@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekushare/screens/providers/app_providers.dart';
+import 'package:tekushare/screens/providers/auth_provider.dart';
 
 typedef PhoneContact = ({String name, String phone});
 
@@ -64,12 +65,13 @@ class SettingsViewModel extends Notifier<SettingsState> {
   static const _kInactivityEnabled = 'settings_inactivityEnabled';
   static const _kInactivityMinutes = 'settings_inactivityMinutes';
   static const _kRegisteredContactName = 'settings_registeredContactName';
-  static const _kShareWantToGo = 'settings_shareWantToGo';
-  static const _kShareVisited = 'settings_shareVisited';
 
   @override
   SettingsState build() {
     final prefsAsync = ref.watch(sharedPrefsProvider);
+    // 共有設定はアカウントごとの値なので、ユーザーが切り替わるたびにサーバーから読み直す
+    final uid = ref.watch(authStateProvider.select((a) => a.valueOrNull?.uid));
+    if (uid != null) Future.microtask(_loadShareSettings);
     return prefsAsync.when(
       data: (prefs) => SettingsState(
         timerEnabled: prefs.getBool(_kTimerEnabled) ?? true,
@@ -78,12 +80,28 @@ class SettingsViewModel extends Notifier<SettingsState> {
         inactivityEnabled: prefs.getBool(_kInactivityEnabled) ?? false,
         inactivityMinutes: prefs.getInt(_kInactivityMinutes) ?? 15,
         registeredContactName: prefs.getString(_kRegisteredContactName),
-        shareWantToGo: prefs.getBool(_kShareWantToGo) ?? true,
-        shareVisited: prefs.getBool(_kShareVisited) ?? true,
       ),
       loading: () => const SettingsState(),
       error: (_, __) => const SettingsState(),
     );
+  }
+
+  /// 共有設定はサーバーの値を正とする（端末にはキャッシュしない）
+  Future<void> _loadShareSettings() async {
+    try {
+      final uid = ref.read(authStateProvider).valueOrNull?.uid;
+      if (uid == null) return;
+      final settings =
+          await ref.read(accountLinkRepositoryProvider).fetchShareSettings(uid);
+      // 取得中にユーザーが切り替わっていたら破棄する
+      if (ref.read(authStateProvider).valueOrNull?.uid != uid) return;
+      state = state.copyWith(
+        shareWantToGo: settings.shareWantToGo,
+        shareVisited: settings.shareVisited,
+      );
+    } catch (_) {
+      // 取得できない場合は現在の表示を維持する
+    }
   }
 
   SharedPreferences get _prefs => ref.read(sharedPrefsProvider).requireValue;
@@ -120,7 +138,6 @@ class SettingsViewModel extends Notifier<SettingsState> {
 
   Future<void> setShareWantToGo(bool v) async {
     final prev = state.shareWantToGo;
-    _prefs.setBool(_kShareWantToGo, v);
     state = state.copyWith(shareWantToGo: v);
     try {
       await ref.read(accountLinkRepositoryProvider).updateShareSettings(
@@ -128,14 +145,12 @@ class SettingsViewModel extends Notifier<SettingsState> {
             shareVisited: state.shareVisited,
           );
     } catch (_) {
-      _prefs.setBool(_kShareWantToGo, prev);
       state = state.copyWith(shareWantToGo: prev);
     }
   }
 
   Future<void> setShareVisited(bool v) async {
     final prev = state.shareVisited;
-    _prefs.setBool(_kShareVisited, v);
     state = state.copyWith(shareVisited: v);
     try {
       await ref.read(accountLinkRepositoryProvider).updateShareSettings(
@@ -143,7 +158,6 @@ class SettingsViewModel extends Notifier<SettingsState> {
             shareVisited: v,
           );
     } catch (_) {
-      _prefs.setBool(_kShareVisited, prev);
       state = state.copyWith(shareVisited: prev);
     }
   }
