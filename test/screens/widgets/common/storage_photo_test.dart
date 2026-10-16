@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -121,6 +122,30 @@ void main() {
       await tester.pump(const Duration(milliseconds: 10));
       expect(calls, 2);
       expect(find.text('error'), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
+    });
+
+    testWidgets('ユーザー切替の取得待ち中は旧ユーザーの画像を表示しない', (tester) async {
+      final pending = Completer<Uint8List?>();
+      var first = true;
+      final c = makeContainer(loader: (_) {
+        if (first) {
+          first = false;
+          return Future.value(Uint8List.fromList(_png));
+        }
+        return pending.future;
+      });
+      await c.read(authStateProvider.future);
+      await tester.pumpWidget(app(c));
+      await tester.pump();
+      expect(find.byType(Image), findsOneWidget);
+
+      c.read(uidProvider.notifier).state = 'carol';
+      await tester.pump(const Duration(milliseconds: 10));
+      await tester.pump(const Duration(milliseconds: 10));
+      expect(find.byType(Image), findsNothing);
+      pending.complete(Uint8List.fromList(_png));
+      await tester.pump();
     });
 
     testWidgets('表示したまま保持期限が来たら認証付きで取得し直す', (tester) async {

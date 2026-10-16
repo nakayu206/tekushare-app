@@ -136,22 +136,30 @@ class AccountLinkRepositoryImpl implements AccountLinkRepository {
   }) async {
     final userRef = _firestore.collection('users').doc(_myUid);
     final spots = await userRef.collection('spots').get();
-    // 設定とスポットの shared を同じバッチで更新し、非公開への変更を即時に有効にする
-    // （Cloud Functions の非同期更新を待たない）。バッチ上限があるため分割する。
+    bool sharedOf(Object? status) => switch (status) {
+          'wantToGo' => shareWantToGo,
+          'visited' => shareVisited,
+          _ => false,
+        };
+    // バッチ上限(500件)を超えると複数バッチに分かれて原子的でなくなるため、
+    // 「非公開になるスポット → 設定 → 公開になるスポット」の順に書く。
+    // どこで中断・遅延しても公開側へ先に倒れることがなく、非公開への変更が先に有効になる。
+    // 公開になるスポットは Cloud Functions も補完する。
+    final toPrivate = <DocumentReference>[];
+    final toPublic = <DocumentReference>[];
+    for (final doc in spots.docs) {
+      final shared = sharedOf(doc.data()['status']);
+      if (doc.data()['shared'] == shared) continue;
+      (shared ? toPublic : toPrivate).add(doc.reference);
+    }
     final writes = <void Function(WriteBatch)>[
+      for (final ref in toPrivate) (b) => b.update(ref, {'shared': false}),
       (b) => b.set(
             userRef,
             {'shareWantToGo': shareWantToGo, 'shareVisited': shareVisited},
             SetOptions(merge: true),
           ),
-      for (final doc in spots.docs)
-        (b) => b.update(doc.reference, {
-              'shared': switch (doc.data()['status']) {
-                'wantToGo' => shareWantToGo,
-                'visited' => shareVisited,
-                _ => false,
-              },
-            }),
+      for (final ref in toPublic) (b) => b.update(ref, {'shared': true}),
     ];
     for (var i = 0; i < writes.length; i += _batchLimit) {
       final batch = _firestore.batch();
