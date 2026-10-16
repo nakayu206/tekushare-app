@@ -52,7 +52,10 @@ jobs:
 
       # 5. コード生成（*.g.dart / *.mocks.dart）
       - name: Generate code
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          # ObjectBox 5 の生成物は dart format 済みではないため、フォーマットチェック前に整形する
+          dart format lib/objectbox.g.dart
 
       # 6. フォーマットチェック（差分があれば失敗）
       - name: Check formatting
